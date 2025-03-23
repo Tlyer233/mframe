@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Current File",
+            "program": "${file}",
+            "cwd": "${workspaceFolder}", // 确保工作目录正确
+            "console": "integratedTerminal"  // 关键配置
+        },
+        {
+            // npm install -g node-inspect vscode联调浏览器
+            "type":"node",
+            "request": "launch",
+            "name": "浏览器联调",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "runtimeExecutable": "node-inspect",
+            "program": "${file}",
+            "cwd": "${workspaceFolder}" // 确保工作目录正确
+        }
+    ]
+}
