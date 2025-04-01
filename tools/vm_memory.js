@@ -9,7 +9,7 @@ mframe.memory = {
     // 相关配置
     config: {
         print: false, // 是否打印日志
-        proxy: true, // 是否开启代理
+        proxy: false, // 是否开启代理
     }
 
     

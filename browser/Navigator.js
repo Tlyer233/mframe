@@ -12,15 +12,12 @@ Object.defineProperties(Navigator.prototype, {
 
 navigator = {};
 ///////////////////////////////////////////////////
-Navigator.prototype.plugins = []; // TODO "浏览器插件"先简单补
 navigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36';
 
 navigator.webdriver = false;
 navigator.language = 'zh-CN';
 navigator.languages = ['zh-CN', 'en', 'zh']
 
-
-navigator.mimeTypes = mimeTypes;
 navigator.appVersion = '5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'
 navigator.platform = 'Win32'
 

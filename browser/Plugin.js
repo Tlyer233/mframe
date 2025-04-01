@@ -4,11 +4,30 @@ var Plugin = function Plugin() {
     throw new TypeError('Illegal constructor');
 }; mframe.safefunction(Plugin)
 
+
+mframe.memory.Plugin.iterator = function values() { // 迭代器
+    return {
+        next: function () {
+            if (this.index_ == undefined) {
+                this.index_ = 0;
+            }
+            var tmp = this.self_[this.index_];
+            this.index_ += 1;
+            return { value: tmp, done: tmp == undefined };
+        },
+        self_: this
+    }
+}; mframe.safefunction(mframe.memory.Plugin.iterator);
+
 Object.defineProperties(Plugin.prototype, {
     [Symbol.toStringTag]: {
         value: "Plugin",
         configurable: true,
-    }
+    },
+    [Symbol.iterator]: {
+        value: mframe.memory.Plugin.iterator,
+        configurable: true
+    },
 })
 
 
@@ -25,16 +44,15 @@ Plugin.prototype.namedItem = function namedItem() { debugger; }; mframe.safefunc
 
 //////////////////////////////////
 
-/**实现 不能通过原型Plugin去调用属性;  因为我们的属性都是绑定在实例上的,没有实例, 属性没有意义* 所以通过 原型访问的属性,需要抛出异常
-*/
-// for (let prototypeName in Plugin.prototype) {
-//     // 方法不能抛异常
-//     if (typeof (Plugin.prototype[prototypeName]) != "function") {
-//         Plugin.prototype.__defineGetter__(prototypeName, function () {
-//             throw new TypeError(`Cannot access '${prototypeName}' on Plugin prototype. Properties should only be accessed through Plugin instances.`);
-//         })
-//     }
-// }
+
+// 保持原型属性和实例属性相同(如果没有原型,会直接报错)
+for (let prototypeName in Plugin.prototype) {
+    if (typeof (Plugin.prototype[prototypeName]) != "function") {
+        Plugin.prototype.__defineGetter__(prototypeName, function () {
+            return this[prototypeName];
+        })
+    }
+}
 
 
 /** 支持内部 new Plugin
@@ -71,10 +89,10 @@ mframe.memory.Plugin.new = function (pluginObj) {
     plugin.name = pluginObj.name;
 
     for (let i = 0; i < pluginObj.mimeTypeArray.length; i++) {
-        // MineType索引表示
-        plugin[i] = pluginObj.mimeTypeArray[i];
+        // part1: MineType索引: MineType实例
+        plugin[i] = mframe.memory.MimeType.new(pluginObj.mimeTypeArray[i], plugin);
 
-        // MineType名字表示; 处理名字为灰色的
+        // part2: MineType名字表示; 处理名字为灰色的
         Object.defineProperty(
             plugin,                                    // 哪个对象
             pluginObj.mimeTypeArray[i].type,           // 哪个属性

@@ -2653,9 +2653,9 @@ Document.prototype["createElement"] = function createElement(tagName, options) {
     }
     
     // 关联JSDOM元素
-    wrapJsdomElement(jsdomElement, element);
+    wrapJsdomElement(jsdomElement, htmlElement);
     
-    return mframe.proxy(element);
+    return mframe.proxy(htmlElement);
 }; mframe.safefunction(Document.prototype["createElement"]);
 
 Document.prototype["createElementNS"] = function createElementNS() { debugger; }; mframe.safefunction(Document.prototype["createElementNS"]);

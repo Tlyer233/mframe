@@ -25,9 +25,12 @@ function GetCode() {
     code += fs.readFileSync(`${__dirname}/browser/Location.js`) + "\r\n";
 
     /**Navigator */
+
+
+    code += fs.readFileSync(`${__dirname}/browser/Navigator.js`) + "\r\n";
+    code += fs.readFileSync(`${__dirname}/browser/MimeType.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/browser/Plugin.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/browser/MimeTypeArray.js`) + "\r\n";
-    code += fs.readFileSync(`${__dirname}/browser/Navigator.js`) + "\r\n";
 
     /**History */
     code += fs.readFileSync(`${__dirname}/browser/History.js`) + "\r\n";
@@ -36,14 +39,14 @@ function GetCode() {
     /**DOM: 如果注入jsdom的document, 以下DOM相关的必须注释 */
 
     // EventTarget->Node->Element->HTMLElement->HTMLXXXElement
-    code += fs.readFileSync(`${__dirname}/browser/Node.js`) + "\r\n";
-    code += fs.readFileSync(`${__dirname}/browser/Element.js`) + "\r\n";
-    code += fs.readFileSync(`${__dirname}/browser/HTMLElement.js`) + "\r\n";
+    // code += fs.readFileSync(`${__dirname}/browser/Node.js`) + "\r\n";
+    // code += fs.readFileSync(`${__dirname}/browser/Element.js`) + "\r\n";
+    // code += fs.readFileSync(`${__dirname}/browser/HTMLElement.js`) + "\r\n";
 
     /**HTMLElements: DOM元素 */
-    code += htmlelements.GetCode() + "\r\n";
+    // code += htmlelements.GetCode() + "\r\n";
     /**Document */
-    code += fs.readFileSync(`${__dirname}/browser/document.js`) + "\r\n";
+    // code += fs.readFileSync(`${__dirname}/browser/document.js`) + "\r\n";
 
     code += "debugger;\n";
     return code;
