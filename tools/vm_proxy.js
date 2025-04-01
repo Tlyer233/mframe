@@ -1,3 +1,4 @@
+// [Tool]代理方法
 /**
  * 对某个"东西"进行代理Proxy后, 以后是使用"代理对象", 而不是原对象
  * eval(`${o} = new Proxy(${o}, ${handler})`); 帮你完成 window = proxy("window")的操作
@@ -40,3 +41,4 @@ mframe.proxy = function (o) {
         }
     });
 }
+

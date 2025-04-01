@@ -1,3 +1,4 @@
+// [Tool]统一错误类
 mframe.memory.get_invocation_error = function get_invocation_error() {
     let e = new Error();
     e.name = "TypeError";

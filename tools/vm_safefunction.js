@@ -1,4 +1,4 @@
-// toString 保护
+// [Tool] toString 保护
 !(() => {
     "use strict";
     const $toString = Function.toString;

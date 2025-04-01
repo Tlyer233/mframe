@@ -1,34 +1,119 @@
-var mframe = {};
-
+// [Tool]框架内存 
 /** 为什么要这个??
  * 解决重名的问题, window.print可能会重名,但window.mframe.print一定不会
  * mframe的内存
  */
-// 框架内存 
+var mframe = {};
 mframe.memory = {
-    // 相关配置
+    // mframe相关配置的内存空间
     config: {
-        print: false, // 是否打印日志
         proxy: false, // 是否开启代理
-    }
+        pluginArray: [  // 插件  
+            {// 插件1: PDF查看器
+                description: "Portable Document Format",
+                filename: "internal-pdf-viewer",
+                name: "PDF Viewer",
+                mimeTypeArray: [
+                    {
+                        description: "Portable Document Format",
+                        enabledPlugin: "Plugin",
+                        suffixes: "pdf",
+                        type: "application/pdf",
+                    },
+                    {
+                        description: "PDF Embedded Document",
+                        enabledPlugin: "Plugin",
+                        suffixes: "pdf",
+                        type: "application/x-google-chrome-pdf",
+                    }
+                ]
+            },
+            {// 插件2: Chrome Native Client
+                description: "Native Client Module",
+                filename: "internal-nacl-plugin",
+                name: "Native Client",
+                mimeTypeArray: [
+                    {
+                        description: "Native Client Executable",
+                        enabledPlugin: "Plugin",
+                        suffixes: "nexe",
+                        type: "application/x-nacl",
+                    },
+                    {
+                        description: "Portable Native Client Executable",
+                        enabledPlugin: "Plugin",
+                        suffixes: "pexe",
+                        type: "application/x-pnacl",
+                    }
+                ]
+            },
+            {// 插件3: Widevine内容解密模块
+                description: "Enables Widevine licenses for playback of HTML audio/video content.",
+                filename: "widevinecdmadapter.dll",
+                name: "Widevine Content Decryption Module",
+                mimeTypeArray: [
+                    {
+                        description: "Widevine Content Decryption Module",
+                        enabledPlugin: "Plugin",
+                        suffixes: "",
+                        type: "application/x-ppapi-widevine-cdm",
+                    }
+                ]
+            },
+            {// 插件4: Chrome媒体路由器
+                description: "Handles media routing for Cast-enabled sites",
+                filename: "internal-media-router",
+                name: "Chrome Media Router",
+                mimeTypeArray: [
+                    {
+                        description: "Google Cast",
+                        enabledPlugin: "Plugin",
+                        suffixes: "",
+                        type: "application/vnd.google.cast.receiver",
+                    },
+                    {
+                        description: "Media Router Implementation",
+                        enabledPlugin: "Plugin",
+                        suffixes: "",
+                        type: "application/x-media-router-plugin",
+                    }
+                ]
+            },
+            { // 插件5: Chromium PDF插件
+                description: "Chromium PDF Renderer",
+                filename: "chrome-pdf.plugin",
+                name: "Chromium PDF Plugin",
+                mimeTypeArray: [
+                    {
+                        description: "Chromium PDF Format",
+                        enabledPlugin: "Plugin",
+                        suffixes: "pdf",
+                        type: "application/x-chromium-pdf",
+                    },
+                    {
+                        description: "PDF Inline Document",
+                        enabledPlugin: "Plugin",
+                        suffixes: "pdf",
+                        type: "text/pdf",
+                    },
+                    {
+                        description: "PDF Embedded Content",
+                        enabledPlugin: "Plugin",
+                        suffixes: "pdf",
+                        type: "application/pdf-embedded",
+                    }
+                ]
+            }
+        ],
 
-    
+    },
+    // HTMLXXXElement的内存空间
+    htmlelements: {
+
+    },
 };
 
-
-mframe.memory.htmlelements = {}
-
-mframe.print = {}
-mframe.memory.print = [];
-mframe.print.log = function () {
-    if (mframe.config.print) {
-
-    }
-}
-
-mframe.print.getall = function () {
-
-}
+// [Tool]统一错误类
 mframe.memory.get_invocation_error = function get_invocation_error() {
     let e = new Error();
     e.name = "TypeError";
@@ -36,6 +121,7 @@ mframe.memory.get_invocation_error = function get_invocation_error() {
     e.stack = "VM988:1 Uncaught TypeError: Illegal invocation \r\n at <anonymous>:1:21";
     return e;
 }
+// [Tool]代理方法
 /**
  * 对某个"东西"进行代理Proxy后, 以后是使用"代理对象", 而不是原对象
  * eval(`${o} = new Proxy(${o}, ${handler})`); 帮你完成 window = proxy("window")的操作
@@ -79,7 +165,8 @@ mframe.proxy = function (o) {
     });
 }
 
-// toString 保护
+
+// [Tool] toString 保护
 !(() => {
     "use strict";
     const $toString = Function.toString;
@@ -107,6 +194,7 @@ mframe.proxy = function (o) {
 
 
 
+mframe.memory.config.proxy=false
 // 创建 Crypto 类
 
 _crypto = crypto; // 保留从vm2加载的crypto
@@ -591,6 +679,82 @@ mframe.memory.Plugin.new = function (pluginObj) {
 
 /**代理 */
 Plugin = mframe.proxy(Plugin)
+mframe.memory.PluginArray = {}
+var PluginArray = function PluginArray() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(PluginArray)
+
+mframe.memory.PluginArray.iterator = function values() {
+    return {
+        next: function () {
+            if (this.index_ == undefined) {
+                this.index_ = 0;
+            }
+            var tmp = this.self_[this.index_];
+            this.index_ += 1;
+            return { value: tmp, done: tmp == undefined };
+        },
+        self_: this
+    }
+}; mframe.safefunction(mframe.memory.PluginArray.iterator);
+Object.defineProperties(PluginArray.prototype, {
+    [Symbol.toStringTag]: {
+        value: "PluginArray",
+        configurable: true,
+    },
+    [Symbol.iterator]: {
+        value: mframe.memory.PluginArray.iterator,
+        configurable: true,
+    },
+})
+
+
+//////////////////////////////////
+var curMemoryArea = mframe.memory.PluginArray;
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%%%%%%
+// length
+curMemoryArea.length_getter = function length() { debugger; }; mframe.safefunction(curMemoryArea.length_getter);
+Object.defineProperty(curMemoryArea.length_getter, "name", { value: "get length", configurable: true, });
+Object.defineProperty(PluginArray.prototype, "length", { get: curMemoryArea.length_getter, enumerable: true, configurable: true, });
+curMemoryArea.length_smart_getter = function length() {
+    let defaultValue = this.length;
+    if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
+    return defaultValue; // 已经正确修改返回值
+}; mframe.safefunction(curMemoryArea.length_smart_getter);
+PluginArray.prototype.__defineGetter__("length", curMemoryArea.length_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%%%%%%
+
+//============== Function START ====================
+PluginArray.prototype["item"] = function item() { debugger; }; mframe.safefunction(PluginArray.prototype["item"]);
+PluginArray.prototype["namedItem"] = function namedItem() { debugger; }; mframe.safefunction(PluginArray.prototype["namedItem"]);
+PluginArray.prototype["refresh"] = function refresh() { debugger; }; mframe.safefunction(PluginArray.prototype["refresh"]);
+//==============↑↑Function END↑↑====================
+//////////////////////////////////
+
+
+// window里面不能有 PluginArray 的实例, 只有navigator中可以有
+mframe.memory.PluginArray._ ={};
+for (let index = 0; index < mframe.memory.config.pluginArray.length; index++) {
+    // part1: 索引
+    mframe.memory.PluginArray._[index] = mframe.memory.Plugin.new( mframe.memory.config.pluginArray[index]);
+    // part2: 名字变色
+    Object.defineProperty(mframe.memory.PluginArray._,
+        mframe.memory.config.pluginArray[index].name, {
+        value: mframe.memory.config.pluginArray[index]
+    });
+    mframe.memory.PluginArray._.length = mframe.memory.config.pluginArray.length;
+}
+
+mframe.memory.PluginArray._.__proto__ = PluginArray.prototype;
+navigator.plugins = mframe.memory.PluginArray._;
+
+/**代理 */
+navigator.plugins = mframe.proxy(navigator.plugins)
 mframe.memory.MimeTypeArray = {}
 var MimeTypeArray = function MimeTypeArray() {
     throw new TypeError('Illegal constructor');
@@ -648,14 +812,43 @@ MimeTypeArray.prototype["namedItem"] = function namedItem() { debugger; }; mfram
 //==============↑↑Function END↑↑====================
 //////////////////////////////////
 
-// window里面不能有MimeTypeArray的实例, 只有navigator中可以有
+
+
 mframe.memory.MimeTypeArray._ = {}
+// 初始化所有MimeType并和PluginArray建立关联
+
+let mimeTypeIndex = 0;
+for (let pluginIndex = 0; pluginIndex < mframe.memory.config.pluginArray.length; pluginIndex++) {
+    const pluginConfig = mframe.memory.config.pluginArray[pluginIndex];
+    const pluginInstance = mframe.memory.PluginArray._[pluginIndex];
+    
+    for (let mimeIndex = 0; mimeIndex < pluginConfig.mimeTypeArray.length; mimeIndex++) {
+        const mimeConfig = pluginConfig.mimeTypeArray[mimeIndex];
+        
+        // 创建MimeType实例，enabledPlugin参数传入对应的Plugin实例
+        const mimeInstance = mframe.memory.MimeType.new(mimeConfig, pluginInstance);
+        
+        // 添加到MimeTypeArray中，使用数字索引
+        mframe.memory.MimeTypeArray._[mimeTypeIndex] = mimeInstance;
+        
+        // 添加到MimeTypeArray中，使用类型名称作为索引
+        Object.defineProperty(mframe.memory.MimeTypeArray._, mimeConfig.type, {
+            value: mimeInstance,
+            enumerable: false,
+            configurable: true
+        });
+        
+        mimeTypeIndex++;
+    }
+}
+
+
 mframe.memory.MimeTypeArray._.__proto__ = MimeTypeArray.prototype;
-navigator.plugins = mframe.memory.MimeTypeArray._;
+navigator.mimeTypes = mframe.memory.MimeTypeArray._;
 
 
 /**代理 */
-navigator.plugins = mframe.proxy(navigator.plugins)
+navigator.mimeTypes = mframe.proxy(navigator.mimeTypes)
 
 var History = function () { 
     debugger;
@@ -678,115 +871,9 @@ History.prototype.back = function back(){debugger;}; mframe.safefunction(History
 history= {} 
 history.__proto__ = History.prototype;
 history=mframe.proxy(history) // 代理
+//=====================================以下为运行代码===============================
+//=====================================以下为运行代码===============================
+//=====================================以下为运行代码===============================
+//=====================================以下为运行代码===============================
 debugger;
-
-///////////////////////////////////////////////////////////////////
-///////////////////自定义环境 自定义环境 自定义环境///////////////////
-///////////////////////////////////////////////////////////////////
-
-
-
-
-
-///////////////////////////////////////////////////////////////////
-///////////////////主代码区域 主代码区域 主代码区域///////////////////
-///////////////////////////////////////////////////////////////////
-
-
 console.log("ok");
-console.log(require);
-console.log(process);
-
-
-// 检测是否使用了jsdom的简洁代码
-function detectJSDOM() {
-    const results = {
-      conclusion: "未检测到JSDOM",
-      tests: {}
-    };
-  
-    try {
-      // 测试1: 检查navigator.userAgent
-      results.tests["测试1: navigator.userAgent"] = "未通过";
-      if (typeof navigator !== 'undefined') {
-        const ua = navigator.userAgent || "";
-        if (ua.includes('Node.js') || ua.includes('jsdom')) {
-          results.tests["测试1: navigator.userAgent"] = "通过";
-          results.conclusion = "检测到JSDOM";
-        }
-      }
-  
-      // 测试2: 检查window特殊属性
-      results.tests["测试2: window特殊属性"] = "未通过";
-      if (typeof window !== 'undefined') {
-        if (window.name === 'nodejs' || 
-            Object.prototype.toString.call(window).includes('jsdom')) {
-          results.tests["测试2: window特殊属性"] = "通过";
-          results.conclusion = "检测到JSDOM";
-        }
-      }
-  
-      // 测试3: 检查document特殊属性
-      results.tests["测试3: document特殊属性"] = "未通过";
-      if (typeof document !== 'undefined') {
-        if (document._documentElement || 
-            document._defaultView || 
-            document._global ||
-            document.defaultView && document.defaultView._resourceLoader) {
-          results.tests["测试3: document特殊属性"] = "通过";
-          results.conclusion = "检测到JSDOM";
-        }
-      }
-  
-      // 测试4: 检查全局对象
-      results.tests["测试4: 全局对象特征"] = "未通过";
-      if (typeof window !== 'undefined' && typeof process !== 'undefined' && process.versions && process.versions.node) {
-        // 同时存在浏览器和Node环境的特征
-        results.tests["测试4: 全局对象特征"] = "通过";
-        results.conclusion = "检测到JSDOM";
-      }
-  
-      // 测试5: 检查DOM实现限制
-      results.tests["测试5: DOM实现限制"] = "未通过";
-      if (typeof document !== 'undefined') {
-        try {
-          // JSDOM中某些DOM API不完整或有限制
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
-          if (!context || typeof context.fillText !== 'function') {
-            results.tests["测试5: DOM实现限制"] = "通过";
-            results.conclusion = "检测到JSDOM";
-          }
-        } catch (e) {
-          // 某些DOM API在JSDOM中可能会抛出错误
-          results.tests["测试5: DOM实现限制"] = "通过 (抛出错误)";
-          results.conclusion = "检测到JSDOM";
-        }
-      }
-  
-      // 测试6: 检查jsdom特有的全局变量
-      results.tests["测试6: jsdom特有全局变量"] = "未通过";
-      if (typeof jsdom !== 'undefined' || 
-          typeof JSDOM !== 'undefined' || 
-          (typeof window !== 'undefined' && window.JSDOM)) {
-        results.tests["测试6: jsdom特有全局变量"] = "通过";
-        results.conclusion = "检测到JSDOM";
-      }
-    } catch (e) {
-      results.error = "检测过程中发生错误: " + e.message;
-    }
-  
-    return results;
-  }
-  
-  // 执行检测并输出结果
-  const jsdomDetectionResults = detectJSDOM();
-  console.log("JSDOM检测结果:");
-  console.log("总结:", jsdomDetectionResults.conclusion);
-  console.log("详细测试:");
-  for (const [test, result] of Object.entries(jsdomDetectionResults.tests)) {
-    console.log(`- ${test}: ${result}`);
-  }
-  if (jsdomDetectionResults.error) {
-    console.log(jsdomDetectionResults.error);
-  }

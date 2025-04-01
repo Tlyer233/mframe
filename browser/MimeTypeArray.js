@@ -40,10 +40,9 @@ curMemoryArea.length_getter = function length() { debugger; }; mframe.safefuncti
 Object.defineProperty(curMemoryArea.length_getter, "name", { value: "get length", configurable: true, });
 Object.defineProperty(MimeTypeArray.prototype, "length", { get: curMemoryArea.length_getter, enumerable: true, configurable: true, });
 curMemoryArea.length_smart_getter = function length() {
-    let defaultValue = 0;
+    let defaultValue = this.length;
     if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
-    console.log(`${this}调用了"MimeTypeArray"中的length的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
-    return defaultValue; // 如果是实例访问，返回默认值
+    return defaultValue; // 已经正确修改返回值
 }; mframe.safefunction(curMemoryArea.length_smart_getter);
 MimeTypeArray.prototype.__defineGetter__("length", curMemoryArea.length_smart_getter);
 
@@ -55,11 +54,41 @@ MimeTypeArray.prototype["namedItem"] = function namedItem() { debugger; }; mfram
 //==============↑↑Function END↑↑====================
 //////////////////////////////////
 
-// window里面不能有MimeTypeArray的实例, 只有navigator中可以有
+
+
 mframe.memory.MimeTypeArray._ = {}
+// 初始化所有MimeType并和PluginArray建立关联
+
+let mimeTypeIndex = 0; // 记录mimeTypeArray的长度
+for (let pluginIndex = 0; pluginIndex < mframe.memory.config.pluginArray.length; pluginIndex++) {
+    const pluginConfig = mframe.memory.config.pluginArray[pluginIndex];
+    const pluginInstance = mframe.memory.PluginArray._[pluginIndex];
+    
+    for (let mimeIndex = 0; mimeIndex < pluginConfig.mimeTypeArray.length; mimeIndex++) {
+        const mimeConfig = pluginConfig.mimeTypeArray[mimeIndex];
+        
+        // 创建MimeType实例，enabledPlugin参数传入对应的Plugin实例
+        const mimeInstance = mframe.memory.MimeType.new(mimeConfig, pluginInstance);
+        
+        // 添加到MimeTypeArray中，使用数字索引
+        mframe.memory.MimeTypeArray._[mimeTypeIndex] = mimeInstance;
+        
+        // 添加到MimeTypeArray中，使用类型名称作为索引
+        Object.defineProperty(mframe.memory.MimeTypeArray._, mimeConfig.type, {
+            value: mimeInstance,
+            enumerable: false,
+            configurable: true
+        });
+        
+        mimeTypeIndex++;
+    }
+}
+mframe.memory.MimeTypeArray._.length = mimeTypeIndex; // mimeTypeArray的长度
+
+
 mframe.memory.MimeTypeArray._.__proto__ = MimeTypeArray.prototype;
-navigator.plugins = mframe.memory.MimeTypeArray._;
+navigator.mimeTypes = mframe.memory.MimeTypeArray._;
 
 
 /**代理 */
-navigator.plugins = mframe.proxy(navigator.plugins)
+navigator.mimeTypes = mframe.proxy(navigator.mimeTypes)
