@@ -138,11 +138,11 @@ curMemoryArea.firstChild_getter = function firstChild() { debugger; }; mframe.sa
 Object.defineProperty(curMemoryArea.firstChild_getter, "name", { value: "get firstChild", configurable: true, });
 Object.defineProperty(Node.prototype, "firstChild", { get: curMemoryArea.firstChild_getter, enumerable: true, configurable: true, });
 curMemoryArea.firstChild_smart_getter = function firstChild() {
-   debugger
-   let defaultValue = null;
-   if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
-   console.log(`${this}调用了"Node"中的firstChild的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
-   return defaultValue; // 如果是实例访问，返回默认值
+    debugger
+    let defaultValue = null;
+    if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
+    console.log(`${this}调用了"Node"中的firstChild的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
+    return defaultValue; // 如果是实例访问，返回默认值
 }; mframe.safefunction(curMemoryArea.firstChild_smart_getter);
 Node.prototype.__defineGetter__("firstChild", curMemoryArea.firstChild_smart_getter);
 
@@ -233,7 +233,55 @@ Node.prototype.DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 32;
 //%%%%%%%↑↑Attribute END↑↑%%%%%%%%%%
 
 //============== Function START ====================
-Node.prototype["appendChild"] = function appendChild() { debugger; }; mframe.safefunction(Node.prototype["appendChild"]);
+Node.prototype["appendChild"] = function appendChild(aChild) {
+    if (mframe.memory.jsdom.document != undefined) { // 有jsdom
+        // 一定是一个实例来调用appendChild才有用,this.jsdomMemory是jsdom的; aChild是我们伪造的,aChild.jsdomMemory是jsdom创建的
+        return this.jsdomMemory.appendChild(aChild.jsdomMemory);
+    }
+    // 没有jsdom, 就只能返回一个空对象了.
+    else {
+        debugger;
+        return {};
+    }
+}; mframe.safefunction(Node.prototype["appendChild"]);
+
+
+
+// for test
+// Node.prototype["appendChild"] = function appendChild(aChild) {   
+//     if (mframe.memory.jsdom.document != undefined) { // 有jsdom
+//         // 获取真实的JSDOM节点
+//         const realParent = mframe.memory.domProxy.elementMap.get(this) || this.jsdomMemory;
+//         const realChild = mframe.memory.domProxy.elementMap.get(aChild) || aChild.jsdomMemory;
+        
+//         console.log("真实操作节点:");
+//         console.log("- Parent:", realParent.outerHTML);
+//         console.log("- Child:", realChild.outerHTML);
+        
+//         // 执行真实DOM操作
+//         const result = realParent.appendChild(realChild);
+        
+//         // 返回代理对象
+//         return mframe.memory.domProxy.getProxy(result);
+//     }
+//     // 没有jsdom, 就只能返回一个空对象了.
+//     else {
+//         debugger;
+//         return {};
+//     }
+// }; mframe.safefunction(Node.prototype["appendChild"]);
+
+
+
+
+
+
+
+
+
+
+
+
 Node.prototype["cloneNode"] = function cloneNode() { debugger; }; mframe.safefunction(Node.prototype["cloneNode"]);
 Node.prototype["compareDocumentPosition"] = function compareDocumentPosition() { debugger; }; mframe.safefunction(Node.prototype["compareDocumentPosition"]);
 Node.prototype["contains"] = function contains() { debugger; }; mframe.safefunction(Node.prototype["contains"]);

@@ -10,28 +10,10 @@ Object.defineProperties(Element.prototype, {
     }
 })
 
-// 使用JSDOM的Element原型
-var jsdomElement = Object.getPrototypeOf(_jsdom_document.documentElement);
-// 复制JSDOM Element的关键方法和属性到我们的Element原型
-for (let prop of Object.getOwnPropertyNames(jsdomElement)) {
-    if (prop !== 'constructor' && prop !== '__proto__') {
-        try {
-            let descriptor = Object.getOwnPropertyDescriptor(jsdomElement, prop);
-            if (descriptor && !Object.getOwnPropertyDescriptor(Element.prototype, prop)) {
-                Object.defineProperty(Element.prototype, prop, descriptor);
-            }
-        } catch (e) {
-            console.log(`无法复制属性: ${prop}`, e);
-        }
-    }
-}
-
 //////////////////////////////////
 var curMemoryArea = mframe.memory.Element = {};
 
 //============== Constant START ==================
-Object.defineProperty(Element, "arguments", { configurable: false, enumerable: false, value: null, writable: false, });
-Object.defineProperty(Element, "caller", { configurable: false, enumerable: false, value: null, writable: false, });
 //==============↑↑Constant END↑↑==================
 
 //%%%%%%% Attribute START %%%%%%%%%%
@@ -87,10 +69,21 @@ Element.prototype.__defineGetter__("tagName", curMemoryArea.tagName_smart_getter
 curMemoryArea.id_getter = function id() { debugger; }; mframe.safefunction(curMemoryArea.id_getter);
 Object.defineProperty(curMemoryArea.id_getter, "name", { value: "get id", configurable: true, });
 // id
-curMemoryArea.id_setter = function id(val) { debugger; }; mframe.safefunction(curMemoryArea.id_setter);
+curMemoryArea.id_setter = function id(val) {
+    if (this.jsdomMemory != undefined) { // 说明有jsdom
+        this.jsdomMemory.id = val;
+    }
+    else {
+        debugger;
+    }
+}; mframe.safefunction(curMemoryArea.id_setter);
 Object.defineProperty(curMemoryArea.id_setter, "name", { value: "set id", configurable: true, });
 Object.defineProperty(Element.prototype, "id", { get: curMemoryArea.id_getter, set: curMemoryArea.id_setter, enumerable: true, configurable: true, });
 curMemoryArea.id_smart_getter = function id() {
+    if (this.jsdomMemory != undefined) { //说明有jsdom
+        return this.jsdomMemory.id;
+    }
+    // 否则就返回默认值
     let defaultValue = "";
     if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
     console.log(`${this}调用了"Element"中的id的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
@@ -195,7 +188,7 @@ curMemoryArea.assignedSlot_smart_getter = function assignedSlot() {
 Element.prototype.__defineGetter__("assignedSlot", curMemoryArea.assignedSlot_smart_getter);
 
 // innerHTML
-curMemoryArea.innerHTML_getter = function innerHTML() { 
+curMemoryArea.innerHTML_getter = function innerHTML() {
     // 如果有关联的JSDOM元素，使用它的innerHTML
     if (this._jsdom_element) {
         return this._jsdom_element.innerHTML;
@@ -216,11 +209,11 @@ curMemoryArea.innerHTML_setter = function innerHTML(val) {
     this._innerHTML = val;
 }; mframe.safefunction(curMemoryArea.innerHTML_setter);
 Object.defineProperty(curMemoryArea.innerHTML_setter, "name", { value: "set innerHTML", configurable: true, });
-Object.defineProperty(Element.prototype, "innerHTML", { 
-    get: curMemoryArea.innerHTML_getter, 
-    set: curMemoryArea.innerHTML_setter, 
-    enumerable: true, 
-    configurable: true 
+Object.defineProperty(Element.prototype, "innerHTML", {
+    get: curMemoryArea.innerHTML_getter,
+    set: curMemoryArea.innerHTML_setter,
+    enumerable: true,
+    configurable: true
 });
 
 // 覆盖smart_getter，使用我们的实现

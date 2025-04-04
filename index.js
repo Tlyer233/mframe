@@ -5,18 +5,15 @@ const { VM, VMScript } = require("vm2"); // vm2纯净V8框架
 const { webcrypto } = require('crypto');               // 引入 webcrypto
 const { XMLHttpRequest } = require('xmlhttprequest');  // 引入 XMLHttpRequest 模拟库
 
-// const { JSDOM } = require('jsdom');
-// const dom = new JSDOM(`<!DOCTYPE html><p>Hello world</p>`);
-// const window = dom.window;
-// global._jsdom_document = window.document; // 保存JSDOM的原始document对象，供后续使用
-// global._jsdom_window = window;
+const { JSDOM } = require('jsdom');
+const dom = new JSDOM(`<!DOCTYPE html><p>Hello world</p>`);
 
 // 用户配置➕组装环境代码
 var userConfig = {
-    proxy: false, // 是否开启代理
+    proxy: true, // 是否开启代理
 }
 
-const codeFile = `${__dirname}/target/3.测试mframe框架/code.js`;             // 需要运行的目标文件
+const codeFile = `${__dirname}/target/4.京东h5t/code.js`;             // 需要运行的目标文件
 const allCode = mframe.GetCode(userConfig) + fs.readFileSync(codeFile);     // 完整代码
 
 const vm = new VM({
@@ -24,8 +21,11 @@ const vm = new VM({
         console: console,                     // 给沙箱传递"控制台", 否则没有打印
         crypto: webcrypto,                    // 注入 crypto
         XMLHttpRequest: XMLHttpRequest,       // 注入 XMLHttpRequest
-        // _jsdom_document: window.document,  // 传递JSDOM的document到沙箱内部
-        // _jsdom_window: window,             // 传递JSDOM的window到沙箱内部
+        jsdomDocument: dom.window.document,   // 传递JSDOM的document到沙箱内部
+
+        vm2Result: {                          // 与沙箱交互
+            page: '1',
+        },
     },
 });
 

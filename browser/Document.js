@@ -12,8 +12,6 @@ document = {}
 var curMemoryArea = mframe.memory.Document = {};
 
 //============== Constant START ==================
-Object.defineProperty(Document, "arguments", { configurable: false, enumerable: false, value: null, writable: false, });
-Object.defineProperty(Document, "caller", { configurable: false, enumerable: false, value: null, writable: false, });
 //==============↑↑Constant END↑↑==================
 
 //%%%%%%% Attribute START %%%%%%%%%%
@@ -283,6 +281,16 @@ curMemoryArea.body_setter = function body(val) { debugger; }; mframe.safefunctio
 Object.defineProperty(curMemoryArea.body_setter, "name", { value: "set body", configurable: true, });
 Object.defineProperty(Document.prototype, "body", { get: curMemoryArea.body_getter, set: curMemoryArea.body_setter, enumerable: true, configurable: true, });
 curMemoryArea.body_smart_getter = function body() {
+    if (mframe.memory.jsdom.document != undefined) { // 有jsdom
+        // 确保单例
+        if(mframe.memory.body) {
+            return mframe.memory.body
+        }
+        mframe.memory.body = mframe.memory.htmlelements['body'](); // 不能调用createElement的,会返回代理的
+        mframe.memory.body.jsdomMemory = mframe.memory.jsdom.document.body;
+        return mframe.memory.body;
+    }
+    //  否则返回默认值
     let defaultValue = mframe.proxy({});
     if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
     console.log(`${this}调用了"Document"中的body的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
@@ -532,7 +540,7 @@ curMemoryArea.all_getter = function all() { debugger; }; mframe.safefunction(cur
 Object.defineProperty(curMemoryArea.all_getter, "name", { value: "get all", configurable: true, });
 Object.defineProperty(Document.prototype, "all", { get: curMemoryArea.all_getter, enumerable: true, configurable: true, });
 curMemoryArea.all_smart_getter = function all() {
-    let defaultValue = undefined;
+    let defaultValue = null;
     if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
     console.log(`${this}调用了"Document"中的all的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
     return defaultValue; // 如果是实例访问，返回默认值
@@ -2624,37 +2632,34 @@ Document.prototype["createCDATASection"] = function createCDATASection() { debug
 Document.prototype["createComment"] = function createComment() { debugger; }; mframe.safefunction(Document.prototype["createComment"]);
 Document.prototype["createDocumentFragment"] = function createDocumentFragment() { debugger; }; mframe.safefunction(Document.prototype["createDocumentFragment"]);
 
-// 创建一个函数来包装JSDOM元素
-function wrapJsdomElement(jsdomElement, customElement) {
-    // 存储原始JSDOM元素
-    customElement._jsdom_element = jsdomElement;
-    return customElement;
-}
-
 // 重写createElement方法
 Document.prototype["createElement"] = function createElement(tagName, options) {
-    console.log("createElement=>", tagName);
+    // STEP1:清洗标签名称
+    // console.log("createElement=>", tagName);
     var tagName = tagName.toLowerCase() + ""; // +""是因为null需要解析为"null"
-    
-    // 使用JSDOM创建真实DOM元素
-    var jsdomElement = _jsdom_document.createElement(tagName, options);
-    
-    // 创建我们的自定义元素
+    // STEP2:创建我们的自定义元素
     var htmlElement;
     if (mframe.memory.htmlelements[tagName] == undefined) {
-        console.error("createElement缺少==>", tagName);
-        debugger; // 没有, 说明这个HTMLXXXElement还没有补!
+        console.error("createElement缺少==>", tagName); //没有, 说明这个HTMLXXXElement还没有补!
+        debugger;
         // 创建一个基础元素
         htmlElement = {};
-        htmlElement.__proto__ = HTMLElement.prototype;  
+        htmlElement.__proto__ = HTMLElement.prototype;
     } else {
-        // 如果有直接创建
-        htmlElement = mframe.memory.htmlelements[tagName]();
+        htmlElement = mframe.memory.htmlelements[tagName](); // 如果有直接创建
     }
-    
-    // 关联JSDOM元素
-    wrapJsdomElement(jsdomElement, htmlElement);
-    
+    // STEP3(可选): 如果使用了jsdom
+    if (mframe.memory.jsdom.document != undefined) {
+        // 使用JSDOM创建真实DOM元素
+        var jsdomXXXElement = mframe.memory.jsdom.document.createElement(tagName, options);
+
+        Object.defineProperty(htmlElement, 'jsdomMemory', {
+            value: jsdomXXXElement,
+            writable: false,
+            configurable: false, // 使用Object.defineProperty确保jsdomMemory不会被修改
+            enumerable: true
+        });
+    }
     return mframe.proxy(htmlElement);
 }; mframe.safefunction(Document.prototype["createElement"]);
 
@@ -2675,16 +2680,50 @@ Document.prototype["exitFullscreen"] = function exitFullscreen() { debugger; }; 
 Document.prototype["exitPictureInPicture"] = function exitPictureInPicture() { debugger; }; mframe.safefunction(Document.prototype["exitPictureInPicture"]);
 Document.prototype["exitPointerLock"] = function exitPointerLock() { debugger; }; mframe.safefunction(Document.prototype["exitPointerLock"]);
 Document.prototype["getAnimations"] = function getAnimations() { debugger; }; mframe.safefunction(Document.prototype["getAnimations"]);
+
+// 如下是依赖"索引表"实现的getElementById
+// Document.prototype["getElementById"] = function getElementById(id) {
+//     if (mframe.memory.jsdom.document != undefined) { // 有jsdom        
+//         return mframe.memory.jsdom.document.getElementById(id);
+//     }
+//     debugger;
+// }; mframe.safefunction(Document.prototype["getElementById"]);
+
+
+// 方法1: 实现自己的getElementById，使用querySelector代替[不用"索引表"]
 Document.prototype["getElementById"] = function getElementById(id) {
-    console.log("getElementById=>", id);
-    // 使用JSDOM的document.getElementById
-    var jsdomElement = _jsdom_document.getElementById(id);
-    if (jsdomElement) {
-        // 创建一个基础元素并包装JSDOM元素
-        var element = {};
-        element.__proto__ = Element.prototype;
-        return mframe.proxy(wrapJsdomElement(jsdomElement, element));
+    console.log(`getElementById查找ID: ${id}`);
+
+    if (mframe.memory.jsdom.document) {
+        // 使用querySelector(强制DOM遍历)而非原生getElementById(依赖ID索引表)
+        const element = mframe.memory.jsdom.document.querySelector(`#${id}`);
+        console.log(`通过querySelector找到元素: ${Boolean(element)}`);
+
+        if (element) {
+            // 为找到的JSDOM元素创建或查找对应的自定义元素
+            // 这里需要根据element.tagName查找对应的自定义元素
+            const tagName = element.tagName.toLowerCase();
+
+            // 通过弱引用映射表查找是否已有对应的自定义元素
+            if (!mframe.memory.elementsMap) {
+                mframe.memory.elementsMap = new WeakMap();
+            }
+
+            let customElement = mframe.memory.elementsMap.get(element);
+            if (!customElement) {
+                // 创建对应标签的自定义元素
+                customElement = Document.prototype.createElement(tagName);
+                // 重新关联jsdomMemory
+                customElement.jsdomMemory = element;
+                // 存储映射关系
+                mframe.memory.elementsMap.set(element, customElement);
+            }
+
+            return customElement;
+        }
+        return null;
     }
+
     return null;
 }; mframe.safefunction(Document.prototype["getElementById"]);
 
@@ -2704,29 +2743,8 @@ Document.prototype["queryCommandIndeterm"] = function queryCommandIndeterm() { d
 Document.prototype["queryCommandState"] = function queryCommandState() { debugger; }; mframe.safefunction(Document.prototype["queryCommandState"]);
 Document.prototype["queryCommandSupported"] = function queryCommandSupported() { debugger; }; mframe.safefunction(Document.prototype["queryCommandSupported"]);
 Document.prototype["queryCommandValue"] = function queryCommandValue() { debugger; }; mframe.safefunction(Document.prototype["queryCommandValue"]);
-Document.prototype["querySelector"] = function querySelector(selector) {
-    console.log("querySelector=>", selector);
-    var jsdomElement = _jsdom_document.querySelector(selector);
-    if (jsdomElement) {
-        var element = {};
-        element.__proto__ = Element.prototype;
-        return mframe.proxy(wrapJsdomElement(jsdomElement, element));
-    }
-    return null;
-}; mframe.safefunction(Document.prototype["querySelector"]);
-
-Document.prototype["querySelectorAll"] = function querySelectorAll(selector) {
-    console.log("querySelectorAll=>", selector);
-    var jsdomElements = _jsdom_document.querySelectorAll(selector);
-    var result = [];
-    for (var i = 0; i < jsdomElements.length; i++) {
-        var element = {};
-        element.__proto__ = Element.prototype;
-        result.push(mframe.proxy(wrapJsdomElement(jsdomElements[i], element)));
-    }
-    return mframe.proxy(result);
-}; mframe.safefunction(Document.prototype["querySelectorAll"]);
-
+Document.prototype["querySelector"] = function querySelector(selector) { debugger; }; mframe.safefunction(Document.prototype["querySelector"]);
+Document.prototype["querySelectorAll"] = function querySelectorAll(selector) { debugger; }; mframe.safefunction(Document.prototype["querySelectorAll"]);
 Document.prototype["releaseEvents"] = function releaseEvents() { debugger; }; mframe.safefunction(Document.prototype["releaseEvents"]);
 Document.prototype["replaceChildren"] = function replaceChildren() { debugger; }; mframe.safefunction(Document.prototype["replaceChildren"]);
 Document.prototype["requestStorageAccess"] = function requestStorageAccess() { debugger; }; mframe.safefunction(Document.prototype["requestStorageAccess"]);

@@ -19,7 +19,8 @@ navigator.language = 'zh-CN';
 navigator.languages = ['zh-CN', 'en', 'zh']
 
 navigator.appVersion = '5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'
-navigator.platform = 'Win32'
+navigator.platform = 'Win32';
+navigator.hardwareConcurrency  = 16
 
 ///////////////////////////////////////////////////
 

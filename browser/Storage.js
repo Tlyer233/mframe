@@ -19,6 +19,9 @@ Storage.prototype.__defineGetter__("length", function length() {
 })
 // 通过键获取值
 Storage.prototype.getItem = function getItem(keyName) {
+    console.log("Storage的getItem, keyName: ",keyName);
+    
+    debugger
     return this[keyName] || null; // 这个this是指向实例的
 }; mframe.safefunction(Storage.prototype.getItem);
 
@@ -53,6 +56,10 @@ Storage.prototype.removeItem = function removeItem(keyName) {
 
 /** 小变量定义 && 原型链的定义 */
 var localStorage = {};
+
+// h5st这个应该缓存在mframe的内存中
+localStorage['WQ_gather_wgl1'] = { "v": "dee3cb94c529ac524a0996146a0176b8", "t": 1743691606906, "e": 31536000 }; 
+
 localStorage.__proto__ = Storage.prototype;
 localStorage = mframe.proxy(localStorage);
 

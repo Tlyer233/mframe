@@ -1,14 +1,15 @@
 // [Tool]框架内存 
-/** 为什么要这个??
- * 解决重名的问题, window.print可能会重名,但window.mframe.print一定不会
- * mframe的内存
- */
 var mframe = {};
+/** mframe.memory.config
+ * proxy(boolean):     是否开启代理(default:false)
+ * pluginArray[array]: 插件列表
+ * jsdomArray[array]:  注入的jsdom元素,命名必须为jsdomXXX
+ */
 mframe.memory = {
     // mframe相关配置的内存空间
     config: {
-        proxy: false, // 是否开启代理
-        pluginArray: [  // 插件  
+        proxy: false,   
+        pluginArray: [
             {// 插件1: PDF查看器
                 description: "Portable Document Format",
                 filename: "internal-pdf-viewer",
@@ -105,10 +106,21 @@ mframe.memory = {
                 ]
             }
         ],
-
-    },
-    // HTMLXXXElement的内存空间
-    htmlelements: {
-
+        jsdomArray : ['jsdomDocument', 'jsdomWindow', 'jsdomNavigator'],
     },
 };
+
+// 一.HTMLXXXElement的内存空间
+mframe.memory.htmlelements = {};
+
+// 二.jsdom专属的空间 mframe.memory.jsdom.document
+mframe.memory.jsdom = {};
+for (let i = 0; i < mframe.memory.config.jsdomArray.length; i++) {
+    const elementName = mframe.memory.config.jsdomArray[i];
+    if (typeof global[elementName] !== 'undefined') {
+        // 根据元素名称确定在 mframe.memory.jsdom 中的属性名
+        const propertyName = elementName.replace('jsdom', '').toLowerCase();
+        mframe.memory.jsdom[propertyName] = global[elementName];  // 将元素存储到 mframe 内存中
+        delete global[elementName];// 在全局中删除该元素(保证只有通过我们的内存才能访问)
+    }
+}
