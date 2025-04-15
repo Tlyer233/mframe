@@ -8,7 +8,9 @@ var mframe = {};
 mframe.memory = {
     // mframe相关配置的内存空间
     config: {
-        proxy: false,   
+        proxy: true,      // 是否开启代理
+        proxyValue: true, // 是否打印值
+        jsdomProxy: true, // 是否在jsdom内部进行代理[建议开启]
         pluginArray: [
             {// 插件1: PDF查看器
                 description: "Portable Document Format",
@@ -106,7 +108,7 @@ mframe.memory = {
                 ]
             }
         ],
-        jsdomArray : ['jsdomDocument', 'jsdomWindow', 'jsdomNavigator'],
+        jsdomArray: ['jsdomDocument', 'jsdomWindow', 'jsdomNavigator',],
     },
 };
 

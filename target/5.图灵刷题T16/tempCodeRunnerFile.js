@@ -1,0 +1,2 @@
+
+// window.PcSign = _$lk;

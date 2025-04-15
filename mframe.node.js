@@ -27,6 +27,7 @@ function GetCode(userConfig) {
 
     /**Location */
     code += fs.readFileSync(`${__dirname}/browser/Location.js`) + "\r\n";
+    // code += fs.readFileSync(`${__dirname}/browser/IDBFactory.js`) + "\r\n";
 
     /**Navigator */
     code += fs.readFileSync(`${__dirname}/browser/Navigator.js`) + "\r\n";
@@ -49,8 +50,14 @@ function GetCode(userConfig) {
 
     /**HTMLElements: DOM元素 */
     code += htmlelements.GetCode() + "\r\n";
+
+    /**中间DOM元素 */
+    code += fs.readFileSync(`${__dirname}/browser/HTMLDocument.js`) + "\r\n";
+
     /**Document */
-    code += fs.readFileSync(`${__dirname}/browser/document.js`) + "\r\n";
+    code += fs.readFileSync(`${__dirname}/browser/Document.js`) + "\r\n";
+    code += fs.readFileSync(`${__dirname}/browser/HTMLCollection.js`) + "\r\n";
+
 
     code += "//=====================================以下为运行代码===============================\r\n";
     code += "//=====================================以下为运行代码===============================\r\n";

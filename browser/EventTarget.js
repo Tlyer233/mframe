@@ -7,10 +7,16 @@ Object.defineProperties(EventTarget.prototype, {
 })
 
 // 方法
-EventTarget.prototype.addEventListener = function addEventListener() { debugger }; mframe.safefunction(EventTarget.prototype.addEventListener)
-EventTarget.prototype.removeEventListener = function removeEventListener() { debugger }; mframe.safefunction(EventTarget.prototype.removeEventListener)
-EventTarget.prototype.dispatchEvent = function dispatchEvent() { debugger }; mframe.safefunction(EventTarget.prototype.dispatchEvent)
+EventTarget.prototype.addEventListener = function addEventListener(arg) {
+    console.log(`EventTarget.prototype.addEventListener:${arg}`);
+}; mframe.safefunction(EventTarget.prototype.addEventListener)
+EventTarget.prototype.removeEventListener = function removeEventListener(arg) {
+    console.log(`EventTarget.prototype.removeEventListener:${arg}`);
+}; mframe.safefunction(EventTarget.prototype.removeEventListener)
+EventTarget.prototype.dispatchEvent = function dispatchEvent(arg) {
+    console.log(`EventTarget.prototype.dispatchEvent:${arg}`);
+}; mframe.safefunction(EventTarget.prototype.dispatchEvent)
 
 
 // 代理
-EventTarget=mframe.proxy(EventTarget)
+EventTarget = mframe.proxy(EventTarget)

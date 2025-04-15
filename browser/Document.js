@@ -7,7 +7,8 @@ Object.defineProperties(Document.prototype, {
     }
 });
 
-document = {}
+Document.prototype.__proto__ = Node.prototype
+document = mframe.memory.htmlelements['document'](); // 小document
 ///////////////////////////////////////////////////
 var curMemoryArea = mframe.memory.Document = {};
 
@@ -128,7 +129,8 @@ curMemoryArea.documentElement_getter = function documentElement() { debugger; };
 Object.defineProperty(curMemoryArea.documentElement_getter, "name", { value: "get documentElement", configurable: true, });
 Object.defineProperty(Document.prototype, "documentElement", { get: curMemoryArea.documentElement_getter, enumerable: true, configurable: true, });
 curMemoryArea.documentElement_smart_getter = function documentElement() {
-    let defaultValue = mframe.proxy({});
+    let defaultValue = new class HTMLHtmlElement { };
+    defaultValue = mframe.proxy(defaultValue);
     if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
     console.log(`${this}调用了"Document"中的documentElement的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
     return defaultValue; // 如果是实例访问，返回默认值
@@ -197,7 +199,7 @@ curMemoryArea.referrer_getter = function referrer() { debugger; }; mframe.safefu
 Object.defineProperty(curMemoryArea.referrer_getter, "name", { value: "get referrer", configurable: true, });
 Object.defineProperty(Document.prototype, "referrer", { get: curMemoryArea.referrer_getter, enumerable: true, configurable: true, });
 curMemoryArea.referrer_smart_getter = function referrer() {
-    let defaultValue = "";
+    let defaultValue = 'https://stu.tulingpyton.cn/';
     if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
     console.log(`${this}调用了"Document"中的referrer的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
     return defaultValue; // 如果是实例访问，返回默认值
@@ -205,17 +207,21 @@ curMemoryArea.referrer_smart_getter = function referrer() {
 Document.prototype.__defineGetter__("referrer", curMemoryArea.referrer_smart_getter);
 
 // cookie
-curMemoryArea.cookie_getter = function cookie() { debugger; }; mframe.safefunction(curMemoryArea.cookie_getter);
+curMemoryArea.cookie_getter = function cookie() { return this._cookie; }; mframe.safefunction(curMemoryArea.cookie_getter);
 Object.defineProperty(curMemoryArea.cookie_getter, "name", { value: "get cookie", configurable: true, });
 // cookie
-curMemoryArea.cookie_setter = function cookie(val) { debugger; }; mframe.safefunction(curMemoryArea.cookie_setter);
+curMemoryArea.cookie_setter = function cookie(val) {
+    this._cookie = val;
+    console.log(`设置cookie:${val}`);
+}; mframe.safefunction(curMemoryArea.cookie_setter);
 Object.defineProperty(curMemoryArea.cookie_setter, "name", { value: "set cookie", configurable: true, });
 Object.defineProperty(Document.prototype, "cookie", { get: curMemoryArea.cookie_getter, set: curMemoryArea.cookie_setter, enumerable: true, configurable: true, });
 curMemoryArea.cookie_smart_getter = function cookie() {
-    let defaultValue = "";
-    if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
-    console.log(`${this}调用了"Document"中的cookie的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
-    return defaultValue; // 如果是实例访问，返回默认值
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    var res = this._cookie !== undefined ? this._cookie : ''; // 返回实例属性或默认值
+    console.log(`获取cookie:${res}`);
+    console.log("cookid end");
+    return res;
 }; mframe.safefunction(curMemoryArea.cookie_smart_getter);
 Document.prototype.__defineGetter__("cookie", curMemoryArea.cookie_smart_getter);
 
@@ -283,7 +289,7 @@ Object.defineProperty(Document.prototype, "body", { get: curMemoryArea.body_gett
 curMemoryArea.body_smart_getter = function body() {
     if (mframe.memory.jsdom.document != undefined) { // 有jsdom
         // 确保单例
-        if(mframe.memory.body) {
+        if (mframe.memory.body) {
             return mframe.memory.body
         }
         mframe.memory.body = mframe.memory.htmlelements['body'](); // 不能调用createElement的,会返回代理的
@@ -303,6 +309,17 @@ curMemoryArea.head_getter = function head() { debugger; }; mframe.safefunction(c
 Object.defineProperty(curMemoryArea.head_getter, "name", { value: "get head", configurable: true, });
 Object.defineProperty(Document.prototype, "head", { get: curMemoryArea.head_getter, enumerable: true, configurable: true, });
 curMemoryArea.head_smart_getter = function head() {
+    if (mframe.memory.jsdom.document != undefined) { // 有jsdom
+        // 确保单例
+        if (mframe.memory.head) {
+            return mframe.memory.head
+        }
+        mframe.memory.head = mframe.memory.htmlelements['head'](); // 不能调用createElement的,会返回代理的
+        mframe.memory.head.jsdomMemory = mframe.memory.jsdom.document.head;
+        return mframe.memory.head;
+    }
+
+    // 否则返回默认值
     let defaultValue = mframe.proxy({});
     if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
     console.log(`${this}调用了"Document"中的head的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
@@ -540,7 +557,12 @@ curMemoryArea.all_getter = function all() { debugger; }; mframe.safefunction(cur
 Object.defineProperty(curMemoryArea.all_getter, "name", { value: "get all", configurable: true, });
 Object.defineProperty(Document.prototype, "all", { get: curMemoryArea.all_getter, enumerable: true, configurable: true, });
 curMemoryArea.all_smart_getter = function all() {
+
+
+    // 否则返回默认值
     let defaultValue = null;
+    // defaultValue = mframe.proxy(defaultValue);
+
     if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
     console.log(`${this}调用了"Document"中的all的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
     return defaultValue; // 如果是实例访问，返回默认值
@@ -606,7 +628,12 @@ curMemoryArea.visibilityState_getter = function visibilityState() { debugger; };
 Object.defineProperty(curMemoryArea.visibilityState_getter, "name", { value: "get visibilityState", configurable: true, });
 Object.defineProperty(Document.prototype, "visibilityState", { get: curMemoryArea.visibilityState_getter, enumerable: true, configurable: true, });
 curMemoryArea.visibilityState_smart_getter = function visibilityState() {
-    let defaultValue = "";
+    // if (mframe.memory.jsdom.document) {
+    //     console.log(`${this}调用了"jsdom.document"中的visibilityState的get方法,\x1b[31m返回${mframe.memory.jsdom.document.visibilityState}\x1b[0m`);
+
+    //     return mframe.memory.jsdom.document.visibilityState;
+    // }
+    let defaultValue = 'visible'
     if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
     console.log(`${this}调用了"Document"中的visibilityState的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
     return defaultValue; // 如果是实例访问，返回默认值
@@ -2634,31 +2661,25 @@ Document.prototype["createDocumentFragment"] = function createDocumentFragment()
 
 // 重写createElement方法
 Document.prototype["createElement"] = function createElement(tagName, options) {
+    console.log(`createElement:${tagName}`);
+
     // STEP1:清洗标签名称
-    // console.log("createElement=>", tagName);
     var tagName = tagName.toLowerCase() + ""; // +""是因为null需要解析为"null"
     // STEP2:创建我们的自定义元素
     var htmlElement;
     if (mframe.memory.htmlelements[tagName] == undefined) {
-        console.error("createElement缺少==>", tagName); //没有, 说明这个HTMLXXXElement还没有补!
+        console.log(`\x1b[31mcreateElement缺少==>${tagName}\x1b[0m`);
         debugger;
-        // 创建一个基础元素
-        htmlElement = {};
+        htmlElement = {}; // 创建一个基础元素
         htmlElement.__proto__ = HTMLElement.prototype;
     } else {
         htmlElement = mframe.memory.htmlelements[tagName](); // 如果有直接创建
     }
     // STEP3(可选): 如果使用了jsdom
-    if (mframe.memory.jsdom.document != undefined) {
+    if (mframe.memory.jsdom.document) {
         // 使用JSDOM创建真实DOM元素
         var jsdomXXXElement = mframe.memory.jsdom.document.createElement(tagName, options);
-
-        Object.defineProperty(htmlElement, 'jsdomMemory', {
-            value: jsdomXXXElement,
-            writable: false,
-            configurable: false, // 使用Object.defineProperty确保jsdomMemory不会被修改
-            enumerable: true
-        });
+        htmlElement.jsdomMemory = mframe.jsdomProxy(jsdomXXXElement)
     }
     return mframe.proxy(htmlElement);
 }; mframe.safefunction(Document.prototype["createElement"]);
@@ -2692,8 +2713,9 @@ Document.prototype["getAnimations"] = function getAnimations() { debugger; }; mf
 
 // 方法1: 实现自己的getElementById，使用querySelector代替[不用"索引表"]
 Document.prototype["getElementById"] = function getElementById(id) {
-    console.log(`getElementById查找ID: ${id}`);
-
+    var res = mframe.memory.jsdom.document.getElementById(id);
+    console.log(`getElementById查找ID: ${id} 找到${res}`);
+    return res;
     if (mframe.memory.jsdom.document) {
         // 使用querySelector(强制DOM遍历)而非原生getElementById(依赖ID索引表)
         const element = mframe.memory.jsdom.document.querySelector(`#${id}`);
@@ -2729,7 +2751,15 @@ Document.prototype["getElementById"] = function getElementById(id) {
 
 Document.prototype["getElementsByClassName"] = function getElementsByClassName() { debugger; }; mframe.safefunction(Document.prototype["getElementsByClassName"]);
 Document.prototype["getElementsByName"] = function getElementsByName() { debugger; }; mframe.safefunction(Document.prototype["getElementsByName"]);
-Document.prototype["getElementsByTagName"] = function getElementsByTagName() { debugger; }; mframe.safefunction(Document.prototype["getElementsByTagName"]);
+Document.prototype["getElementsByTagName"] = function getElementsByTagName(name) {
+    if (mframe.memory.jsdom.document) { // 有jsdom
+        console.log('Document.prototype["getElementsByTagName"]==>', name);
+        // 这个方法返回是tageName为name的所有标签, 是返回数组, so我们要代理这个数组中的所有对象
+        var elements = mframe.memory.jsdom.document.getElementsByTagName(name);
+        return mframe.memory.htmlelements['collection'](elements);
+    }
+    debugger;
+}; mframe.safefunction(Document.prototype["getElementsByTagName"]);
 Document.prototype["getElementsByTagNameNS"] = function getElementsByTagNameNS() { debugger; }; mframe.safefunction(Document.prototype["getElementsByTagNameNS"]);
 Document.prototype["getSelection"] = function getSelection() { debugger; }; mframe.safefunction(Document.prototype["getSelection"]);
 Document.prototype["hasFocus"] = function hasFocus() { debugger; }; mframe.safefunction(Document.prototype["hasFocus"]);
@@ -2763,19 +2793,6 @@ Document.prototype["moveBefore"] = function moveBefore() { debugger; }; mframe.s
 ///////////////////////////////////////////////////
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 ///////////////////////////////////////////////////
 
-document.__proto__ = Document.prototype;
 document = mframe.proxy(document) // 代理

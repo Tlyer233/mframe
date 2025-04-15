@@ -22,6 +22,10 @@ navigator.appVersion = '5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KH
 navigator.platform = 'Win32';
 navigator.hardwareConcurrency  = 16
 
+
+Navigator.prototype["getBattery"] = function getBattery() { 
+    return new Promise();
+ }; mframe.safefunction(Navigator.prototype["getBattery"]);
 ///////////////////////////////////////////////////
 
 

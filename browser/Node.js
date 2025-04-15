@@ -102,6 +102,10 @@ curMemoryArea.parentNode_getter = function parentNode() { debugger; }; mframe.sa
 Object.defineProperty(curMemoryArea.parentNode_getter, "name", { value: "get parentNode", configurable: true, });
 Object.defineProperty(Node.prototype, "parentNode", { get: curMemoryArea.parentNode_getter, enumerable: true, configurable: true, });
 curMemoryArea.parentNode_smart_getter = function parentNode() {
+    if(mframe.memory.jsdom.document) {
+        console.log(`jsdom parentNode: ${this.jsdomMemory.parentNode.tagName}`);
+        return this.jsdomMemory.parentNode;
+    }
     let defaultValue = null;
     if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
     console.log(`${this}调用了"Node"中的parentNode的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
@@ -114,6 +118,11 @@ curMemoryArea.parentElement_getter = function parentElement() { debugger; }; mfr
 Object.defineProperty(curMemoryArea.parentElement_getter, "name", { value: "get parentElement", configurable: true, });
 Object.defineProperty(Node.prototype, "parentElement", { get: curMemoryArea.parentElement_getter, enumerable: true, configurable: true, });
 curMemoryArea.parentElement_smart_getter = function parentElement() {
+    if(mframe.memory.jsdom.document) {
+        console.log(`jsdom parentElement: ${this.jsdomMemory.parentElement.tagName}`);
+        return this.jsdomMemory.parentElement;
+    }
+
     let defaultValue = null;
     if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
     console.log(`${this}调用了"Node"中的parentElement的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
@@ -246,42 +255,6 @@ Node.prototype["appendChild"] = function appendChild(aChild) {
 }; mframe.safefunction(Node.prototype["appendChild"]);
 
 
-
-// for test
-// Node.prototype["appendChild"] = function appendChild(aChild) {   
-//     if (mframe.memory.jsdom.document != undefined) { // 有jsdom
-//         // 获取真实的JSDOM节点
-//         const realParent = mframe.memory.domProxy.elementMap.get(this) || this.jsdomMemory;
-//         const realChild = mframe.memory.domProxy.elementMap.get(aChild) || aChild.jsdomMemory;
-        
-//         console.log("真实操作节点:");
-//         console.log("- Parent:", realParent.outerHTML);
-//         console.log("- Child:", realChild.outerHTML);
-        
-//         // 执行真实DOM操作
-//         const result = realParent.appendChild(realChild);
-        
-//         // 返回代理对象
-//         return mframe.memory.domProxy.getProxy(result);
-//     }
-//     // 没有jsdom, 就只能返回一个空对象了.
-//     else {
-//         debugger;
-//         return {};
-//     }
-// }; mframe.safefunction(Node.prototype["appendChild"]);
-
-
-
-
-
-
-
-
-
-
-
-
 Node.prototype["cloneNode"] = function cloneNode() { debugger; }; mframe.safefunction(Node.prototype["cloneNode"]);
 Node.prototype["compareDocumentPosition"] = function compareDocumentPosition() { debugger; }; mframe.safefunction(Node.prototype["compareDocumentPosition"]);
 Node.prototype["contains"] = function contains() { debugger; }; mframe.safefunction(Node.prototype["contains"]);
@@ -294,12 +267,32 @@ Node.prototype["isSameNode"] = function isSameNode() { debugger; }; mframe.safef
 Node.prototype["lookupNamespaceURI"] = function lookupNamespaceURI() { debugger; }; mframe.safefunction(Node.prototype["lookupNamespaceURI"]);
 Node.prototype["lookupPrefix"] = function lookupPrefix() { debugger; }; mframe.safefunction(Node.prototype["lookupPrefix"]);
 Node.prototype["normalize"] = function normalize() { debugger; }; mframe.safefunction(Node.prototype["normalize"]);
-Node.prototype["removeChild"] = function removeChild() { debugger; }; mframe.safefunction(Node.prototype["removeChild"]);
+Node.prototype["removeChild"] = function removeChild(child) { 
+    console.log("jsdom removeChild", child);
+    
+    if(mframe.memory.jsdom.document) {
+        var aa =  this.jsdomMemory.removeChild(child)
+        console.log("使用jsdom removeChild ", aa);
+        
+        return aa;
+    }
+ }; mframe.safefunction(Node.prototype["removeChild"]);
 Node.prototype["replaceChild"] = function replaceChild() { debugger; }; mframe.safefunction(Node.prototype["replaceChild"]);
 //==============↑↑Function END↑↑====================
 
 
 ////////////////Instance Instance Instance///////////////////
+
+// === hook jsdom====
+// remove
+const or_removeChild = mframe.memory.jsdom.window.Node.prototype.removeChild
+mframe.memory.jsdom.window.Node.prototype.removeChild = function (child) {
+    console.log(`调用jsdom内部的 Node.prototype.removeChild: ${child}`, child);
+    debugger;
+    return or_removeChild.call(this, child.jsdomMemory ? child.jsdomMemory : child);
+    
+}
+// =======end========
 
 /////////////////////////////////////////////////////////////
 
