@@ -198,10 +198,39 @@ mframe.proxy = function (o) {
     delete Function.prototype['toString']; //删除原型链上的toString
     set_native(Function.prototype, "toString", myToString); //自己定义个getter方法
     set_native(Function.prototype.toString, myFunction_toString_symbol, "function toString() { [native code] }"); //套个娃 保护一下我们定义的toString 否则就暴露了
-    this.mframe.safefunction = (func) => {
+    mframe.safefunction = (func) => {
         set_native(func, myFunction_toString_symbol, `function ${myFunction_toString_symbol,func.name || ''}() { [native code] }`);
     }; //导出函数到globalThis
 }).call(this);
+
+
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+
+const { JSDOM } = require('jsdom');
+const dom = new JSDOM(` 
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <!--[if lt IE 9]><script r='m'>document.createElement("section")</script><![endif]-->
+        <meta content="Z5C5cpze1cRruUpcpZ9naTO2yex.vPBqXzsflcFgeRG" r="m">
+        
+        <script type="text/javascript" charset="utf-8" src="/H9Ml1X1DHajj/BmTojS75ExXf.6771a74.js" r="m"></script>
+    </head>
+</html>
+`); 
+
+webcrypto = crypto;
+mframe.memory.jsdom={};
+mframe.memory.jsdom.window = dom.window;
+mframe.memory.jsdom.document = dom.window.document;
+
+
+
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
 
 
 
@@ -234,7 +263,7 @@ Crypto.prototype.randomUUID = function randomUUID(array) {
 }; mframe.safefunction(Crypto.prototype.randomUUID)
 
 // 使用SubtleCrypto
-crypto.subtle = _crypto.subtle ? mframe.proxy(_crypto.subtle) : mframe.proxy(new (class SubtleCrypto { }));
+// crypto.subtle = _crypto.subtle ? mframe.proxy(_crypto.subtle) : mframe.proxy(new (class SubtleCrypto { }));
 ///////////////////////////////////////////
 crypto.__proto__ = Crypto.prototype
 
@@ -512,6 +541,14 @@ Object.defineProperties(IDBFactory.prototype, {
         configurable: true,
     }
 })
+
+
+
+
+
+
+
+
 
 ///////////////////////////////////////////////////////
 var curMemoryArea = mframe.memory.IDBFactory = {};

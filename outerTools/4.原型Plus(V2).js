@@ -108,6 +108,7 @@ function processSelfProperties(obj, objName) {
                 // 尝试确定属性类型并设置默认值
                 let defaultValue = getDefaultValueByProperty(objName, prop);
                 result += `    let defaultValue = ${defaultValue};\n`;
+
                 result += `    console.log(\`调用了"${objName}"中的${prop}的get方法,返回默认值:\${defaultValue}\`);\n`;
                 result += `    return defaultValue;\n`;
                 result += `};\n\n`;
@@ -220,11 +221,7 @@ function processPrototypeProperties(proto, objName) {
                 // 处理getter
                 if (descriptor.get) {
                     result += `// ${prop}\n`;
-                    result += `curMemoryArea.${prop}_getter = function ${prop}() {\n`
-                    result += `    var res = _crypto.subtle.${prop};\n`
-                    result += `    mframe.log({ flag: 'property', className: '${objName}', propertyName: '${prop}', method: 'get', val: res });\n`
-                    result += `    return res;\n`
-                    result += `}; mframe.safefunction(curMemoryArea.${prop}_getter);\n`;
+                    result += `curMemoryArea.${prop}_getter = function ${prop}() { return this._${prop}; }; mframe.safefunction(curMemoryArea.${prop}_getter);\n`;
                     result += `Object.defineProperty(curMemoryArea.${prop}_getter, "name", {`;
                     result += `value: "get ${prop}",`;
                     result += `configurable: true,`;
@@ -234,10 +231,7 @@ function processPrototypeProperties(proto, objName) {
                 // 处理setter
                 if (descriptor.set) {
                     result += `// ${prop}\n`;
-                    result += `curMemoryArea.${prop}_setter = function ${prop}(val) { \n`;
-                    result += `    _crypto.subtle.${prop} = val; \n`;
-                    result += `    mframe.log({ flag: 'property', className: '${objName}', propertyName: '${prop}', method: 'set', val: val });\n`
-                    result += `}; mframe.safefunction(curMemoryArea.${prop}_setter);\n`;
+                    result += `curMemoryArea.${prop}_setter = function ${prop}(val) { this._${prop} = val; }; mframe.safefunction(curMemoryArea.${prop}_setter);\n`;
                     result += `Object.defineProperty(curMemoryArea.${prop}_setter, "name", {`;
                     result += `value: "set ${prop}",`;
                     result += `configurable: true,`;
@@ -259,9 +253,7 @@ function processPrototypeProperties(proto, objName) {
                 // 添加智能getter
                 result += `curMemoryArea.${prop}_smart_getter = function ${prop}() {\n`;
                 result += `    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');\n`;
-                result += `    var res = _crypto.subtle.${prop} \n`;
-                result += `    mframe.log({ flag: 'property', className: '${objName}', propertyName: '${prop}', method: 'get', val: res });\n`;
-                result += `    return res; // 返回实例属性或默认值\n`;
+                result += `    return this._${prop} !== undefined ? this._${prop} : ''; // 返回实例属性或默认值\n`;
                 result += `}; mframe.safefunction(curMemoryArea.${prop}_smart_getter);\n`;
                 result += `${objName}.prototype.__defineGetter__("${prop}", curMemoryArea.${prop}_smart_getter);\n\n`;
             }
@@ -308,11 +300,7 @@ function processPrototypeMethods(proto, objName) {
     // 处理每个方法
     for (const method of methods) {
         try {
-            result += `${objName}.prototype["${method}"] = function ${method}() {\n`
-            result += `    var res = _crypto.subtle.${method}(...arguments);\n`
-            result += `    mframe.log({ flag: 'function', className: '${objName}', methodName: '${method}', inputVal: arguments, res: res });\n`
-            result += `    return res;\n`
-            result += `}; mframe.safefunction(${objName}.prototype["${method}"]);\n`;
+            result += `${objName}.prototype["${method}"] = function ${method}() { debugger; }; mframe.safefunction(${objName}.prototype["${method}"]);\n`;
         } catch (e) {
             result += `// 无法处理方法 ${method}: ${e.message}\n`;
         }
@@ -350,4 +338,4 @@ function formatValue(value) {
 }
 
 // 使用示例
-console.log(generateObjectProperties('SubtleCrypto'));
+console.log(generateObjectProperties('Screen'));

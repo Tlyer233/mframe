@@ -23,9 +23,12 @@ Object.defineProperty(IDBFactory, "caller", { configurable: false, enumerable: f
 IDBFactory.prototype["cmp"] = function cmp() { debugger; }; mframe.safefunction(IDBFactory.prototype["cmp"]);
 IDBFactory.prototype["databases"] = function databases() { debugger; }; mframe.safefunction(IDBFactory.prototype["databases"]);
 IDBFactory.prototype["deleteDatabase"] = function deleteDatabase() { debugger; }; mframe.safefunction(IDBFactory.prototype["deleteDatabase"]);
-IDBFactory.prototype["open"] = function open() { 
-    return {};
- }; mframe.safefunction(IDBFactory.prototype["open"]);
+IDBFactory.prototype["open"] = function open() {
+    var res = {};
+    mframe.log({ flag: 'function', className: 'IDBFactory', methodName: 'open', inputVal: arguments, res: res });
+    // return res;
+    return mframe.proxy(res);
+}; mframe.safefunction(IDBFactory.prototype["open"]);
 //==============↑↑Function END↑↑====================
 ///////////////////////////////////////////////////////
 

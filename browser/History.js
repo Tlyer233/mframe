@@ -12,6 +12,23 @@ Object.defineProperties(History.prototype, {
 
 
 ///////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.History = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+// History.prototype["back"] = function back() { debugger; }; mframe.safefunction(History.prototype["back"]);
+// History.prototype["forward"] = function forward() { debugger; }; mframe.safefunction(History.prototype["forward"]);
+// History.prototype["go"] = function go() { debugger; }; mframe.safefunction(History.prototype["go"]);
+// History.prototype["pushState"] = function pushState() { debugger; }; mframe.safefunction(History.prototype["pushState"]);
+History.prototype["replaceState"] = function replaceState() { debugger; }; mframe.safefunction(History.prototype["replaceState"]);
+//==============↑↑Function END↑↑====================
 History.prototype.back = function back(){debugger;}; mframe.safefunction(History.prototype.back);
 
 

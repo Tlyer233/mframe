@@ -19,16 +19,21 @@ Object.defineProperty(HTMLDivElement, "caller", { configurable: false, enumerabl
 
 //%%%%%%% Attribute START %%%%%
 // align
-curMemoryArea.align_getter = function align() { return this._align; }; mframe.safefunction(curMemoryArea.align_getter);
+curMemoryArea.align_getter = function align() { debugger; }; mframe.safefunction(curMemoryArea.align_getter);
 Object.defineProperty(curMemoryArea.align_getter, "name", {value: "get align",configurable: true,});
 // align
-curMemoryArea.align_setter = function align(val) { this._align = val; }; mframe.safefunction(curMemoryArea.align_setter);
+curMemoryArea.align_setter = function align(val) {
+    this._align = val; 
+    this.jsdomMemory.align = val; 
+    mframe.log({ flag: 'property', className: 'HTMLDivElement', propertyName: 'align', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.align_setter);
 Object.defineProperty(curMemoryArea.align_setter, "name", {value: "set align",configurable: true,});
 Object.defineProperty(HTMLDivElement.prototype, "align", {get: curMemoryArea.align_getter,set: curMemoryArea.align_setter,enumerable: true,configurable: true,});
 curMemoryArea.align_smart_getter = function align() {
-    if(mframe.memory.jsdom.document) {return this.jsdomMemory.align;}
     if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
-    return this._align !== undefined ? this._align : ''; // 返回实例属性或默认值
+    res = this._align !== undefined ? this._align : this.jsdomMemory.align; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLDivElement', propertyName: 'align', method: 'get', val: res }); 
+    return res; 
 }; mframe.safefunction(curMemoryArea.align_smart_getter);
 HTMLDivElement.prototype.__defineGetter__("align", curMemoryArea.align_smart_getter);
 

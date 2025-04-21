@@ -16,20 +16,23 @@ function GetCode(userConfig) {
 
     // STEP3:引入mframe浏览器环境相关
     // 注意加载顺序!!!!
+    code += fs.readFileSync(`${__dirname}/browser/SubtleCrypto.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/browser/Crypto.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/browser/Storage.js`) + "\r\n";
+    code += fs.readFileSync(`${__dirname}/browser/EventTarget.js`) + "\r\n"; // EventTarget在这里
+    code += fs.readFileSync(`${__dirname}/browser/ScreenOrientation.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/browser/Screen.js`) + "\r\n";
 
     /**window*/
-    code += fs.readFileSync(`${__dirname}/browser/EventTarget.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/browser/WindowProperties.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/browser/Window.js`) + "\r\n";
 
     /**Location */
     code += fs.readFileSync(`${__dirname}/browser/Location.js`) + "\r\n";
-    // code += fs.readFileSync(`${__dirname}/browser/IDBFactory.js`) + "\r\n";
+    code += fs.readFileSync(`${__dirname}/browser/IDBFactory.js`) + "\r\n";
 
     /**Navigator */
+    code += fs.readFileSync(`${__dirname}/browser/NetworkInformation.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/browser/Navigator.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/browser/MimeType.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/browser/Plugin.js`) + "\r\n";

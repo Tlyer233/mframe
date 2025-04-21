@@ -30,56 +30,156 @@ console.log('\x1b[32m%s\x1b[0m', '这是绿色的文字'); // 输出绿色文本
 */
 
 
+
+mframe.proxy = function (o) {
+    if (mframe.memory.config.proxy == false) return o;
+    // 定义无需打印的属性
+    const ignoreProerties = ['prototype', 'constructor', 'jsdomMemory', '0', 'toJSON'];  // Preperties属性
+    const ignoreSymbols = ['Symbol(nodejs.util.inspect.custom)', 'Symbol(Symbol.toStringTag)'];                // Symbol属性
+    const objLength = mframe.memory.config.log['objLength'];    //  日志长度
+    const propertyLength = mframe.memory.config.log['propertyLength'];
+    const typeLength = mframe.memory.config.log['typeLength'];
+    return new Proxy(o, {
+        set(target, property, value, receiver) {
+            // 一.清洗日志
+            const isSpecial = ignoreProerties.includes(property);
+            const isImplSymbol = typeof property === 'symbol' && ignoreSymbols.includes(property.toString());
+            if (isSpecial || isImplSymbol) {
+                return Reflect.set(target, property, value, receiver);
+            }
+            // mframe.memory.config.proxy = false;
+            // 二.日志打印
+            var logContent = `方法:set 对象 ${padString(target.constructor.name, objLength)} 属性 ${padString(String(property), propertyLength)} 值类型 ${padString(typeof value, typeLength)}`; // 基础日志
+            if (mframe.memory.config.proxyValue) logContent += " 值" + formatValueForDisplay(value);          // 全量日志
+            console.log(logContent);
+            // mframe.memory.config.proxy = true;
+            // 三.正常设置
+            return Reflect.set(target, property, value, receiver);
+        },
+        get(target, property, receiver) {
+
+            if(property==="_bx") {
+                console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                
+            }
+            // console.log(property,mframe.proxy['jsdomFlag'] );
+            // 一.清洗日志
+            const isSpecial = ignoreProerties.includes(property);
+            const isImplSymbol = typeof property === 'symbol' && ignoreSymbols.includes(property.toString());
+            if (isSpecial || isImplSymbol) {
+                return Reflect.get(target, property, receiver);
+            }
+            if(property==="_bx") {
+                console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", target.constructor.name);
+                
+            }
+            // mframe.memory.config.proxy = false;
+            // 二.日志打印
+            // 获取属性值
+            const value = Reflect.get(target, property, receiver);
+
+            // 打印获取操作的日志   
+            var logContent = `方法:\x1b[32mget\x1b[0m 对象 ${padString(target.constructor.name, objLength)} 属性 ${padString(String(property), propertyLength)} 值类型 ${value === undefined ? "\x1b[31m" + padString("undefined", typeLength) + "\x1b[0m" : padString(typeof value, typeLength)}`;
+            if (mframe.memory.config.proxyValue) logContent += " 值" + formatValueForDisplay(value);                                 // 全量日志
+            if (value === undefined)
+                logContent = `\x1b[1m${logContent}\x1b[0m`
+            logContent = parseColorString(logContent);
+            console.log(logContent);
+            // mframe.memory.config.proxy = true;
+            // 三.正常返回
+            return value;
+        }
+    });
+}
+mframe.jsdomProxy = function (o) {
+    if (mframe.memory.config.proxy == false || mframe.memory.config.jsdomProxy == false) return o;
+    // 定义无需打印的属性
+    const ignoreProerties = ['prototype', 'constructor'];  // Preperties属性
+    const ignoreSymbols = ['Symbol(impl)', 'Symbol(SameObject caches)']; // Symbol属性
+    const objLength = mframe.memory.config.log['objLength'];    //  日志长度
+    const propertyLength = mframe.memory.config.log['propertyLength'];
+    const typeLength = mframe.memory.config.log['typeLength'];
+
+    return new Proxy(o, {
+        set(target, property, value, receiver) {
+            // 一.清洗日志
+            const isSpecial = ignoreProerties.includes(property);
+            const isImplSymbol = typeof property === 'symbol' && ignoreSymbols.includes(property.toString());
+            if (isSpecial || isImplSymbol) return Reflect.set(target, property, value, receiver);
+            // mframe.memory.config.proxy = false;
+            // 二.日志打印
+            var logContent = `方法:\x1b[37mset\x1b[0m 对象 ${padString(target.constructor.name, objLength)} 属性 ${padString(String(property), propertyLength)} 值类型 ${padString(typeof value, typeLength)}`; // 基础日志
+            if (mframe.memory.config.proxyValue) logContent += " 值" + formatValueForDisplay(value);          // 全量日志
+            logContent = `\x1b[36m${logContent}\x1b[0m`;
+            logContent = parseColorString(logContent);
+            console.log(logContent);
+            // mframe.memory.config.proxy = true;
+            // 三.正常设置
+            return Reflect.set(target, property, value, receiver);
+        },
+        get(target, property, receiver) {
+            // 一.清洗日志
+            const isSpecial = ignoreProerties.includes(property);
+            const isImplSymbol = typeof property === 'symbol' && ignoreSymbols.includes(property.toString());
+            if (isSpecial || isImplSymbol) {
+                return Reflect.get(target, property, receiver);
+            }
+            // mframe.memory.config.proxy = false;
+            // 二.日志打印
+            // 获取属性值
+            const value = Reflect.get(target, property, receiver);
+
+            // 打印获取操作的日志   
+            var logContent = `方法:\x1b[32mget\x1b[0m 对象 ${padString(target.constructor.name, objLength)} 属性 ${padString(String(property), propertyLength)} 值类型 ${value === undefined ? "\x1b[31" + padString("mundefined", 10) + "\x1b[0m" : padString(typeof value, 10)}`;
+            // var logContent = `方法:\x1b[32mget\x1b[0m 对象 ${target.constructor.name} 属性 ${String(property)} 值类型 ${value === undefined ? "\x1b[31mundefined\x1b[0m" : typeof value}`;
+            if (mframe.memory.config.proxyValue) logContent += " 值" + formatValueForDisplay(value);                                 // 全量日志
+            logContent = `\x1b[36m${logContent}\x1b[0m`;
+            logContent = parseColorString(logContent);
+            console.log(logContent);
+            // mframe.memory.config.proxy = true;
+            // 三.正常返回
+            return value;
+        }
+    });
+}
+
+
 // 格式化值以便打印
-function formatValueForDisplay(value) {
+function formatValueForDisplay(value, orderLength = 30) {
     if (value === null) return "null";
     if (value === undefined) return "undefined";
-
     const type = typeof value;
-
-    // 处理不同类型的值
+    
+    // 处理不同类型的值，并确保移除所有换行符
+    let result = "";
+    
     if (type === "symbol") {
-        return value.toString();
+        result = value.toString();
     } else if (type === "function") {
-        // 函数显示简短描述
-        const funcStr = value.toString();
-        if (funcStr.length > 50) {
-            return funcStr.substring(0, 45) + '...}';
-        }
-        return funcStr;
+        const funcStr = value.toString().replace(/\r?\n/g, " ").replace(/\s+/g, " ");
+        result = funcStr.length > orderLength ? funcStr.substring(0, orderLength - 3) + '...' : funcStr;
     } else if (type === "object") {
         if (Array.isArray(value)) {
-            // 数组处理
-            if (value.length > 10) {
-                return `[${value.slice(0, 5).join(", ")}, ... ${value.length} items]`;
-            }
-            return JSON.stringify(value);
-        } else if (value instanceof Date) {
-            return value.toString();
-        } else if (value instanceof RegExp) {
-            return value.toString();
+            result = value.length > 10 ? `[${value.slice(0, 5).join(", ")}, ... ${value.length} items]` : JSON.stringify(value);
+        } else if (value instanceof Date || value instanceof RegExp) {
+            result = value.toString();
         } else {
-            // 一般对象
             try {
-                const str = JSON.stringify(value);
-                if (str.length > 255) {
-                    return str.substring(0, 250) + "...}";
-                }
-                return str;
+                const str = JSON.stringify(value).replace(/\r?\n/g, " ");
+                result = str.length > orderLength ? str.substring(0, orderLength - 3) + "..." : str;
             } catch (e) {
-                // 如果对象不能被序列化(如循环引用)
-                return `[object ${value.constructor.name || 'Object'}]`;
+                result = `[object ${value.constructor.name || 'Object'}]`;
             }
         }
     } else if (type === "string") {
-        if (value.length > 255) {
-            return value.substring(0, 250) + "...";
-        }
-        return value;
+        result = value.replace(/\r?\n/g, " ").replace(/\s+/g, " ");
+        result = result.length > orderLength ? result.substring(0, orderLength - 3) + "..." : result;
     } else {
-        // 数字、布尔等基本类型
-        return String(value);
+        result = String(value).replace(/\r?\n/g, " ").replace(/\s+/g, " ");
     }
+    
+    // 最终确保移除所有换行并压缩多余空格
+    return result.replace(/\r?\n/g, " ").replace(/\s+/g, " ");
 }
 
 /** 解析带有ANSI转义颜色代码的字符串，正确处理嵌套颜色
@@ -156,99 +256,4 @@ function padString(str, length = 10) {
 
     // 如果字符串长度不足，填充空格
     return str.padEnd(length, ' ');
-}
-mframe.proxy = function (o) {
-    if (mframe.memory.config.proxy == false) return o;
-    // 定义无需打印的属性
-    const ignoreProerties = ['prototype', 'constructor', 'jsdomMemory'];  // Preperties属性
-    const ignoreSymbols = [''];                // Symbol属性
-    return new Proxy(o, {
-        set(target, property, value, receiver) {
-            // 一.清洗日志
-            const isSpecial = ignoreProerties.includes(property);
-            const isImplSymbol = typeof property === 'symbol' && ignoreSymbols.includes(property.toString());
-            if (isSpecial || isImplSymbol) {
-                return Reflect.set(target, property, value, receiver);
-            }
-
-            // 二.日志打印
-            var logContent = `方法:set 对象 ${padString(target.constructor.name, 15)} 属性 ${padString(String(property), 15)} 值类型 ${padString(typeof value, 10)}`; // 基础日志
-            if (mframe.memory.config.proxyValue) logContent += " 值" + formatValueForDisplay(value);          // 全量日志
-            console.log(logContent);
-
-            // 三.正常设置
-            return Reflect.set(target, property, value, receiver);
-        },
-        get(target, property, receiver) {
-            // console.log(property,mframe.proxy['jsdomFlag'] );
-            // 一.清洗日志
-            const isSpecial = ignoreProerties.includes(property);
-            const isImplSymbol = typeof property === 'symbol' && ignoreSymbols.includes(property.toString());
-            if (isSpecial || isImplSymbol) {
-                return Reflect.get(target, property, receiver);
-            }
-
-            // 二.日志打印
-            // 获取属性值
-            const value = Reflect.get(target, property, receiver);
-
-            // 打印获取操作的日志   
-            var logContent = `方法:\x1b[32mget\x1b[0m 对象 ${padString(target.constructor.name, 15)} 属性 ${padString(String(property), 15)} 值类型 ${value === undefined ? "\x1b[31m"+padString("undefined", 10)+"\x1b[0m" : padString(typeof value, 10)}`;
-            if (mframe.memory.config.proxyValue) logContent += " 值" + formatValueForDisplay(value);                                 // 全量日志
-            if(value === undefined) 
-                logContent = `\x1b[1m${logContent}\x1b[0m`
-            logContent = parseColorString(logContent);
-            console.log(logContent);
-
-            // 三.正常返回
-            return value;
-        }
-    });
-}
-mframe.jsdomProxy = function (o) {
-    if (mframe.memory.config.proxy == false || mframe.memory.config.jsdomProxy == false) return o;
-    // 定义无需打印的属性
-    const ignoreProerties = ['prototype', 'constructor'];  // Preperties属性
-    const ignoreSymbols = ['Symbol(impl)', 'Symbol(SameObject caches)']; // Symbol属性
-    return new Proxy(o, {
-        set(target, property, value, receiver) {
-            // 一.清洗日志
-            const isSpecial = ignoreProerties.includes(property);
-            const isImplSymbol = typeof property === 'symbol' && ignoreSymbols.includes(property.toString());
-            if (isSpecial || isImplSymbol) return Reflect.set(target, property, value, receiver);
-
-            // 二.日志打印
-            var logContent = `方法:\x1b[37mset\x1b[0m 对象 ${padString(target.constructor.name, 15)} 属性 ${padString(String(property), 15)} 值类型 ${padString(typeof value, 10)}`; // 基础日志
-            if (mframe.memory.config.proxyValue) logContent += " 值" + formatValueForDisplay(value);          // 全量日志
-            logContent = `\x1b[36m${logContent}\x1b[0m`;
-            logContent = parseColorString(logContent);
-            console.log(logContent);
-
-            // 三.正常设置
-            return Reflect.set(target, property, value, receiver);
-        },
-        get(target, property, receiver) {
-            // 一.清洗日志
-            const isSpecial = ignoreProerties.includes(property);
-            const isImplSymbol = typeof property === 'symbol' && ignoreSymbols.includes(property.toString());
-            if (isSpecial || isImplSymbol) {
-                return Reflect.get(target, property, receiver);
-            }
-
-            // 二.日志打印
-            // 获取属性值
-            const value = Reflect.get(target, property, receiver);
-
-            // 打印获取操作的日志   
-            var logContent = `方法:\x1b[32mget\x1b[0m 对象 ${padString(target.constructor.name, 15)} 属性 ${padString(String(property), 15)} 值类型 ${value === undefined ? padString("\x1b[31mundefined\x1b[0m", 10) : padString(typeof value, 10)}`;
-            // var logContent = `方法:\x1b[32mget\x1b[0m 对象 ${target.constructor.name} 属性 ${String(property)} 值类型 ${value === undefined ? "\x1b[31mundefined\x1b[0m" : typeof value}`;
-            if (mframe.memory.config.proxyValue) logContent += " 值" + formatValueForDisplay(value);                                 // 全量日志
-            logContent = `\x1b[36m${logContent}\x1b[0m`;
-            logContent = parseColorString(logContent);
-            console.log(logContent);
-
-            // 三.正常返回
-            return value;
-        }
-    });
 }

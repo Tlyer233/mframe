@@ -91,7 +91,7 @@ mframe.memory = {
                         description: "Chromium PDF Format",
                         enabledPlugin: "Plugin",
                         suffixes: "pdf",
-                        type: "application/x-chromium-pdf",
+                        type: "application/x-shockwave-flash",
                     },
                     {
                         description: "PDF Inline Document",
@@ -109,6 +109,66 @@ mframe.memory = {
             }
         ],
         jsdomArray: ['jsdomDocument', 'jsdomWindow', 'jsdomNavigator',],
+        log: {  // 打印日志的长度
+            objLength: 20,
+            propertyLength: 30,
+            typeLength: 10,
+        },
+
+
+        // 浏览器指纹
+        initScreen: {  // [浏览器指纹]screen初始参数
+            availHeight: 1152,
+            availLeft: 0,
+            availTop: 0,
+            availWidth: 2048,
+            colorDepth: 24,
+            height: 1152,
+            isExtended: false,
+            onchange: null,
+            orientation: {
+                angle: 0,
+                onchange: null,
+                type: "landscape-primary",
+            },
+            pixelDepth: 24,
+            width: 2048
+        },
+        // 华能(瑞5)
+        // copy(window.location);
+        initLocation:{
+            "ancestorOrigins": {},
+            "href": "https://zbzx.lzjtu.edu.cn/",
+            "origin": "https://zbzx.lzjtu.edu.cn",
+            "protocol": "https:",
+            "host": "zbzx.lzjtu.edu.cn",
+            "hostname": "zbzx.lzjtu.edu.cn",
+            "port": "",
+            "pathname": "/",
+            "search": "",
+            "hash": ""
+        },
+
+        // !(function(){const props=['userAgent','language','languages','appVersion','platform','hardwareConcurrency','webdriver','appName','appCodeName','deviceMemory','maxTouchPoints','onLine','pdfViewerEnabled','vendor','vendorSub','product','productSub'];const result=props.map(prop=>`${prop}:${JSON.stringify(navigator[prop])},`).join('\n');console.log(result)})();
+        initNavigator: {
+            userAgent:"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+            language:"zh-CN",
+            languages:["zh-CN"],
+            appVersion:"5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+            platform:"Win32",
+            hardwareConcurrency:16,
+            webdriver:false,
+            appName:"Netscape",
+            appCodeName:"Mozilla",
+            deviceMemory:8,
+            maxTouchPoints:20,
+            onLine:true,
+            pdfViewerEnabled:true,
+            vendor:"Google Inc.",
+            vendorSub:"",
+            product:"Gecko",
+            productSub:"20030107",
+        },
     },
 };
 

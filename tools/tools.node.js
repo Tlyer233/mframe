@@ -8,6 +8,7 @@ function GetToolsCode() {
     code += fs.readFileSync(`${__dirname}/vm_error.js`) + "\r\n"
     code += fs.readFileSync(`${__dirname}/vm_proxy.js`) + "\r\n"
     code += fs.readFileSync(`${__dirname}/vm_safefunction.js`) + "\r\n"
+    code += fs.readFileSync(`${__dirname}/vm_log.js`) + "\r\n"
     return code;
 }
 
