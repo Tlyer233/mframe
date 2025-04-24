@@ -18,6 +18,7 @@ function GetCode() {
 
     // EventTarget->Node->Element->HTMLElement->HTMLXXXElement
     // 该目录下, 只补充 HTMLXXXElement
+    code += fs.readFileSync(`${__dirname}/HTMLTemplateElement.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/HTMLAnchorElement.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/HTMLMetaElement.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/HTMLDivElement.js`) + "\r\n";

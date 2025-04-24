@@ -20,7 +20,7 @@ Storage.prototype.__defineGetter__("length", function length() {
 })
 // 通过键获取值
 Storage.prototype.getItem = function getItem(keyName) {
-    var res = this[keyName] || undefined; // 这个this是指向实例的
+    var res = this[keyName] || null; // 这个this是指向实例的
     mframe.log({ flag: 'function', className: 'Storage', methodName: 'getItem', inputVal: arguments, res: res });
     return res;
 }; mframe.safefunction(Storage.prototype.getItem);

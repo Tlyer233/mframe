@@ -9,6 +9,7 @@ mframe.memory = {
     // mframe相关配置的内存空间
     config: {
         proxy: true,      // 是否开启代理
+        nodeEnv: false,   // 是否使用node环境
         proxyValue: true, // 是否打印值
         jsdomProxy: true, // 是否在jsdom内部进行代理[建议开启]
         pluginArray: [
@@ -110,9 +111,11 @@ mframe.memory = {
         ],
         jsdomArray: ['jsdomDocument', 'jsdomWindow', 'jsdomNavigator',],
         log: {  // 打印日志的长度
-            objLength: 20,
-            propertyLength: 30,
-            typeLength: 10,
+            objLength: 20,      // [方法/属性]    对象(名)长度
+            propertyLength: 30, // [方法/属性]    属性(名)长度
+            typeLength: 10,     // [属性]         方法类型get/set长度
+            inputLength: 50,    // [vm_log][方法] 传入
+            resLength: 30,      // [vm_log][方法] 返回值
         },
 
 
@@ -136,7 +139,7 @@ mframe.memory = {
         },
         // 华能(瑞5)
         // copy(window.location);
-        initLocation:{
+        initLocation: {
             "ancestorOrigins": {},
             "href": "https://zbzx.lzjtu.edu.cn/",
             "origin": "https://zbzx.lzjtu.edu.cn",
@@ -149,25 +152,25 @@ mframe.memory = {
             "hash": ""
         },
 
-        // !(function(){const props=['userAgent','language','languages','appVersion','platform','hardwareConcurrency','webdriver','appName','appCodeName','deviceMemory','maxTouchPoints','onLine','pdfViewerEnabled','vendor','vendorSub','product','productSub'];const result=props.map(prop=>`${prop}:${JSON.stringify(navigator[prop])},`).join('\n');console.log(result)})();
+        // (function(){const props=['userAgent','language','languages','appVersion','platform','hardwareConcurrency','webdriver','appName','appCodeName','deviceMemory','maxTouchPoints','onLine','pdfViewerEnabled','vendor','vendorSub','product','productSub'];const result=props.map(prop=>`${prop}:${JSON.stringify(navigator[prop])},`).join('\n');copy(result)})();
         initNavigator: {
-            userAgent:"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-            language:"zh-CN",
-            languages:["zh-CN"],
-            appVersion:"5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-            platform:"Win32",
-            hardwareConcurrency:16,
-            webdriver:false,
-            appName:"Netscape",
-            appCodeName:"Mozilla",
-            deviceMemory:8,
-            maxTouchPoints:20,
-            onLine:true,
-            pdfViewerEnabled:true,
-            vendor:"Google Inc.",
-            vendorSub:"",
-            product:"Gecko",
-            productSub:"20030107",
+            userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+            language: "zh-CN",
+            languages: ["zh-CN"],
+            appVersion: "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+            platform: "Win32",
+            hardwareConcurrency: 16,
+            webdriver: false,
+            appName: "Netscape",
+            appCodeName: "Mozilla",
+            deviceMemory: 8,
+            maxTouchPoints: 20,
+            onLine: true,
+            pdfViewerEnabled: true,
+            vendor: "Google Inc.",
+            vendorSub: "",
+            product: "Gecko",
+            productSub: "20030107",
         },
     },
 };

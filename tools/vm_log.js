@@ -28,11 +28,11 @@ mframe.log = function (options) {
     const { flag, className } = options;
 
     // 定义固定宽度
-    const classNameWidth = mframe.memory.config.log['objLength'];    //  日志长度
-    const propertyNameWidth = mframe.memory.config.log['propertyLength'];
-    const typeLength = mframe.memory.config.log['typeLength'];
-    const methodNameWidth = mframe.memory.config.log['propertyLength'];
-    const methodTypeWidth = 5; // for 'get'/'set'
+    const classNameWidth = mframe.memory.config.log['objLength'];         // [方法/属性] 对象(名)长度
+    const propertyNameWidth = mframe.memory.config.log['propertyLength']; // [方法/属性] 属性(名)长度
+    const methodTypeWidth = mframe.memory.config.log['typeLength']+2;       // [属性]方法类型get/set长度
+    const inputLength = mframe.memory.config.log['inputLength'];          // [方法]传入
+    const resLength = mframe.memory.config.log['resLength'];              // [方法]返回值
 
     if (!flag || !className) {
         console.error("mframe.log: 'flag' and 'className' are required options.");
@@ -46,33 +46,33 @@ mframe.log = function (options) {
     function formatValueWithObjectName(value, maxLength = 30) {
         if (value === null) return "null";
         if (value === undefined) return "undefined";
-        
+
         const type = typeof value;
         let result = "";
-        
+
         if (type === "object" && value !== null) {
             // 处理Arguments对象
             if (Object.prototype.toString.call(value) === '[object Arguments]') {
                 try {
                     // 将Arguments转换为数组并格式化
                     const argsArray = Array.from(value);
-                    const argsStr = argsArray.length > 5 ? 
-                        `[${argsArray.slice(0, 3).map(arg => formatValueWithObjectName(arg, maxLength/2)).join(", ")}, ... ${argsArray.length} args]` : 
-                        `[${argsArray.map(arg => formatValueWithObjectName(arg, maxLength/2)).join(", ")}]`;
+                    const argsStr = argsArray.length > 5 ?
+                        `[${argsArray.slice(0, 3).map(arg => formatValueWithObjectName(arg, maxLength / 2)).join(", ")}, ... ${argsArray.length} args]` :
+                        `[${argsArray.map(arg => formatValueWithObjectName(arg, maxLength / 2)).join(", ")}]`;
                     return `${argsStr}`;
                 } catch (e) {
                     return "Arguments:[无法序列化]";
                 }
             }
-            
+
             // 尝试获取对象的类型名称
             let objName = value.constructor ? value.constructor.name : "Object";
-            
+
             // 尝试获取对象的字符串表示
             let strValue = "";
             try {
                 // 首先尝试使用toString方法
-                if (typeof value.toString === 'function' && 
+                if (typeof value.toString === 'function' &&
                     value.toString !== Object.prototype.toString) {
                     // 使用自定义的toString方法
                     strValue = value.toString();
@@ -81,9 +81,9 @@ mframe.log = function (options) {
                     strValue = `${value.name}: ${value.message}`;
                 } else if (Array.isArray(value)) {
                     // 特殊处理数组
-                    strValue = value.length > 5 ? 
-                        `[${value.slice(0, 3).map(item => formatValueWithObjectName(item, maxLength/3)).join(", ")}, ... ${value.length} items]` : 
-                        `[${value.map(item => formatValueWithObjectName(item, maxLength/3)).join(", ")}]`;
+                    strValue = value.length > 5 ?
+                        `[${value.slice(0, 3).map(item => formatValueWithObjectName(item, maxLength / 3)).join(", ")}, ... ${value.length} items]` :
+                        `[${value.map(item => formatValueWithObjectName(item, maxLength / 3)).join(", ")}]`;
                 } else if (value instanceof Date || value instanceof RegExp) {
                     // Date和RegExp已经有好的toString实现
                     strValue = value.toString();
@@ -98,7 +98,7 @@ mframe.log = function (options) {
                 // 如果序列化失败
                 strValue = "[无法序列化]";
             }
-            
+
             result = `${objName}:${strValue}`;
         } else if (type === "function") {
             // 处理函数
@@ -115,7 +115,7 @@ mframe.log = function (options) {
             // 处理其他基本类型
             result = String(value);
         }
-        
+
         // 确保移除所有换行并压缩多余空格
         return result.replace(/\r?\n/g, " ").replace(/\s+/g, " ");
     }
@@ -127,9 +127,9 @@ mframe.log = function (options) {
             mframe.memory.config.proxy = true;
             return;
         }
-        const paddedMethodName = padString(methodName, methodNameWidth);
-        const formattedInput = formatValueWithObjectName(inputVal);
-        const formattedRes = formatValueWithObjectName(res);
+        const paddedMethodName = padString(methodName, propertyNameWidth);
+        const formattedInput = formatValueWithObjectName(inputVal, inputLength);
+        const formattedRes = formatValueWithObjectName(res, resLength);
 
         // 使用固定宽度打印
         console.log(`======>>>\x1b[35m对象:${paddedClassName} 方法:${paddedMethodName} 传入:${formattedInput} 返回:${formattedRes}\x1b[0m`);

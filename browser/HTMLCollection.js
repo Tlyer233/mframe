@@ -68,10 +68,8 @@ HTMLCollection.prototype["namedItem"] = function namedItem() { debugger; }; mfra
  * 不能在document.createElement时调用，因为这不是页面的任何一个标签，只能算是DOM的中间件。
  */
 mframe.memory.htmlelements['collection'] = function (initCollection) {
-
     // 暂时关闭输出打印,避免影响判断(下面要用set进行数据转移)
-    var originalConsole = console; // 保存原始console对象
-    console = { log: function () { }, warn: function () { }, error: function () { } }; // 替换为空实现
+    mframe.console.mute();
     // 创建HTMLCollection实例
     var collection = new (function () { });
     // 代理数组中的元素+将数组中原jsdom的数据,变为我们有原型链仿照的数据
@@ -96,8 +94,7 @@ mframe.memory.htmlelements['collection'] = function (initCollection) {
     collection['length'] = initCollection.length;
     // HTMLCollection原型链继承
     collection.__proto__ = HTMLCollection.prototype;
-    console = originalConsole; // 恢复原始console对象
-
+    mframe.console.unmute(); // 恢复原始console对象
     // 二次代理
     for (let i = 0; i < collection.length; i++) {
         collection[i] = mframe.proxy(collection[i]);
