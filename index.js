@@ -68,7 +68,7 @@ var userConfig = {
     }
 }
 
-const codeFile = `${__dirname}/target/13.云南公共服务/code.js`;                        // 需要运行的目标文件
+const codeFile = `${__dirname}/target/12.娱乐指数/code.js`;                        // 需要运行的目标文件
 const allCode = mframe.GetCode(userConfig) + fs.readFileSync(codeFile);           // VM2环境  完整代码
 syncNodeEnvInject()
 const nodeEnvCode = mframe.GetNodeEnvCode(userConfig) + fs.readFileSync(codeFile);// nodeEnv完整代码

@@ -111,9 +111,11 @@ mframe.memory = {
         ],
         jsdomArray: ['jsdomDocument', 'jsdomWindow', 'jsdomNavigator',],
         log: {  // 打印日志的长度
-            objLength: 20,
-            propertyLength: 30,
-            typeLength: 10,
+            objLength: 20,      // [方法/属性]    对象(名)长度
+            propertyLength: 30, // [方法/属性]    属性(名)长度
+            typeLength: 10,     // [属性]         方法类型get/set长度
+            inputLength: 50,    // [vm_log][方法] 传入
+            resLength: 30,      // [vm_log][方法] 返回值
         },
 
 
@@ -150,25 +152,25 @@ mframe.memory = {
             "hash": ""
         },
 
-        // !(function(){const props=['userAgent','language','languages','appVersion','platform','hardwareConcurrency','webdriver','appName','appCodeName','deviceMemory','maxTouchPoints','onLine','pdfViewerEnabled','vendor','vendorSub','product','productSub'];const result=props.map(prop=>`${prop}:${JSON.stringify(navigator[prop])},`).join('\n');console.log(result)})();
+        // (function(){const props=['userAgent','language','languages','appVersion','platform','hardwareConcurrency','webdriver','appName','appCodeName','deviceMemory','maxTouchPoints','onLine','pdfViewerEnabled','vendor','vendorSub','product','productSub'];const result=props.map(prop=>`${prop}:${JSON.stringify(navigator[prop])},`).join('\n');copy(result)})();
         initNavigator: {
-            userAgent:"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-            language:"zh-CN",
-            languages:["zh-CN"],
-            appVersion:"5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-            platform:"Win32",
-            hardwareConcurrency:16,
-            webdriver:false,
-            appName:"Netscape",
-            appCodeName:"Mozilla",
-            deviceMemory:8,
-            maxTouchPoints:20,
-            onLine:true,
-            pdfViewerEnabled:true,
-            vendor:"Google Inc.",
-            vendorSub:"",
-            product:"Gecko",
-            productSub:"20030107",
+            userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+            language: "zh-CN",
+            languages: ["zh-CN"],
+            appVersion: "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+            platform: "Win32",
+            hardwareConcurrency: 16,
+            webdriver: false,
+            appName: "Netscape",
+            appCodeName: "Mozilla",
+            deviceMemory: 8,
+            maxTouchPoints: 20,
+            onLine: true,
+            pdfViewerEnabled: true,
+            vendor: "Google Inc.",
+            vendorSub: "",
+            product: "Gecko",
+            productSub: "20030107",
         },
     },
 };
@@ -511,11 +513,11 @@ mframe.log = function (options) {
     const { flag, className } = options;
 
     // 定义固定宽度
-    const classNameWidth = mframe.memory.config.log['objLength'];    //  日志长度
-    const propertyNameWidth = mframe.memory.config.log['propertyLength'];
-    const typeLength = mframe.memory.config.log['typeLength'];
-    const methodNameWidth = mframe.memory.config.log['propertyLength'];
-    const methodTypeWidth = 5; // for 'get'/'set'
+    const classNameWidth = mframe.memory.config.log['objLength'];         // [方法/属性] 对象(名)长度
+    const propertyNameWidth = mframe.memory.config.log['propertyLength']; // [方法/属性] 属性(名)长度
+    const methodTypeWidth = mframe.memory.config.log['typeLength']+2;       // [属性]方法类型get/set长度
+    const inputLength = mframe.memory.config.log['inputLength'];          // [方法]传入
+    const resLength = mframe.memory.config.log['resLength'];              // [方法]返回值
 
     if (!flag || !className) {
         console.error("mframe.log: 'flag' and 'className' are required options.");
@@ -529,33 +531,33 @@ mframe.log = function (options) {
     function formatValueWithObjectName(value, maxLength = 30) {
         if (value === null) return "null";
         if (value === undefined) return "undefined";
-        
+
         const type = typeof value;
         let result = "";
-        
+
         if (type === "object" && value !== null) {
             // 处理Arguments对象
             if (Object.prototype.toString.call(value) === '[object Arguments]') {
                 try {
                     // 将Arguments转换为数组并格式化
                     const argsArray = Array.from(value);
-                    const argsStr = argsArray.length > 5 ? 
-                        `[${argsArray.slice(0, 3).map(arg => formatValueWithObjectName(arg, maxLength/2)).join(", ")}, ... ${argsArray.length} args]` : 
-                        `[${argsArray.map(arg => formatValueWithObjectName(arg, maxLength/2)).join(", ")}]`;
+                    const argsStr = argsArray.length > 5 ?
+                        `[${argsArray.slice(0, 3).map(arg => formatValueWithObjectName(arg, maxLength / 2)).join(", ")}, ... ${argsArray.length} args]` :
+                        `[${argsArray.map(arg => formatValueWithObjectName(arg, maxLength / 2)).join(", ")}]`;
                     return `${argsStr}`;
                 } catch (e) {
                     return "Arguments:[无法序列化]";
                 }
             }
-            
+
             // 尝试获取对象的类型名称
             let objName = value.constructor ? value.constructor.name : "Object";
-            
+
             // 尝试获取对象的字符串表示
             let strValue = "";
             try {
                 // 首先尝试使用toString方法
-                if (typeof value.toString === 'function' && 
+                if (typeof value.toString === 'function' &&
                     value.toString !== Object.prototype.toString) {
                     // 使用自定义的toString方法
                     strValue = value.toString();
@@ -564,9 +566,9 @@ mframe.log = function (options) {
                     strValue = `${value.name}: ${value.message}`;
                 } else if (Array.isArray(value)) {
                     // 特殊处理数组
-                    strValue = value.length > 5 ? 
-                        `[${value.slice(0, 3).map(item => formatValueWithObjectName(item, maxLength/3)).join(", ")}, ... ${value.length} items]` : 
-                        `[${value.map(item => formatValueWithObjectName(item, maxLength/3)).join(", ")}]`;
+                    strValue = value.length > 5 ?
+                        `[${value.slice(0, 3).map(item => formatValueWithObjectName(item, maxLength / 3)).join(", ")}, ... ${value.length} items]` :
+                        `[${value.map(item => formatValueWithObjectName(item, maxLength / 3)).join(", ")}]`;
                 } else if (value instanceof Date || value instanceof RegExp) {
                     // Date和RegExp已经有好的toString实现
                     strValue = value.toString();
@@ -581,7 +583,7 @@ mframe.log = function (options) {
                 // 如果序列化失败
                 strValue = "[无法序列化]";
             }
-            
+
             result = `${objName}:${strValue}`;
         } else if (type === "function") {
             // 处理函数
@@ -598,7 +600,7 @@ mframe.log = function (options) {
             // 处理其他基本类型
             result = String(value);
         }
-        
+
         // 确保移除所有换行并压缩多余空格
         return result.replace(/\r?\n/g, " ").replace(/\s+/g, " ");
     }
@@ -610,9 +612,9 @@ mframe.log = function (options) {
             mframe.memory.config.proxy = true;
             return;
         }
-        const paddedMethodName = padString(methodName, methodNameWidth);
-        const formattedInput = formatValueWithObjectName(inputVal);
-        const formattedRes = formatValueWithObjectName(res);
+        const paddedMethodName = padString(methodName, propertyNameWidth);
+        const formattedInput = formatValueWithObjectName(inputVal, inputLength);
+        const formattedRes = formatValueWithObjectName(res, resLength);
 
         // 使用固定宽度打印
         console.log(`======>>>\x1b[35m对象:${paddedClassName} 方法:${paddedMethodName} 传入:${formattedInput} 返回:${formattedRes}\x1b[0m`);
@@ -647,8 +649,9 @@ mframe.log = function (options) {
 
 mframe.memory.config.nodeEnv=true
 mframe.memory.config.proxy=true
-mframe.memory.config.initLocation={"ancestorOrigins":{},"href":"https://www.chinaindex.net/ranklist/4","origin":"https://www.chinaindex.net","protocol":"https:","host":"www.chinaindex.net","hostname":"www.chinaindex.net","port":"","pathname":"/ranklist/4","search":"","hash":""}
-mframe.memory.config.initNavigator={"userAgent":"Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Mobile Safari/537.36 Edg/135.0.0.0","language":"zh-CN","languages":["zh-CN","en","en-GB","en-US","de-DE"],"appVersion":"5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Mobile Safari/537.36 Edg/135.0.0.0","platform":"Win32","hardwareConcurrency":16,"webdriver":false,"appName":"Netscape","appCodeName":"Mozilla","deviceMemory":8,"maxTouchPoints":1,"onLine":true,"pdfViewerEnabled":false,"vendor":"Google Inc.","vendorSub":"","product":"Gecko","productSub":"20030107"}
+mframe.memory.config.log={"objLength":20,"propertyLength":30,"typeLength":10,"inputLength":50,"resLength":30}
+mframe.memory.config.initLocation={"ancestorOrigins":{},"href":"https://www.fcbox.com/pages/user/login.html","origin":"https://www.fcbox.com","protocol":"https:","host":"www.fcbox.com","hostname":"www.fcbox.com","port":"","pathname":"/pages/user/login.html","search":"","hash":""}
+mframe.memory.config.initNavigator={"userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36","language":"zh-CN","languages":["zh-CN","en","zh"],"appVersion":"5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36","platform":"Win32","hardwareConcurrency":16,"webdriver":false,"appName":"Netscape","appCodeName":"Mozilla","deviceMemory":8,"maxTouchPoints":20,"onLine":true,"pdfViewerEnabled":true,"vendor":"Google Inc.","vendorSub":"","product":"Gecko","productSub":"20030107"}
 //////////////////当前环境为node环境/////////////////////////
 //////////////////当前环境为node环境/////////////////////////
 //////////////////当前环境为node环境/////////////////////////
@@ -667,163 +670,14 @@ const dom = new JSDOM(`<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional
     <body></body>
 </html>`);
 
-webcrypto = crypto;
 mframe.memory.jsdom = {};
 mframe.memory.jsdom.window = dom.window;
 mframe.memory.jsdom.document = dom.window.document;
 
 
-
 //////////////////当前环境为node环境/////////////////////////
 //////////////////当前环境为node环境/////////////////////////
 //////////////////当前环境为node环境/////////////////////////
-var SubtleCrypto = function SubtleCrypto() {
-    throw new TypeError("Illegal constructor");
-}; mframe.safefunction(SubtleCrypto);
-
-Object.defineProperties(SubtleCrypto.prototype, {
-    [Symbol.toStringTag]: {
-        value: "SubtleCrypto",
-        configurable: true,
-    }
-});
-
-///////////////////////////////////////////////////
-var curMemoryArea = mframe.memory.SubtleCrypto = {};
-
-//============== Constant START ==================
-Object.defineProperty(SubtleCrypto, "arguments", { configurable: false, enumerable: false, value: null, writable: false, });
-Object.defineProperty(SubtleCrypto, "caller", { configurable: false, enumerable: false, value: null, writable: false, });
-//==============↑↑Constant END↑↑==================
-
-//%%%%%%% Attribute START %%%%%
-//%%%%%%%↑↑Attribute END↑↑%%%%%
-
-//============== Function START ====================
-SubtleCrypto.prototype["decrypt"] = function decrypt() {
-    var res = _crypto.subtle.decrypt(...arguments);
-    mframe.log({ flag: 'function', className: 'SubtleCrypto', methodName: 'decrypt', inputVal: arguments, res: res });
-    return res;
-}; mframe.safefunction(SubtleCrypto.prototype["decrypt"]);
-SubtleCrypto.prototype["deriveBits"] = function deriveBits() {
-    var res = _crypto.subtle.deriveBits(...arguments);
-    mframe.log({ flag: 'function', className: 'SubtleCrypto', methodName: 'deriveBits', inputVal: arguments, res: res });
-    return res;
-}; mframe.safefunction(SubtleCrypto.prototype["deriveBits"]);
-SubtleCrypto.prototype["deriveKey"] = function deriveKey() {
-    var res = _crypto.subtle.deriveKey(...arguments);
-    mframe.log({ flag: 'function', className: 'SubtleCrypto', methodName: 'deriveKey', inputVal: arguments, res: res });
-    return res;
-}; mframe.safefunction(SubtleCrypto.prototype["deriveKey"]);
-SubtleCrypto.prototype["digest"] = function digest() {
-    var res = _crypto.subtle.digest(...arguments);
-    mframe.log({ flag: 'function', className: 'SubtleCrypto', methodName: 'digest', inputVal: arguments, res: res });
-    return res;
-}; mframe.safefunction(SubtleCrypto.prototype["digest"]);
-SubtleCrypto.prototype["encrypt"] = function encrypt() {
-    var res = _crypto.subtle.encrypt(...arguments);
-    mframe.log({ flag: 'function', className: 'SubtleCrypto', methodName: 'encrypt', inputVal: arguments, res: res });
-    return res;
-}; mframe.safefunction(SubtleCrypto.prototype["encrypt"]);
-SubtleCrypto.prototype["exportKey"] = function exportKey() {
-    var res = _crypto.subtle.exportKey(...arguments);
-    mframe.log({ flag: 'function', className: 'SubtleCrypto', methodName: 'exportKey', inputVal: arguments, res: res });
-    return res;
-}; mframe.safefunction(SubtleCrypto.prototype["exportKey"]);
-SubtleCrypto.prototype["generateKey"] = function generateKey() {
-    var res = _crypto.subtle.generateKey(...arguments);
-    mframe.log({ flag: 'function', className: 'SubtleCrypto', methodName: 'generateKey', inputVal: arguments, res: res });
-    return res;
-}; mframe.safefunction(SubtleCrypto.prototype["generateKey"]);
-SubtleCrypto.prototype["importKey"] = function importKey() {
-    var res = _crypto.subtle.importKey(...arguments);
-    mframe.log({ flag: 'function', className: 'SubtleCrypto', methodName: 'importKey', inputVal: arguments, res: res });
-    return res;
-}; mframe.safefunction(SubtleCrypto.prototype["importKey"]);
-SubtleCrypto.prototype["sign"] = function sign() {
-    var res = _crypto.subtle.sign(...arguments);
-    mframe.log({ flag: 'function', className: 'SubtleCrypto', methodName: 'sign', inputVal: arguments, res: res });
-    return res;
-}; mframe.safefunction(SubtleCrypto.prototype["sign"]);
-SubtleCrypto.prototype["unwrapKey"] = function unwrapKey() {
-    var res = _crypto.subtle.unwrapKey(...arguments);
-    mframe.log({ flag: 'function', className: 'SubtleCrypto', methodName: 'unwrapKey', inputVal: arguments, res: res });
-    return res;
-}; mframe.safefunction(SubtleCrypto.prototype["unwrapKey"]);
-SubtleCrypto.prototype["verify"] = function verify() {
-    var res = _crypto.subtle.verify(...arguments);
-    mframe.log({ flag: 'function', className: 'SubtleCrypto', methodName: 'verify', inputVal: arguments, res: res });
-    return res;
-}; mframe.safefunction(SubtleCrypto.prototype["verify"]);
-SubtleCrypto.prototype["wrapKey"] = function wrapKey() {
-    var res = _crypto.subtle.wrapKey(...arguments);
-    mframe.log({ flag: 'function', className: 'SubtleCrypto', methodName: 'wrapKey', inputVal: arguments, res: res });
-    return res;
-}; mframe.safefunction(SubtleCrypto.prototype["wrapKey"]);
-//==============↑↑Function END↑↑====================
-///////////////////////////////////////////////////
-
-
-
-// 浏览器是没有的, 但是我们要用
-mframe.subtleCrypto = {}
-mframe.subtleCrypto.__proto__ = SubtleCrypto.prototype;
-mframe.subtleCrypto = mframe.proxy(mframe.subtleCrypto);
-const _crypto = webcrypto; // 保留从vm2加载的crypto
-var Crypto = function Crypto() {
-    throw new TypeError("Illegal constructor");
-}; mframe.safefunction(Crypto);
-
-Object.defineProperties(Crypto.prototype, {
-    [Symbol.toStringTag]: {
-        value: "Crypto",
-        configurable: true,
-    }
-})
-
-// 使用原生crypto对象的方法
-var crypto = {}
-///////////////////////////////////////////
-var curMemoryArea = mframe.memory.Crypto = {};
-
-//============== Constant START ==================
-//==============↑↑Constant END↑↑==================
-
-//%%%%%%% Attribute START %%%%%
-// subtle
-curMemoryArea.subtle_getter = function subtle() {
-    var res = mframe.subtleCrypto;
-    mframe.log({ flag: 'property', className: 'Crypto', propertyName: 'subtle', method: 'get', val: res });
-    return res;
-}; mframe.safefunction(curMemoryArea.subtle_getter);
-Object.defineProperty(curMemoryArea.subtle_getter, "name", { value: "get subtle", configurable: true, });
-Object.defineProperty(Crypto.prototype, "subtle", { get: curMemoryArea.subtle_getter, enumerable: true, configurable: true, });
-curMemoryArea.subtle_smart_getter = function subtle() {
-    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
-    var res = mframe.subtleCrypto;
-    mframe.log({ flag: 'property', className: 'Crypto', propertyName: 'subtle', method: 'get', val: res });
-    return res; // 返回实例属性或默认值
-}; mframe.safefunction(curMemoryArea.subtle_smart_getter);
-Crypto.prototype.__defineGetter__("subtle", curMemoryArea.subtle_smart_getter);
-
-//%%%%%%%↑↑Attribute END↑↑%%%%%
-
-//============== Function START ====================
-Crypto.prototype["getRandomValues"] = function getRandomValues(typedArray) {
-    var res = _crypto.getRandomValues(typedArray)
-    mframe.log({ flag: 'function', className: 'Crypto', methodName: 'getRandomValues', inputVal: arguments, res: res });
-    return res;
-}; mframe.safefunction(Crypto.prototype["getRandomValues"]);
-Crypto.prototype["randomUUID"] = function randomUUID() {
-    var res = _crypto.randomUUID();
-    mframe.log({ flag: 'function', className: 'Crypto', methodName: 'randomUUID', inputVal: arguments, res: res });
-    return res;
-}; mframe.safefunction(Crypto.prototype["randomUUID"]);
-//==============↑↑Function END↑↑====================
-///////////////////////////////////////////
-crypto.__proto__ = Crypto.prototype
-
-crypto = mframe.proxy(crypto)
 var Storage = function Storage() {
     throw new TypeError('Illegal constructor');
 }; mframe.safefunction(Storage)
@@ -846,7 +700,7 @@ Storage.prototype.__defineGetter__("length", function length() {
 })
 // 通过键获取值
 Storage.prototype.getItem = function getItem(keyName) {
-    var res = this[keyName] || undefined; // 这个this是指向实例的
+    var res = this[keyName] || null; // 这个this是指向实例的
     mframe.log({ flag: 'function', className: 'Storage', methodName: 'getItem', inputVal: arguments, res: res });
     return res;
 }; mframe.safefunction(Storage.prototype.getItem);
@@ -1154,8 +1008,6 @@ WindowProperties.prototype.__proto__ = EventTarget.prototype
 
 
 
-
-
 window = mframe.memory.config.nodeEnv ? global : this;
 var Window = function Window() {
     throw new TypeError('Illegal constructor');
@@ -1221,32 +1073,33 @@ window.MutationObserver = mframe.proxy(mframe.memory.jsdom.window.MutationObserv
 const OriginalMutationObserver = mframe.memory.jsdom.window.MutationObserver;
 
 // 创建一个新的MutationObserver构造函数
-mframe.memory.jsdom.window.MutationObserver = function(callback) {
+mframe.memory.jsdom.window.MutationObserver = function (callback) {
     // 创建原始的MutationObserver实例
     const originalObserver = new OriginalMutationObserver(callback);
-    
+
     // 重写observe方法
     const originalObserve = originalObserver.observe;
-    originalObserver.observe = function(target, options) {
+    originalObserver.observe = function (target, options) {
         // 如果target是全局document，替换为jsdom的document
         if (target === document) {
             console.log("[Hook] 替换MutationObserver目标: 从全局document到jsdom document");
             target = mframe.memory.jsdom.document;
         }
-        
+
         // 调用原始observe方法
         return originalObserve.call(this, target, options);
     };
-    
+
     return originalObserver;
 };
 
-// 保持原型链一致
-mframe.memory.jsdom.window.MutationObserver.prototype = OriginalMutationObserver.prototype;
+// 保持原型链一致(这个在源代码中删除就好了, or在Node环境中运行)
+// mframe.memory.jsdom.window.MutationObserver.prototype = OriginalMutationObserver.prototype;
 ///////////////////////////////////////////////////
 // 属性
 window.top = window;
 window.self = window;
+ActiveXObject = undefined; // 这个东西很多网站都查,且理论上也应该手动赋值undefined
 
 ///////////////////////////////////////////////////
 // mframe原型链
@@ -5277,6 +5130,122 @@ mframe.memory.htmlelements['document'] = function () {
     //////////////////////////////////////////////////////
     return document;
 }
+var Text = function () { }; mframe.safefunction(Text);
+
+Object.defineProperties(Text.prototype, {
+    [Symbol.toStringTag]: {
+        value: "Text",
+        configurable: true,
+    }
+});
+/////////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.Text = {};
+
+//============== Constant START ==================
+Object.defineProperty(Text, "arguments", { configurable: false, enumerable: false, value: null, writable: false, });
+Object.defineProperty(Text, "caller", { configurable: false, enumerable: false, value: null, writable: false, });
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+// wholeText
+curMemoryArea.wholeText_getter = function wholeText() { debugger; }; mframe.safefunction(curMemoryArea.wholeText_getter);
+Object.defineProperty(curMemoryArea.wholeText_getter, "name", { value: "get wholeText", configurable: true, });
+Object.defineProperty(Text.prototype, "wholeText", { get: curMemoryArea.wholeText_getter, enumerable: true, configurable: true, });
+curMemoryArea.wholeText_smart_getter = function wholeText() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._wholeText !== undefined ? this._wholeText : this.jsdomMemory.wholeText; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'Text', propertyName: 'wholeText', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.wholeText_smart_getter);
+Text.prototype.__defineGetter__("wholeText", curMemoryArea.wholeText_smart_getter);
+
+// assignedSlot
+curMemoryArea.assignedSlot_getter = function assignedSlot() { debugger; }; mframe.safefunction(curMemoryArea.assignedSlot_getter);
+Object.defineProperty(curMemoryArea.assignedSlot_getter, "name", { value: "get assignedSlot", configurable: true, });
+Object.defineProperty(Text.prototype, "assignedSlot", { get: curMemoryArea.assignedSlot_getter, enumerable: true, configurable: true, });
+curMemoryArea.assignedSlot_smart_getter = function assignedSlot() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._assignedSlot !== undefined ? this._assignedSlot : this.jsdomMemory.assignedSlot; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'Text', propertyName: 'assignedSlot', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.assignedSlot_smart_getter);
+Text.prototype.__defineGetter__("assignedSlot", curMemoryArea.assignedSlot_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+Text.prototype["splitText"] = function splitText() {
+    var res = this.jsdomMemory["splitText"](...arguments);
+    mframe.log({ flag: 'function', className: 'Text', methodName: 'splitText', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Text.prototype["splitText"]);
+//==============↑↑Function END↑↑====================
+
+/////////////////////////////////////////////////////
+Text.prototype.__proto__ = Node.prototype;
+
+/**
+ * 改方法通过 Document.prototype["createTextNode"] 进行调用!!!
+ * @param {string} text 
+ * @returns 
+ */
+mframe.memory.htmlelements['text'] = function (text) {
+    var text = new (function () { }); 
+    text._wholeText = text;
+
+    text.__proto__ = Text.prototype;
+    return text;
+}
+DOMImplementation = mframe.memory.config.nodeEnv ? global : this;
+var DOMImplementation = function DOMImplementation() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(DOMImplementation)
+Object.defineProperties(DOMImplementation.prototype, {
+    [Symbol.toStringTag]: {
+        value: "DOMImplementation",
+        configurable: true,
+    }
+})
+//////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.DOMImplementation = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+// DOMImplementation.prototype["createDocument"] = function createDocument() {
+//     var res = undefined;
+//     mframe.log({ flag: 'function', className: 'DOMImplementation', methodName: 'createDocument', inputVal: arguments, res: res });
+//     return res;
+// }; mframe.safefunction(DOMImplementation.prototype["createDocument"]);
+
+// DOMImplementation.prototype["createDocumentType"] = function createDocumentType() {
+//     var res = undefined;
+//     mframe.log({ flag: 'function', className: 'DOMImplementation', methodName: 'createDocumentType', inputVal: arguments, res: res });
+//     return res;
+// }; mframe.safefunction(DOMImplementation.prototype["createDocumentType"]);
+
+// DOMImplementation.prototype["createHTMLDocument"] = function createHTMLDocument() {
+//     var res = undefined;
+//     mframe.log({ flag: 'function', className: 'DOMImplementation', methodName: 'createHTMLDocument', inputVal: arguments, res: res });
+//     return res;
+// }; mframe.safefunction(DOMImplementation.prototype["createHTMLDocument"]);
+
+DOMImplementation.prototype["hasFeature"] = function hasFeature() {
+    var res = this.jsdomMemory.hasFeature;
+    mframe.log({ flag: 'function', className: 'DOMImplementation', methodName: 'hasFeature', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(DOMImplementation.prototype["hasFeature"]);
+//==============↑↑Function END↑↑====================
+//////////////////////////////////////////////////
+mframe.memory.domImplementation = {};
+mframe.memory.domImplementation.__proto__ = DOMImplementation.prototype;
+mframe.memory.domImplementation = mframe.proxy(mframe.memory.domImplementation);
+
+
 var Document = function () { }; mframe.safefunction(Document);
 
 Object.defineProperties(Document.prototype, {
@@ -5340,6 +5309,26 @@ curMemoryArea.head_smart_getter = function head() {
     return res;
 }; mframe.safefunction(curMemoryArea.head_smart_getter);
 Document.prototype.__defineGetter__("head", curMemoryArea.head_smart_getter);
+
+// all
+curMemoryArea.all_getter = function all() { debugger; }; mframe.safefunction(curMemoryArea.all_getter);
+Object.defineProperty(curMemoryArea.all_getter, "name", { value: "get all", configurable: true, });
+Object.defineProperty(Document.prototype, "all", { get: curMemoryArea.all_getter, enumerable: true, configurable: true, });
+curMemoryArea.all_smart_getter = function all() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+
+    // 这个方法返回是tageName为name的所有标签, 是返回数组, so我们要代理这个数组中的所有对象
+    var elements = mframe.memory.jsdom.document.getElementsByTagName("*"); // jsdom没有all,用这个替代;基本等价
+    var res = mframe.memory.htmlelements['collection'](elements);
+    mframe.log({ flag: 'function', className: 'Document', methodName: 'getElementsByTagName', inputVal: arguments, res: res });
+    return mframe.proxy(res); // TODO 不能偷懒这里的AllCollect还是要补, 里面有length
+
+
+    res = this._all !== undefined ? this._all : ''; // 返回实例属性或默认值
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'all', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.all_smart_getter);
+Document.prototype.__defineGetter__("all", curMemoryArea.all_smart_getter);
 
 //cookie
 curMemoryArea.cookie_getter = function cookie() { debugger; }; mframe.safefunction(curMemoryArea.cookie_getter);
@@ -5449,6 +5438,22 @@ curMemoryArea.wasDiscarded_smart_getter = function wasDiscarded() {
     return res;
 }; mframe.safefunction(curMemoryArea.wasDiscarded_smart_getter);
 Document.prototype.__defineGetter__("wasDiscarded", curMemoryArea.wasDiscarded_smart_getter);
+
+
+// implementation
+curMemoryArea.implementation_getter = function implementation() { debugger; }; mframe.safefunction(curMemoryArea.implementation_getter);
+Object.defineProperty(curMemoryArea.implementation_getter, "name", { value: "get implementation", configurable: true, });
+Object.defineProperty(Document.prototype, "implementation", { get: curMemoryArea.implementation_getter, enumerable: true, configurable: true, });
+curMemoryArea.implementation_smart_getter = function implementation() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+
+    res = mframe.memory.domImplementation; // 环境中唯一的DOMImplementation的实例
+    res.jsdomMemory = mframe.memory.jsdom.document.implementation;
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'implementation', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.implementation_smart_getter);
+Document.prototype.__defineGetter__("implementation", curMemoryArea.implementation_smart_getter);
+
 //%%%%%%%↑↑Attribute END↑↑%%%%%%%%%%
 
 //============== Function START ====================
@@ -5494,14 +5499,7 @@ Document.prototype["getElementsByTagName"] = function getElementsByTagName() {
 Document.prototype["createExpression"] = function createExpression() {
     var res = mframe.memory.jsdom.document.createExpression(...arguments);
     mframe.log({ flag: 'function', className: 'Document', methodName: 'createExpression', inputVal: arguments, res: res });
-    Object.defineProperty(res, "ttt", {
-        value: "ttttt_name", // 属性值
-        writable: true, // 是否可修改
-        enumerable: true, // 是否可枚举
-        configurable: true // 是否可配置
-    });
-    var tt = mframe.proxy(res);
-    return tt;
+    return res;
 }; mframe.safefunction(Document.prototype["createExpression"]);
 
 Document.prototype["querySelectorAll"] = function querySelectorAll() {
@@ -5516,6 +5514,14 @@ Document.prototype["createTextNode"] = function createTextNode() {
     mframe.log({ flag: 'function', className: 'Document', methodName: 'createTextNode', inputVal: arguments, res: res });
     return res;
 }; mframe.safefunction(Document.prototype["createTextNode"]);
+
+Document.prototype["querySelector"] = function querySelector() {
+    var res = mframe.memory.jsdom.document.querySelector(...arguments);
+    
+
+    mframe.log({ flag: 'function', className: 'Document', methodName: 'querySelector', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Document.prototype["querySelector"]);
 //==============↑↑Function END↑↑====================
 ///////////////////////////////////////////////////
 document.location = location;
@@ -5595,10 +5601,8 @@ HTMLCollection.prototype["namedItem"] = function namedItem() { debugger; }; mfra
  * 不能在document.createElement时调用，因为这不是页面的任何一个标签，只能算是DOM的中间件。
  */
 mframe.memory.htmlelements['collection'] = function (initCollection) {
-
     // 暂时关闭输出打印,避免影响判断(下面要用set进行数据转移)
-    var originalConsole = console; // 保存原始console对象
-    console = { log: function () { }, warn: function () { }, error: function () { } }; // 替换为空实现
+    mframe.console.mute();
     // 创建HTMLCollection实例
     var collection = new (function () { });
     // 代理数组中的元素+将数组中原jsdom的数据,变为我们有原型链仿照的数据
@@ -5623,8 +5627,7 @@ mframe.memory.htmlelements['collection'] = function (initCollection) {
     collection['length'] = initCollection.length;
     // HTMLCollection原型链继承
     collection.__proto__ = HTMLCollection.prototype;
-    console = originalConsole; // 恢复原始console对象
-
+    mframe.console.unmute(); // 恢复原始console对象
     // 二次代理
     for (let i = 0; i < collection.length; i++) {
         collection[i] = mframe.proxy(collection[i]);
@@ -5632,6 +5635,10 @@ mframe.memory.htmlelements['collection'] = function (initCollection) {
 
     return mframe.proxy(collection);
 }
+// 2.防止console.log被篡改
+const consoleGuard=(()=>{const virginConsole=Object.create(Object.getPrototypeOf(console));Object.assign(virginConsole,console);let isMuted=false;const mute=()=>isMuted=true;const unmute=()=>isMuted=false;const handler={get(target,prop){if(isMuted&&['log','warn','error'].includes(prop)){return()=>{}}return Reflect.get(target,prop)},set(target,prop,value){if(prop==='log'){return true}return Reflect.set(target,prop,value)}};return{proxy:new Proxy(console,handler),controller:{mute,unmute}}})();mframe.console=consoleGuard.controller;Object.defineProperty(global,'console',{value:consoleGuard.proxy,writable:false,configurable:false});
+// 1.用于在Node环境下代理crypto
+Object.defineProperty(window, 'crypto', { get: function () {return require('crypto');}});
 //=====================================以下为运行代码===============================
 //=====================================以下为运行代码===============================
 //=====================================以下为运行代码===============================
@@ -5779,5 +5786,11 @@ function print() { __p += __j.call(arguments, '') }
 }`;var ot=AC(function(){return Mt(O,Ze+"return "+Ee).apply(n,W)});if(ot.source=Ee,Pp(ot))throw ot;return ot}function l5(o){return Dt(o).toLowerCase()}function u5(o){return Dt(o).toUpperCase()}function A5(o,l,d){if(o=Dt(o),o&&(d||l===n))return IE(o);if(!o||!(l=pr(l)))return o;var E=ei(o),M=ei(l),O=wE(E,M),W=yE(E,M)+1;return Ua(E,O,W).join("")}function f5(o,l,d){if(o=Dt(o),o&&(d||l===n))return o.slice(0,CE(o)+1);if(!o||!(l=pr(l)))return o;var E=ei(o),M=yE(E,ei(l))+1;return Ua(E,0,M).join("")}function d5(o,l,d){if(o=Dt(o),o&&(d||l===n))return o.replace(Ph,"");if(!o||!(l=pr(l)))return o;var E=ei(o),M=wE(E,ei(l));return Ua(E,M).join("")}function g5(o,l){var d=T,E=F;if(tn(l)){var M="separator"in l?l.separator:M;d="length"in l?nt(l.length):d,E="omission"in l?pr(l.omission):E}o=Dt(o);var O=o.length;if(Os(o)){var W=ei(o);O=W.length}if(d>=O)return o;var q=d-ks(E);if(q<1)return E;var ne=W?Ua(W,0,q).join(""):o.slice(0,q);if(M===n)return ne+E;if(W&&(q+=ne.length-q),Fp(M)){if(o.slice(q).search(M)){var be,Ie=ne;for(M.global||(M=ip(M.source,Dt(Fy.exec(M))+"g")),M.lastIndex=0;be=M.exec(Ie);)var Ee=be.index;ne=ne.slice(0,Ee===n?q:Ee)}}else if(o.indexOf(pr(M),q)!=q){var xe=ne.lastIndexOf(M);xe>-1&&(ne=ne.slice(0,xe))}return ne+E}function h5(o){return o=Dt(o),o&&fA.test(o)?o.replace(sl,QL):o}var p5=Ps(function(o,l,d){return o+(d?" ":"")+l.toUpperCase()}),Vp=f1("toUpperCase");function uC(o,l,d){return o=Dt(o),l=d?n:l,l===n?LL(o)?HL(o):TL(o):o.match(l)||[]}var AC=lt(function(o,l){try{return gr(o,n,l)}catch(d){return Pp(d)?d:new qe(d)}}),v5=Xi(function(o,l){return jr(l,function(d){d=Mi(d),Hi(o,d,Lp(o[d],o))}),o});function m5(o){var l=o==null?0:o.length,d=Ve();return o=l?_t(o,function(E){if(typeof E[1]!="function")throw new Yr(s);return[d(E[0]),E[1]]}):[],lt(function(E){for(var M=-1;++M<l;){var O=o[M];if(gr(O[0],this,E))return gr(O[1],this,E)}})}function b5(o){return QZ(Zr(o,g))}function zp(o){return function(){return o}}function I5(o,l){return o==null||o!==o?l:o}var w5=g1(),y5=g1(!0);function qn(o){return o}function Hp(o){return QE(typeof o=="function"?o:Zr(o,g))}function E5(o){return zE(Zr(o,g))}function C5(o,l){return HE(o,Zr(l,g))}var R5=lt(function(o,l){return function(d){return pl(d,o,l)}}),M5=lt(function(o,l){return function(d){return pl(o,d,l)}});function Jp(o,l,d){var E=Cn(l),M=NA(l,E);d==null&&!(tn(l)&&(M.length||!E.length))&&(d=l,l=o,o=this,M=NA(l,Cn(l)));var O=!(tn(d)&&"chain"in d)||!!d.chain,W=Ki(o);return jr(M,function(q){var ne=l[q];o[q]=ne,W&&(o.prototype[q]=function(){var be=this.__chain__;if(O||be){var Ie=o(this.__wrapped__),Ee=Ie.__actions__=Xn(this.__actions__);return Ee.push({func:ne,args:arguments,thisArg:o}),Ie.__chain__=be,Ie}return ne.apply(o,Ta([this.value()],arguments))})}),o}function S5(){return Sn._===this&&(Sn._=$L),this}function Xp(){}function B5(o){return o=nt(o),lt(function(l){return JE(l,o)})}var D5=Mp(_t),T5=Mp(hE),x5=Mp(Kh);function fC(o){return Op(o)?qh(Mi(o)):sP(o)}function G5(o){return function(l){return o==null?n:Do(o,l)}}var O5=p1(),k5=p1(!0);function _p(){return[]}function Kp(){return!1}function N5(){return{}}function U5(){return""}function j5(){return!0}function Y5(o,l){if(o=nt(o),o<1||o>X)return[];var d=U,E=On(o,U);l=Ve(l),o-=U;for(var M=tp(E,l);++d<o;)l(d);return M}function L5(o){return $e(o)?_t(o,Mi):vr(o)?[o]:Xn(G1(Dt(o)))}function Z5(o){var l=++KL;return Dt(o)+l}var P5=PA(function(o,l){return o+l},0),F5=Sp("ceil"),W5=PA(function(o,l){return o/l},1),Q5=Sp("floor");function V5(o){return o&&o.length?kA(o,qn,fp):n}function z5(o,l){return o&&o.length?kA(o,Ve(l,2),fp):n}function H5(o){return mE(o,qn)}function J5(o,l){return mE(o,Ve(l,2))}function X5(o){return o&&o.length?kA(o,qn,pp):n}function _5(o,l){return o&&o.length?kA(o,Ve(l,2),pp):n}var K5=PA(function(o,l){return o*l},1),q5=Sp("round"),$5=PA(function(o,l){return o-l},0);function eQ(o){return o&&o.length?ep(o,qn):0}function tQ(o,l){return o&&o.length?ep(o,Ve(l,2)):0}return D.after=EF,D.ary=W1,D.assign=uW,D.assignIn=rC,D.assignInWith=ef,D.assignWith=AW,D.at=fW,D.before=Q1,D.bind=Lp,D.bindAll=v5,D.bindKey=V1,D.castArray=NF,D.chain=Z1,D.chunk=QP,D.compact=VP,D.concat=zP,D.cond=m5,D.conforms=b5,D.constant=zp,D.countBy=eF,D.create=dW,D.curry=z1,D.curryRight=H1,D.debounce=J1,D.defaults=gW,D.defaultsDeep=hW,D.defer=CF,D.delay=RF,D.difference=HP,D.differenceBy=JP,D.differenceWith=XP,D.drop=_P,D.dropRight=KP,D.dropRightWhile=qP,D.dropWhile=$P,D.fill=e3,D.filter=nF,D.flatMap=aF,D.flatMapDeep=oF,D.flatMapDepth=sF,D.flatten=U1,D.flattenDeep=t3,D.flattenDepth=n3,D.flip=MF,D.flow=w5,D.flowRight=y5,D.fromPairs=r3,D.functions=yW,D.functionsIn=EW,D.groupBy=cF,D.initial=a3,D.intersection=o3,D.intersectionBy=s3,D.intersectionWith=c3,D.invert=RW,D.invertBy=MW,D.invokeMap=uF,D.iteratee=Hp,D.keyBy=AF,D.keys=Cn,D.keysIn=Kn,D.map=JA,D.mapKeys=BW,D.mapValues=DW,D.matches=E5,D.matchesProperty=C5,D.memoize=_A,D.merge=TW,D.mergeWith=iC,D.method=R5,D.methodOf=M5,D.mixin=Jp,D.negate=KA,D.nthArg=B5,D.omit=xW,D.omitBy=GW,D.once=SF,D.orderBy=fF,D.over=D5,D.overArgs=BF,D.overEvery=T5,D.overSome=x5,D.partial=Zp,D.partialRight=X1,D.partition=dF,D.pick=OW,D.pickBy=aC,D.property=fC,D.propertyOf=G5,D.pull=f3,D.pullAll=Y1,D.pullAllBy=d3,D.pullAllWith=g3,D.pullAt=h3,D.range=O5,D.rangeRight=k5,D.rearg=DF,D.reject=pF,D.remove=p3,D.rest=TF,D.reverse=jp,D.sampleSize=mF,D.set=NW,D.setWith=UW,D.shuffle=bF,D.slice=v3,D.sortBy=yF,D.sortedUniq=C3,D.sortedUniqBy=R3,D.split=a5,D.spread=xF,D.tail=M3,D.take=S3,D.takeRight=B3,D.takeRightWhile=D3,D.takeWhile=T3,D.tap=V3,D.throttle=GF,D.thru=HA,D.toArray=eC,D.toPairs=oC,D.toPairsIn=sC,D.toPath=L5,D.toPlainObject=nC,D.transform=jW,D.unary=OF,D.union=x3,D.unionBy=G3,D.unionWith=O3,D.uniq=k3,D.uniqBy=N3,D.uniqWith=U3,D.unset=YW,D.unzip=Yp,D.unzipWith=L1,D.update=LW,D.updateWith=ZW,D.values=Qs,D.valuesIn=PW,D.without=j3,D.words=uC,D.wrap=kF,D.xor=Y3,D.xorBy=L3,D.xorWith=Z3,D.zip=P3,D.zipObject=F3,D.zipObjectDeep=W3,D.zipWith=Q3,D.entries=oC,D.entriesIn=sC,D.extend=rC,D.extendWith=ef,Jp(D,D),D.add=P5,D.attempt=AC,D.camelCase=VW,D.capitalize=cC,D.ceil=F5,D.clamp=FW,D.clone=UF,D.cloneDeep=YF,D.cloneDeepWith=LF,D.cloneWith=jF,D.conformsTo=ZF,D.deburr=lC,D.defaultTo=I5,D.divide=W5,D.endsWith=zW,D.eq=ni,D.escape=HW,D.escapeRegExp=JW,D.every=tF,D.find=rF,D.findIndex=k1,D.findKey=pW,D.findLast=iF,D.findLastIndex=N1,D.findLastKey=vW,D.floor=Q5,D.forEach=P1,D.forEachRight=F1,D.forIn=mW,D.forInRight=bW,D.forOwn=IW,D.forOwnRight=wW,D.get=Wp,D.gt=PF,D.gte=FF,D.has=CW,D.hasIn=Qp,D.head=j1,D.identity=qn,D.includes=lF,D.indexOf=i3,D.inRange=WW,D.invoke=SW,D.isArguments=Go,D.isArray=$e,D.isArrayBuffer=WF,D.isArrayLike=_n,D.isArrayLikeObject=fn,D.isBoolean=QF,D.isBuffer=ja,D.isDate=VF,D.isElement=zF,D.isEmpty=HF,D.isEqual=JF,D.isEqualWith=XF,D.isError=Pp,D.isFinite=_F,D.isFunction=Ki,D.isInteger=_1,D.isLength=qA,D.isMap=K1,D.isMatch=KF,D.isMatchWith=qF,D.isNaN=$F,D.isNative=eW,D.isNil=nW,D.isNull=tW,D.isNumber=q1,D.isObject=tn,D.isObjectLike=sn,D.isPlainObject=yl,D.isRegExp=Fp,D.isSafeInteger=rW,D.isSet=$1,D.isString=$A,D.isSymbol=vr,D.isTypedArray=Ws,D.isUndefined=iW,D.isWeakMap=aW,D.isWeakSet=oW,D.join=l3,D.kebabCase=XW,D.last=Fr,D.lastIndexOf=u3,D.lowerCase=_W,D.lowerFirst=KW,D.lt=sW,D.lte=cW,D.max=V5,D.maxBy=z5,D.mean=H5,D.meanBy=J5,D.min=X5,D.minBy=_5,D.stubArray=_p,D.stubFalse=Kp,D.stubObject=N5,D.stubString=U5,D.stubTrue=j5,D.multiply=K5,D.nth=A3,D.noConflict=S5,D.noop=Xp,D.now=XA,D.pad=qW,D.padEnd=$W,D.padStart=e5,D.parseInt=t5,D.random=QW,D.reduce=gF,D.reduceRight=hF,D.repeat=n5,D.replace=r5,D.result=kW,D.round=q5,D.runInContext=te,D.sample=vF,D.size=IF,D.snakeCase=i5,D.some=wF,D.sortedIndex=m3,D.sortedIndexBy=b3,D.sortedIndexOf=I3,D.sortedLastIndex=w3,D.sortedLastIndexBy=y3,D.sortedLastIndexOf=E3,D.startCase=o5,D.startsWith=s5,D.subtract=$5,D.sum=eQ,D.sumBy=tQ,D.template=c5,D.times=Y5,D.toFinite=qi,D.toInteger=nt,D.toLength=tC,D.toLower=l5,D.toNumber=Wr,D.toSafeInteger=lW,D.toString=Dt,D.toUpper=u5,D.trim=A5,D.trimEnd=f5,D.trimStart=d5,D.truncate=g5,D.unescape=h5,D.uniqueId=Z5,D.upperCase=p5,D.upperFirst=Vp,D.each=P1,D.eachRight=F1,D.first=j1,Jp(D,function(){var o={};return Ci(D,function(l,d){Gt.call(D.prototype,d)||(o[d]=l)}),o}(),{chain:!1}),D.VERSION=r,jr(["bind","bindKey","curry","curryRight","partial","partialRight"],function(o){D[o].placeholder=D}),jr(["drop","take"],function(o,l){pt.prototype[o]=function(d){d=d===n?1:bn(nt(d),0);var E=this.__filtered__&&!l?new pt(this):this.clone();return E.__filtered__?E.__takeCount__=On(d,E.__takeCount__):E.__views__.push({size:On(d,U),type:o+(E.__dir__<0?"Right":"")}),E},pt.prototype[o+"Right"]=function(d){return this.reverse()[o](d).reverse()}}),jr(["filter","map","takeWhile"],function(o,l){var d=l+1,E=d==K||d==ue;pt.prototype[o]=function(M){var O=this.clone();return O.__iteratees__.push({iteratee:Ve(M,3),type:d}),O.__filtered__=O.__filtered__||E,O}}),jr(["head","last"],function(o,l){var d="take"+(l?"Right":"");pt.prototype[o]=function(){return this[d](1).value()[0]}}),jr(["initial","tail"],function(o,l){var d="drop"+(l?"":"Right");pt.prototype[o]=function(){return this.__filtered__?new pt(this):this[d](1)}}),pt.prototype.compact=function(){return this.filter(qn)},pt.prototype.find=function(o){return this.filter(o).head()},pt.prototype.findLast=function(o){return this.reverse().find(o)},pt.prototype.invokeMap=lt(function(o,l){return typeof o=="function"?new pt(this):this.map(function(d){return pl(d,o,l)})}),pt.prototype.reject=function(o){return this.filter(KA(Ve(o)))},pt.prototype.slice=function(o,l){o=nt(o);var d=this;return d.__filtered__&&(o>0||l<0)?new pt(d):(o<0?d=d.takeRight(-o):o&&(d=d.drop(o)),l!==n&&(l=nt(l),d=l<0?d.dropRight(-l):d.take(l-o)),d)},pt.prototype.takeRightWhile=function(o){return this.reverse().takeWhile(o).reverse()},pt.prototype.toArray=function(){return this.take(U)},Ci(pt.prototype,function(o,l){var d=/^(?:filter|find|map|reject)|While$/.test(l),E=/^(?:head|last)$/.test(l),M=D[E?"take"+(l=="last"?"Right":""):l],O=E||/^find/.test(l);!M||(D.prototype[l]=function(){var W=this.__wrapped__,q=E?[1]:arguments,ne=W instanceof pt,be=q[0],Ie=ne||$e(W),Ee=function(dt){var mt=M.apply(D,Ta([dt],q));return E&&xe?mt[0]:mt};Ie&&d&&typeof be=="function"&&be.length!=1&&(ne=Ie=!1);var xe=this.__chain__,Ze=!!this.__actions__.length,He=O&&!xe,ot=ne&&!Ze;if(!O&&Ie){W=ot?W:new pt(this);var Je=o.apply(W,q);return Je.__actions__.push({func:HA,args:[Ee],thisArg:n}),new Lr(Je,xe)}return He&&ot?o.apply(this,q):(Je=this.thru(Ee),He?E?Je.value()[0]:Je.value():Je)})}),jr(["pop","push","shift","sort","splice","unshift"],function(o){var l=bA[o],d=/^(?:push|sort|unshift)$/.test(o)?"tap":"thru",E=/^(?:pop|shift)$/.test(o);D.prototype[o]=function(){var M=arguments;if(E&&!this.__chain__){var O=this.value();return l.apply($e(O)?O:[],M)}return this[d](function(W){return l.apply($e(W)?W:[],M)})}}),Ci(pt.prototype,function(o,l){var d=D[l];if(d){var E=d.name+"";Gt.call(Ys,E)||(Ys[E]=[]),Ys[E].push({name:l,func:d})}}),Ys[ZA(n,y).name]=[{name:"wrapper",func:n}],pt.prototype.clone=hZ,pt.prototype.reverse=pZ,pt.prototype.value=vZ,D.prototype.at=z3,D.prototype.chain=H3,D.prototype.commit=J3,D.prototype.next=X3,D.prototype.plant=K3,D.prototype.reverse=q3,D.prototype.toJSON=D.prototype.valueOf=D.prototype.value=$3,D.prototype.first=D.prototype.head,ll&&(D.prototype[ll]=_3),D},Ns=JL();Co?((Co.exports=Ns)._=Ns,Hh._=Ns):Sn._=Ns}).call(it)})(CI,CI.exports);var zx=CI.exports;const tRe={name:"Toast",data(){return{classes:[],styles:{color:"#FF5500"}}},props:{sign:String,after:Function,message:String,duration:{type:Number,default:300},position:{type:Object,default:function(){return{}}},zIndex:{type:Number,default:1e5}},computed:{},methods:{fadeout(){this.classes.push("fadeout"),zx.delay(()=>{this.$destroy(),this.after&&this.after()},600)},show(){if(this.styles.zIndex=this.zIndex,this.position){const{left:e,top:t}=this.position,n=(r,i)=>{i!==void 0&&(this.styles[r]=i>0&&i<1?i*100+"%":i+"px")};n("top",t),n("left",e)}this.$nextTick(()=>{this.classes.push("fadein"),this.duration>0&&zx.delay(()=>{this.fadeout()},this.duration)})}},created:function(){this.$nextTick(function(){this.show()})},destroyed:function(){this.$el.parentNode.removeChild(this.$el)}};function nRe(e,t,n,r,i,a){return gt(),nn("div",{ref:"toast",class:ci(["toast",i.classes]),style:Vn(i.styles)},[Se("span",{class:"toast-message",style:Vn({color:n.sign=="-"?"#119e13":""})},li(n.message),5)],6)}var rRe=kr(tRe,[["render",nRe],["__scopeId","data-v-d7d255a4"],["__file","/home/apiserver1/.jenkins/workspace/iIndexMobileWeb-Pro-Build-190-191-V5/src/components/globals/PopText/PopText.vue"]]);const iRe={emits:["click-left","click-right"],props:{leftArrow:{default:!1},title:{},leftText:{},rightText:{},border:{default:!0}},methods:{onClickLeft(){this.$emit("click-left")},onClickRight(){this.$emit("click-right")}}},aRe=e=>(Xc("data-v-2f029f00"),e=e(),_c(),e),oRe=aRe(()=>Se("div",{class:"icon"},null,-1));function sRe(e,t,n,r,i,a){const s=St("van-nav-bar");return gt(),nr(s,{style:Vn({borderBottom:n.border?"8px solid #0f1418":"none"}),"z-index":2,border:!1,"left-arrow":n.leftArrow,title:n.title,"left-text":n.leftText,"right-text":n.rightText,onClickLeft:a.onClickLeft,onClickRight:a.onClickRight},Xk({_:2},[!n.leftArrow&&!e.$slots.left?{name:"left",fn:yt(()=>[oRe])}:void 0,e.$slots.title?{name:"title",fn:yt(()=>[Bc(e.$slots,"title",{},void 0,!0)])}:void 0,e.$slots.right?{name:"right",fn:yt(()=>[Bc(e.$slots,"right",{},void 0,!0)])}:void 0]),1032,["style","left-arrow","title","left-text","right-text","onClickLeft","onClickRight"])}var cRe=kr(iRe,[["render",sRe],["__scopeId","data-v-2f029f00"],["__file","/home/apiserver1/.jenkins/workspace/iIndexMobileWeb-Pro-Build-190-191-V5/src/components/Header/index.vue"]]);const lRe={props:{bgColor:String,showMargin:{default:!0},showPadding:{default:!0}},setup(e){return(t,n)=>(gt(),nn("div",{class:ci(["im-container",{mg:e.showMargin,pd:e.showPadding}]),style:Vn({background:e.bgColor})},[Bc(t.$slots,"title",{},void 0,!0),Bc(t.$slots,"default",{},void 0,!0)],6))}};var uRe=kr(lRe,[["__scopeId","data-v-535305da"],["__file","/home/apiserver1/.jenkins/workspace/iIndexMobileWeb-Pro-Build-190-191-V5/src/components/container/container.vue"]]);const ARe={};function fRe(e,t){const n=St("van-empty");return gt(),nr(n,{class:"custom-image",description:"\u63CF\u8FF0\u6587\u5B57"},{default:yt(()=>[Bc(e.$slots,"default")]),_:3})}var dRe=kr(ARe,[["render",fRe],["__file","/home/apiserver1/.jenkins/workspace/iIndexMobileWeb-Pro-Build-190-191-V5/src/components/empty/empty.vue"]]);function gRe(e){const t=Xu(rRe);e.config.globalProperties.$poptext=function(n,r){document.body.appendChild(new t({el:document.createElement("div"),propsData:ii({message:n},r)}).$el)},e.use(MY),e.component("iminer-header",cRe),e.component("im-container",uRe),e.component("im-empty",dRe),e.config.globalProperties.$goLoginPage=bfe,e.config.globalProperties.$goAddLifePage=Lj,e.config.globalProperties.$goPayPage=wfe,e.config.globalProperties.$goAddAttentionPage=Ife,e.config.globalProperties.$goBack=mfe,e.config.globalProperties.$apiManager=yr,e.config.globalProperties.$getObjectImgPath=Kt.filterImgForSaveTranslate}var SY={exports:{}};/* NProgress, (c) 2013, 2014 Rico Sta. Cruz - http://ricostacruz.com/nprogress
  * @license MIT */(function(e,t){(function(n,r){e.exports=r()})(it,function(){var n={};n.version="0.2.0";var r=n.settings={minimum:.08,easing:"ease",positionUsing:"",speed:200,trickle:!0,trickleRate:.02,trickleSpeed:800,showSpinner:!0,barSelector:'[role="bar"]',spinnerSelector:'[role="spinner"]',parent:"body",template:'<div class="bar" role="bar"><div class="peg"></div></div><div class="spinner" role="spinner"><div class="spinner-icon"></div></div>'};n.configure=function(w){var I,p;for(I in w)p=w[I],p!==void 0&&w.hasOwnProperty(I)&&(r[I]=p);return this},n.status=null,n.set=function(w){var I=n.isStarted();w=i(w,r.minimum,1),n.status=w===1?null:w;var p=n.render(!I),y=p.querySelector(r.barSelector),v=r.speed,m=r.easing;return p.offsetWidth,c(function(C){r.positionUsing===""&&(r.positionUsing=n.getPositioningCSS()),u(y,s(w,v,m)),w===1?(u(p,{transition:"none",opacity:1}),p.offsetWidth,setTimeout(function(){u(p,{transition:"all "+v+"ms linear",opacity:0}),setTimeout(function(){n.remove(),C()},v)},v)):setTimeout(C,v)}),this},n.isStarted=function(){return typeof n.status=="number"},n.start=function(){n.status||n.set(0);var w=function(){setTimeout(function(){!n.status||(n.trickle(),w())},r.trickleSpeed)};return r.trickle&&w(),this},n.done=function(w){return!w&&!n.status?this:n.inc(.3+.5*Math.random()).set(1)},n.inc=function(w){var I=n.status;return I?(typeof w!="number"&&(w=(1-I)*i(Math.random()*I,.1,.95)),I=i(I+w,0,.994),n.set(I)):n.start()},n.trickle=function(){return n.inc(Math.random()*r.trickleRate)},function(){var w=0,I=0;n.promise=function(p){return!p||p.state()==="resolved"?this:(I===0&&n.start(),w++,I++,p.always(function(){I--,I===0?(w=0,n.done()):n.set((w-I)/w)}),this)}}(),n.render=function(w){if(n.isRendered())return document.getElementById("nprogress");f(document.documentElement,"nprogress-busy");var I=document.createElement("div");I.id="nprogress",I.innerHTML=r.template;var p=I.querySelector(r.barSelector),y=w?"-100":a(n.status||0),v=document.querySelector(r.parent),m;return u(p,{transition:"all 0 linear",transform:"translate3d("+y+"%,0,0)"}),r.showSpinner||(m=I.querySelector(r.spinnerSelector),m&&b(m)),v!=document.body&&f(v,"nprogress-custom-parent"),v.appendChild(I),I},n.remove=function(){g(document.documentElement,"nprogress-busy"),g(document.querySelector(r.parent),"nprogress-custom-parent");var w=document.getElementById("nprogress");w&&b(w)},n.isRendered=function(){return!!document.getElementById("nprogress")},n.getPositioningCSS=function(){var w=document.body.style,I="WebkitTransform"in w?"Webkit":"MozTransform"in w?"Moz":"msTransform"in w?"ms":"OTransform"in w?"O":"";return I+"Perspective"in w?"translate3d":I+"Transform"in w?"translate":"margin"};function i(w,I,p){return w<I?I:w>p?p:w}function a(w){return(-1+w)*100}function s(w,I,p){var y;return r.positionUsing==="translate3d"?y={transform:"translate3d("+a(w)+"%,0,0)"}:r.positionUsing==="translate"?y={transform:"translate("+a(w)+"%,0)"}:y={"margin-left":a(w)+"%"},y.transition="all "+I+"ms "+p,y}var c=function(){var w=[];function I(){var p=w.shift();p&&p(I)}return function(p){w.push(p),w.length==1&&I()}}(),u=function(){var w=["Webkit","O","Moz","ms"],I={};function p(C){return C.replace(/^-ms-/,"ms-").replace(/-([\da-z])/gi,function(R,S){return S.toUpperCase()})}function y(C){var R=document.body.style;if(C in R)return C;for(var S=w.length,x=C.charAt(0).toUpperCase()+C.slice(1),L;S--;)if(L=w[S]+x,L in R)return L;return C}function v(C){return C=p(C),I[C]||(I[C]=y(C))}function m(C,R,S){R=v(R),C.style[R]=S}return function(C,R){var S=arguments,x,L;if(S.length==2)for(x in R)L=R[x],L!==void 0&&R.hasOwnProperty(x)&&m(C,x,L);else m(C,S[1],S[2])}}();function A(w,I){var p=typeof w=="string"?w:h(w);return p.indexOf(" "+I+" ")>=0}function f(w,I){var p=h(w),y=p+I;A(p,I)||(w.className=y.substring(1))}function g(w,I){var p=h(w),y;!A(w,I)||(y=p.replace(" "+I+" "," "),w.className=y.substring(1,y.length-1))}function h(w){return(" "+(w.className||"")+" ").replace(/\s+/gi," ")}function b(w){w&&w.parentNode&&w.parentNode.removeChild(w)}return n})})(SY);var RI=SY.exports;function hRe(e,t){const n=e.config.globalProperties.$cookie;return async function(r,i,a){const{auth:s}=r.meta,c=r.fullPath,u=await yh();if(u){const f=r.query["extra-info"];if(f)try{const g=JSON.parse(f),{token:h,oid:b}=g||{};h?n.set(bt.COOKIE_TOKEN,h,{expires:7,path:"/"}):n.delete(bt.COOKIE_TOKEN),b&&n.set(bt.COOKIE_OPEN_ID,b,{expires:7,path:"/"})}catch(g){console.log(f),console.error(g)}}const A=n.get(bt.COOKIE_TOKEN);s?A?a():u?wx.miniProgram.navigateTo({url:"/pages/login/index?from="+c}):a({path:"/login",query:{from:c}}):a()}}function pRe(e,t){return function(n,r,i){const{honmei:a}=n.meta,s=n.fullPath,u=e.config.globalProperties.$cookie.get(bt.COOKIE_TOKEN);a&&u?t.state.hasSelfStar?i():i({path:"/AddLife",query:{from:s}}):i()}}function vRe(e,t){return async function(n,r,i){const a=n.name!=="login"&&n.name!=="SetPass",s=localStorage.getItem("index_mobile_phone"),c=e.config.globalProperties.$cookie,u=await yh();let A=c.get(bt.COOKIE_TOKEN);if(e.config.globalProperties.inited){if(A&&t.state.hadPassword==0&&a&&s){i("/setPass");return}}else try{if(A){if((await t.dispatch("loginByToken",{isHideLoading:!0})).errorCode==-1){cn("\u767B\u5F55\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u767B\u5F55"),i(u?"/":"/login");return}if(await t.dispatch("checkHasSelfStar",{isHideLoading:!0}),s){let g={phoneNumber:s.trim(),isHideLoading:!0};const{result:h}=await t.dispatch("hadPassWordOrNot",g);if(h==0&&a){i("/setPass");return}}}await t.dispatch("loadingLifeData",{isHideLoading:!0}),e.config.globalProperties.inited=!0}catch(f){console.error(f)}i()}}function mRe(e,t){return function(n,r,i){if(r.name!="login"){const a=r.name?r.fullPath:"";n.meta.__from__=a}i()}}(function(e,t){var n="orientationchange"in window?"orientationchange":"resize",r=function(){var i=document.documentElement.clientWidth,a=window.innerWidth,s=window.innerHeight,c=document.documentElement.clientHeight;s<a&&(i=c,a=s);var u=Math.max(i,a);u=u>750?750:u;var A=u/10;document.getElementsByTagName("html")[0].style.cssText="font-size: "+A+"px";function f(){var g=~~(+window.getComputedStyle(document.getElementsByTagName("html")[0]).fontSize.replace("px","")*1e4)/1e4;A!==g&&(document.getElementsByTagName("html")[0].style.cssText="font-size: "+A*(A/g)+"px")}f()};!e.addEventListener||(t.addEventListener(n,r,!1),e.addEventListener("DOMContentLoaded",r,!1))})(document,window);RI.configure({showSpinner:!1});pfe(function(e){const t=Xu(Vve),n=khe(),r=fge();t.config.globalProperties.$isPrivate=e,t.config.globalProperties.inited=!1,t.config.globalProperties.$noop=()=>{},t.config.globalProperties.$cookie={isEnabled:Nde,get:Lc,set:ts,delete:Fn},gRe(t),_ve(t),t.use(r),t.use(n),XCe(t),n.beforeEach((i,a,s)=>{RI.start(),s()}),n.beforeEach(hRe(t)),n.beforeEach(vRe(t,r)),n.beforeEach((i,a,s)=>{if(i.name=="MyIdol"&&!Lc(bt.COOKIE_TOKEN)&&i.fullPath!==gI){s(gI);return}s()}),n.beforeEach(pRe(t,r)),n.beforeEach(mRe()),n.afterEach(i=>{var a=i.fullPath;try{_hmt&&_hmt.push(["_trackPageview",decodeURI(a)])}catch{}RI.done()}),window.__iIndexApp__=t,t.mount("#app")});
 
- console.log(Kt);
+
+ function decrypto_response() {
+  input_e = {"data":"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","isEncrypt":1,"result":1,"fetchTime":0,"loginStatus":0,"totalNo":0,"residueNum":0,"updatedNum":0,"pageNum":0,"pageLimit":0,"lastFetchTime":1745491407307}
+  return Kt.dataFilter(input_e, undefined)
+}
+console.log(decrypto_response())
+
  
