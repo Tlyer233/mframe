@@ -46,6 +46,7 @@ function getCommon(includeCrypto = true) {
     code += fs.readFileSync(`${__dirname}/browser/Node.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/browser/Element.js`) + "\r\n";
     code += fs.readFileSync(`${__dirname}/browser/HTMLElement.js`) + "\r\n";
+    code += fs.readFileSync(`${__dirname}/browser/Event.js`) + "\r\n";
 
     /**HTMLElements: DOM元素 */
     code += htmlelements.GetCode() + "\r\n";

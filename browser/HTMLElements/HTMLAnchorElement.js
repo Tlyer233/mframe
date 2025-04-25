@@ -13,8 +13,6 @@ Object.defineProperties(HTMLAnchorElement.prototype, {
 var curMemoryArea = mframe.memory.HTMLAnchorElement = {};
 
 //============== Constant START ==================
-Object.defineProperty(HTMLAnchorElement, "arguments", { configurable: false, enumerable: false, value: null, writable: false, });
-Object.defineProperty(HTMLAnchorElement, "caller", { configurable: false, enumerable: false, value: null, writable: false, });
 //==============↑↑Constant END↑↑==================
 
 //%%%%%%% Attribute START %%%%%

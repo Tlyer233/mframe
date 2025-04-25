@@ -274,6 +274,14 @@ Document.prototype["querySelector"] = function querySelector() {
     mframe.log({ flag: 'function', className: 'Document', methodName: 'querySelector', inputVal: arguments, res: res });
     return res;
 }; mframe.safefunction(Document.prototype["querySelector"]);
+
+Document.prototype["createEvent"] = function createEvent() {
+    var res = mframe.memory.event();
+    res.jsdomMemory =mframe.proxy( mframe.memory.jsdom.document['createEvent'](...arguments));
+    res = mframe.proxy(res);
+    mframe.log({ flag: 'function', className: 'Document', methodName: 'createEvent', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Document.prototype["createEvent"]);
 //==============↑↑Function END↑↑====================
 ///////////////////////////////////////////////////
 document.location = location;

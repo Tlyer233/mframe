@@ -14,8 +14,6 @@ Object.defineProperties(HTMLScriptElement.prototype, {
 var curMemoryArea = mframe.memory.HTMLScriptElement = {};
 
 //============== Constant START ==================
-Object.defineProperty(HTMLScriptElement, "arguments", { configurable: false, enumerable: false, value: null, writable: false, });
-Object.defineProperty(HTMLScriptElement, "caller", { configurable: false, enumerable: false, value: null, writable: false, });
 //==============↑↑Constant END↑↑==================
 
 //%%%%%%% Attribute START %%%%%

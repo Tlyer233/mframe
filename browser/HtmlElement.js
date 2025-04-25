@@ -14,8 +14,6 @@ Object.defineProperties(HTMLElement.prototype, {
 var curMemoryArea = mframe.memory.HTMLElement = {};
 
 //============== Constant START ==================
-Object.defineProperty(HTMLElement, "arguments", { configurable: false, enumerable: false, value: null, writable: false, });
-Object.defineProperty(HTMLElement, "caller", { configurable: false, enumerable: false, value: null, writable: false, });
 //==============↑↑Constant END↑↑==================
 
 //%%%%%%% Attribute START %%%%%
@@ -125,6 +123,8 @@ curMemoryArea.draggable_setter = function draggable(val) { this._draggable = val
 Object.defineProperty(curMemoryArea.draggable_setter, "name", {value: "set draggable",configurable: true,});
 Object.defineProperty(HTMLElement.prototype, "draggable", {get: curMemoryArea.draggable_getter,set: curMemoryArea.draggable_setter,enumerable: true,configurable: true,});
 curMemoryArea.draggable_smart_getter = function draggable() {
+    console.log("开始补吧");
+    
     if(mframe.memory.jsdom.document) {return this.jsdomMemory.draggable;}
     if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
     return this._draggable !== undefined ? this._draggable : ''; // 返回实例属性或默认值

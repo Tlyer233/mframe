@@ -14,8 +14,6 @@ Object.defineProperties(HTMLCanvasElement.prototype, {
 var curMemoryArea = mframe.memory.HTMLCanvasElement = {};
 
 //============== Constant START ==================
-Object.defineProperty(HTMLCanvasElement, "arguments", { configurable: false, enumerable: false, value: null, writable: false, });
-Object.defineProperty(HTMLCanvasElement, "caller", { configurable: false, enumerable: false, value: null, writable: false, });
 //==============↑↑Constant END↑↑==================
 
 //%%%%%%% Attribute START %%%%%

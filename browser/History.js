@@ -1,6 +1,5 @@
 var History = function () {
-    debugger;
-    throw new TypeError('History 不允许被new')
+    throw new TypeError('Illegal constructor')
 }; mframe.safefunction(History);
 
 Object.defineProperties(History.prototype, {

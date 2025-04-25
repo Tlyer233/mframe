@@ -94,7 +94,7 @@ mframe.proxy = function (o) {
 mframe.jsdomProxy = function (o) {
     if (mframe.memory.config.proxy == false || mframe.memory.config.jsdomProxy == false) return o;
     // 定义无需打印的属性
-    const ignoreProerties = ['prototype', 'constructor'];  // Preperties属性
+    const ignoreProerties = ['prototype', 'constructor','toJSON'];  // Preperties属性
     const ignoreSymbols = ['Symbol(impl)', 'Symbol(SameObject caches)']; // Symbol属性
     const objLength = mframe.memory.config.log['objLength'];    //  日志长度
     const propertyLength = mframe.memory.config.log['propertyLength'];

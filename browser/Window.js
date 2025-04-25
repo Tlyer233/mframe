@@ -58,33 +58,7 @@ window["prompt"] = function prompt() {
     mframe.log({ flag: 'function', className: 'window', methodName: 'prompt', inputVal: arguments, res: res });
 }; mframe.safefunction(window["prompt"]);
 
-window.MutationObserver = mframe.proxy(mframe.memory.jsdom.window.MutationObserver)
-// 保存原始的MutationObserver
-const OriginalMutationObserver = mframe.memory.jsdom.window.MutationObserver;
 
-// 创建一个新的MutationObserver构造函数
-mframe.memory.jsdom.window.MutationObserver = function (callback) {
-    // 创建原始的MutationObserver实例
-    const originalObserver = new OriginalMutationObserver(callback);
-
-    // 重写observe方法
-    const originalObserve = originalObserver.observe;
-    originalObserver.observe = function (target, options) {
-        // 如果target是全局document，替换为jsdom的document
-        if (target === document) {
-            console.log("[Hook] 替换MutationObserver目标: 从全局document到jsdom document");
-            target = mframe.memory.jsdom.document;
-        }
-
-        // 调用原始observe方法
-        return originalObserve.call(this, target, options);
-    };
-
-    return originalObserver;
-};
-
-// 保持原型链一致(这个在源代码中删除就好了, or在Node环境中运行)
-// mframe.memory.jsdom.window.MutationObserver.prototype = OriginalMutationObserver.prototype;
 ///////////////////////////////////////////////////
 // 属性
 window.top = window;

@@ -196,48 +196,19 @@ mframe.proxy = function (o) {
     delete Function.prototype['toString']; //删除原型链上的toString
     set_native(Function.prototype, "toString", myToString); //自己定义个getter方法
     set_native(Function.prototype.toString, myFunction_toString_symbol, "function toString() { [native code] }"); //套个娃 保护一下我们定义的toString 否则就暴露了
-    this.mframe.safefunction = (func) => {
+    mframe.safefunction = (func) => {
         set_native(func, myFunction_toString_symbol, `function ${myFunction_toString_symbol,func.name || ''}() { [native code] }`);
     }; //导出函数到globalThis
 }).call(this);
 
-
+// _crypto=crypto
 
 
 
 mframe.memory.config.proxy=true
 // 创建 Crypto 类
 
-_crypto = crypto; // 保留从vm2加载的crypto
-var Crypto = function Crypto() {
-    throw new TypeError("Illegal constructor");
-}; mframe.safefunction(Crypto);
 
-Object.defineProperties(Crypto.prototype, {
-    [Symbol.toStringTag]: {
-        value: "Crypto",
-        configurable: true,
-    }
-})
-
-// 使用原生crypto对象的方法
-var crypto = {}
-///////////////////////////////////////////
-Crypto.prototype.getRandomValues = function getRandomValues(array) {
-    return _crypto.getRandomValues(array);
-}; mframe.safefunction(Crypto.prototype.getRandomValues)
-
-Crypto.prototype.randomUUID = function randomUUID(array) {
-    return _crypto.randomUUID(array);
-}; mframe.safefunction(Crypto.prototype.randomUUID)
-
-// 使用SubtleCrypto
-crypto.subtle = _crypto.subtle ? mframe.proxy(_crypto.subtle) : mframe.proxy(new (class SubtleCrypto { }));
-///////////////////////////////////////////
-crypto.__proto__ = Crypto.prototype
-
-crypto = mframe.proxy(crypto)
-Crypto = mframe.proxy(Crypto)
 var Storage = function Storage() {
     throw new TypeError('Illegal constructor');
 }; mframe.safefunction(Storage)
@@ -360,7 +331,7 @@ WindowProperties.prototype.__proto__ = EventTarget.prototype
 
 
 
-window = this;
+window = global;
 var Window = function Window() {
     debugger;
     throw new TypeError('WindowProperties不允许被new');

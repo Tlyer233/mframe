@@ -6,18 +6,20 @@ const { JSDOM } = require('jsdom');       // mframe必须基于jsdom
 /**可选模块 */
 const { XMLHttpRequest } = require('xmlhttprequest');  // 引入 XMLHttpRequest 模拟库
 const dom = new JSDOM(` 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html>
     <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <meta id="LqoV0dyCu4zp" content="JIZD1fHlq_._WyrwMllmMch1OzOPDIqxxZsvR03sEoDyiWhPlMGnqQeJXMNuW3YDvUUbs2WRsT3" r='m'>
-        <!--[if lt IE 9]><script r='m'>document.createElement("section")</script><![endif]-->
-        <script type="text/javascript" r='m'></script>
-        <script type="text/javascript" charset="utf-8" src="/uXDCTVkcv724/t8MvF5VukNwZ.303c6e9.js" r='m'></script>
+        <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0" name="description" content="A comprehensive example of meta attributes." name="keywords" content="HTML, Meta, Attributes" name="author" content="Kimi" http-equiv="refresh" content="30">
+        <script></script>
+        <link rel="icon" href="//www.jd.com/favicon.ico" type="image/x-icon">
     </head>
-    <body></body>
+    <body>
+        <div class="theup-submit-text">感谢您的反馈</div>
+    </body>
 </html>
 `);
+// <meta charset="utf-8">
+// <div class="theup-submit-text">感谢您的反馈</div>
 
 
 
@@ -30,45 +32,44 @@ var userConfig = {
         objLength: 20,      // [方法/属性]    对象(名)长度
         propertyLength: 30, // [方法/属性]    属性(名)长度
         typeLength: 10,     // [属性]         方法类型get/set长度
-        inputLength: 50,    // [vm_log][方法] 传入
+        inputLength: 100,    // [vm_log][方法] 传入
         resLength: 30,      // [vm_log][方法] 返回值
     },
     // 初始化网站Location
     initLocation: { // copy(window.location);
-        "ancestorOrigins": {},
-        "href": "https://www.fcbox.com/pages/user/login.html",
-        "origin": "https://www.fcbox.com",
+        "href": "https://union.jd.com/proManager/index",
+        "origin": "https://union.jd.com",
         "protocol": "https:",
-        "host": "www.fcbox.com",
-        "hostname": "www.fcbox.com",
+        "host": "union.jd.com",
+        "hostname": "union.jd.com",
         "port": "",
-        "pathname": "/pages/user/login.html",
+        "pathname": "/proManager/index",
         "search": "",
         "hash": ""
     },
     // 初始化网站navigator
     initNavigator: { // (function(){const props=['userAgent','language','languages','appVersion','platform','hardwareConcurrency','webdriver','appName','appCodeName','deviceMemory','maxTouchPoints','onLine','pdfViewerEnabled','vendor','vendorSub','product','productSub'];const result=props.map(prop=>`${prop}:${JSON.stringify(navigator[prop])},`).join('\n');copy(result)})();
-        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-        language: "zh-CN",
-        languages: ["zh-CN", "en", "zh"],
-        appVersion: "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-        platform: "Win32",
-        hardwareConcurrency: 16,
-        webdriver: false,
-        appName: "Netscape",
-        appCodeName: "Mozilla",
-        deviceMemory: 8,
-        maxTouchPoints: 20,
-        onLine: true,
-        pdfViewerEnabled: true,
-        vendor: "Google Inc.",
-        vendorSub: "",
-        product: "Gecko",
-        productSub: "20030107",
+        userAgent:"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+        language:"zh-CN",
+        languages:["zh-CN","zh","zh-TW","zh-HK","en-US","en"],
+        appVersion:"5.0 (Windows)",
+        platform:"Win32",
+        hardwareConcurrency:16,
+        webdriver:false,
+        appName:"Netscape",
+        appCodeName:"Mozilla",
+        deviceMemory:undefined,
+        maxTouchPoints:20,
+        onLine:true,
+        pdfViewerEnabled:true,
+        vendor:"",
+        vendorSub:"",
+        product:"Gecko",
+        productSub:"20100101",
     }
 }
 
-const codeFile = `${__dirname}/target/12.娱乐指数/code.js`;                        // 需要运行的目标文件
+const codeFile = `${__dirname}/target/16.京东联盟/code.js`;                        // 需要运行的目标文件
 const allCode = mframe.GetCode(userConfig) + fs.readFileSync(codeFile);           // VM2环境  完整代码
 syncNodeEnvInject()
 const nodeEnvCode = mframe.GetNodeEnvCode(userConfig) + fs.readFileSync(codeFile);// nodeEnv完整代码

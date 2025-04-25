@@ -12,8 +12,6 @@ Object.defineProperties(HTMLMetaElement.prototype, {
 var curMemoryArea = mframe.memory.HTMLMetaElement = {};
 
 //============== Constant START ==================
-Object.defineProperty(HTMLMetaElement, "arguments", { configurable: false, enumerable: false, value: null, writable: false, });
-Object.defineProperty(HTMLMetaElement, "caller", { configurable: false, enumerable: false, value: null, writable: false, });
 //==============↑↑Constant END↑↑==================
 
 //%%%%%%% Attribute START %%%%%
@@ -30,7 +28,7 @@ Object.defineProperty(curMemoryArea.name_setter, "name", {value: "set name",conf
 Object.defineProperty(HTMLMetaElement.prototype, "name", {get: curMemoryArea.name_getter,set: curMemoryArea.name_setter,enumerable: true,configurable: true,});
 curMemoryArea.name_smart_getter = function name() {
     if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
-    res = this._name !== undefined ? this._name : this.jsdomMemory.name; // 返回实例属性或jsdom值
+    res = this._name || this.jsdomMemory.name || ""||"";
     mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'name', method: 'get', val: res }); 
     return res; 
 }; mframe.safefunction(curMemoryArea.name_smart_getter);
@@ -49,7 +47,7 @@ Object.defineProperty(curMemoryArea.httpEquiv_setter, "name", {value: "set httpE
 Object.defineProperty(HTMLMetaElement.prototype, "httpEquiv", {get: curMemoryArea.httpEquiv_getter,set: curMemoryArea.httpEquiv_setter,enumerable: true,configurable: true,});
 curMemoryArea.httpEquiv_smart_getter = function httpEquiv() {
     if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
-    res = this._httpEquiv !== undefined ? this._httpEquiv : this.jsdomMemory.httpEquiv; // 返回实例属性或jsdom值
+    res = this._httpEquiv || this.jsdomMemory.httpEquiv||"";
     mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'httpEquiv', method: 'get', val: res }); 
     return res; 
 }; mframe.safefunction(curMemoryArea.httpEquiv_smart_getter);
@@ -68,7 +66,7 @@ Object.defineProperty(curMemoryArea.content_setter, "name", {value: "set content
 Object.defineProperty(HTMLMetaElement.prototype, "content", {get: curMemoryArea.content_getter,set: curMemoryArea.content_setter,enumerable: true,configurable: true,});
 curMemoryArea.content_smart_getter = function content() {
     if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
-    res = this._content !== undefined ? this._content : this.jsdomMemory.content; // 返回实例属性或jsdom值
+    res = this._content || this._content|| this.jsdomMemory.content||"";
     mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'content', method: 'get', val: res }); 
     return res; 
 }; mframe.safefunction(curMemoryArea.content_smart_getter);
@@ -87,7 +85,7 @@ Object.defineProperty(curMemoryArea.media_setter, "name", {value: "set media",co
 Object.defineProperty(HTMLMetaElement.prototype, "media", {get: curMemoryArea.media_getter,set: curMemoryArea.media_setter,enumerable: true,configurable: true,});
 curMemoryArea.media_smart_getter = function media() {
     if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
-    res = this._media !== undefined ? this._media : this.jsdomMemory.media; // 返回实例属性或jsdom值
+    res = this._media || this.jsdomMemory.media|| "";
     mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'media', method: 'get', val: res }); 
     return res; 
 }; mframe.safefunction(curMemoryArea.media_smart_getter);
@@ -106,7 +104,7 @@ Object.defineProperty(curMemoryArea.scheme_setter, "name", {value: "set scheme",
 Object.defineProperty(HTMLMetaElement.prototype, "scheme", {get: curMemoryArea.scheme_getter,set: curMemoryArea.scheme_setter,enumerable: true,configurable: true,});
 curMemoryArea.scheme_smart_getter = function scheme() {
     if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
-    res = this._scheme !== undefined ? this._scheme : this.jsdomMemory.scheme; // 返回实例属性或jsdom值
+    res = this._scheme || this._scheme|| this.jsdomMemory.scheme||"";
     mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'scheme', method: 'get', val: res }); 
     return res; 
 }; mframe.safefunction(curMemoryArea.scheme_smart_getter);

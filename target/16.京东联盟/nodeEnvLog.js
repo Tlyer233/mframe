@@ -1,0 +1,5697 @@
+// [Tool]框架内存 
+var mframe = {};
+/** mframe.memory.config
+ * proxy(boolean):     是否开启代理(default:false)
+ * pluginArray[array]: 插件列表
+ * jsdomArray[array]:  注入的jsdom元素,命名必须为jsdomXXX
+ */
+mframe.memory = {
+    // mframe相关配置的内存空间
+    config: {
+        proxy: true,      // 是否开启代理
+        nodeEnv: false,   // 是否使用node环境
+        proxyValue: true, // 是否打印值
+        jsdomProxy: true, // 是否在jsdom内部进行代理[建议开启]
+        pluginArray: [
+            {// 插件1: PDF查看器
+                description: "Portable Document Format",
+                filename: "internal-pdf-viewer",
+                name: "PDF Viewer",
+                mimeTypeArray: [
+                    {
+                        description: "Portable Document Format",
+                        enabledPlugin: "Plugin",
+                        suffixes: "pdf",
+                        type: "application/pdf",
+                    },
+                    {
+                        description: "PDF Embedded Document",
+                        enabledPlugin: "Plugin",
+                        suffixes: "pdf",
+                        type: "application/x-google-chrome-pdf",
+                    }
+                ]
+            },
+            {// 插件2: Chrome Native Client
+                description: "Native Client Module",
+                filename: "internal-nacl-plugin",
+                name: "Native Client",
+                mimeTypeArray: [
+                    {
+                        description: "Native Client Executable",
+                        enabledPlugin: "Plugin",
+                        suffixes: "nexe",
+                        type: "application/x-nacl",
+                    },
+                    {
+                        description: "Portable Native Client Executable",
+                        enabledPlugin: "Plugin",
+                        suffixes: "pexe",
+                        type: "application/x-pnacl",
+                    }
+                ]
+            },
+            {// 插件3: Widevine内容解密模块
+                description: "Enables Widevine licenses for playback of HTML audio/video content.",
+                filename: "widevinecdmadapter.dll",
+                name: "Widevine Content Decryption Module",
+                mimeTypeArray: [
+                    {
+                        description: "Widevine Content Decryption Module",
+                        enabledPlugin: "Plugin",
+                        suffixes: "",
+                        type: "application/x-ppapi-widevine-cdm",
+                    }
+                ]
+            },
+            {// 插件4: Chrome媒体路由器
+                description: "Handles media routing for Cast-enabled sites",
+                filename: "internal-media-router",
+                name: "Chrome Media Router",
+                mimeTypeArray: [
+                    {
+                        description: "Google Cast",
+                        enabledPlugin: "Plugin",
+                        suffixes: "",
+                        type: "application/vnd.google.cast.receiver",
+                    },
+                    {
+                        description: "Media Router Implementation",
+                        enabledPlugin: "Plugin",
+                        suffixes: "",
+                        type: "application/x-media-router-plugin",
+                    }
+                ]
+            },
+            { // 插件5: Chromium PDF插件
+                description: "Chromium PDF Renderer",
+                filename: "chrome-pdf.plugin",
+                name: "Chromium PDF Plugin",
+                mimeTypeArray: [
+                    {
+                        description: "Chromium PDF Format",
+                        enabledPlugin: "Plugin",
+                        suffixes: "pdf",
+                        type: "application/x-shockwave-flash",
+                    },
+                    {
+                        description: "PDF Inline Document",
+                        enabledPlugin: "Plugin",
+                        suffixes: "pdf",
+                        type: "text/pdf",
+                    },
+                    {
+                        description: "PDF Embedded Content",
+                        enabledPlugin: "Plugin",
+                        suffixes: "pdf",
+                        type: "application/pdf-embedded",
+                    }
+                ]
+            }
+        ],
+        jsdomArray: ['jsdomDocument', 'jsdomWindow', 'jsdomNavigator',],
+        log: {  // 打印日志的长度
+            objLength: 20,      // [方法/属性]    对象(名)长度
+            propertyLength: 30, // [方法/属性]    属性(名)长度
+            typeLength: 10,     // [属性]         方法类型get/set长度
+            inputLength: 50,    // [vm_log][方法] 传入
+            resLength: 30,      // [vm_log][方法] 返回值
+        },
+
+
+        // 浏览器指纹
+        initScreen: {  // [浏览器指纹]screen初始参数
+            availHeight: 1152,
+            availLeft: 0,
+            availTop: 0,
+            availWidth: 2048,
+            colorDepth: 24,
+            height: 1152,
+            isExtended: false,
+            onchange: null,
+            orientation: {
+                angle: 0,
+                onchange: null,
+                type: "landscape-primary",
+            },
+            pixelDepth: 24,
+            width: 2048
+        },
+        // 华能(瑞5)
+        // copy(window.location);
+        initLocation: {
+            "ancestorOrigins": {},
+            "href": "https://zbzx.lzjtu.edu.cn/",
+            "origin": "https://zbzx.lzjtu.edu.cn",
+            "protocol": "https:",
+            "host": "zbzx.lzjtu.edu.cn",
+            "hostname": "zbzx.lzjtu.edu.cn",
+            "port": "",
+            "pathname": "/",
+            "search": "",
+            "hash": ""
+        },
+
+        // (function(){const props=['userAgent','language','languages','appVersion','platform','hardwareConcurrency','webdriver','appName','appCodeName','deviceMemory','maxTouchPoints','onLine','pdfViewerEnabled','vendor','vendorSub','product','productSub'];const result=props.map(prop=>`${prop}:${JSON.stringify(navigator[prop])},`).join('\n');copy(result)})();
+        initNavigator: {
+            userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+            language: "zh-CN",
+            languages: ["zh-CN"],
+            appVersion: "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+            platform: "Win32",
+            hardwareConcurrency: 16,
+            webdriver: false,
+            appName: "Netscape",
+            appCodeName: "Mozilla",
+            deviceMemory: 8,
+            maxTouchPoints: 20,
+            onLine: true,
+            pdfViewerEnabled: true,
+            vendor: "Google Inc.",
+            vendorSub: "",
+            product: "Gecko",
+            productSub: "20030107",
+        },
+    },
+};
+
+// 一.HTMLXXXElement的内存空间
+mframe.memory.htmlelements = {};
+
+// 二.jsdom专属的空间 mframe.memory.jsdom.document
+mframe.memory.jsdom = {};
+for (let i = 0; i < mframe.memory.config.jsdomArray.length; i++) {
+    const elementName = mframe.memory.config.jsdomArray[i];
+    if (typeof global[elementName] !== 'undefined') {
+        // 根据元素名称确定在 mframe.memory.jsdom 中的属性名
+        const propertyName = elementName.replace('jsdom', '').toLowerCase();
+        mframe.memory.jsdom[propertyName] = global[elementName];  // 将元素存储到 mframe 内存中
+        delete global[elementName];// 在全局中删除该元素(保证只有通过我们的内存才能访问)
+    }
+}
+// [Tool]统一错误类
+mframe.memory.get_invocation_error = function get_invocation_error() {
+    let e = new Error();
+    e.name = "TypeError";
+    e.message = "Illegal constructor";
+    e.stack = "VM988:1 Uncaught TypeError: Illegal invocation \r\n at <anonymous>:1:21";
+    return e;
+}
+/** [Tool]代理方法 
+ * 对某个"东西"进行代理Proxy后, 以后是使用"代理对象", 而不是原对象
+ * eval(`${o} = new Proxy(${o}, ${handler})`); 帮你完成 window = proxy("window")的操作
+ * @param {需要代理的对象(str)} o 
+一. 输出彩色文本到控制台
+console.log('\x1b[33m%s\x1b[0m', '这是黄色的文字'); // 输出黄色文本
+console.log('\x1b[31m%s\x1b[0m', '这是红色的文字'); // 输出红色文本
+console.log('\x1b[36m%s\x1b[0m', '这是青色的文字'); // 输出青色文本
+console.log('\x1b[32m%s\x1b[0m', '这是绿色的文字'); // 输出绿色文本
+参考: https://juejin.cn/post/7355382754693464105
+恢复: \x1b[0m
+前景色（文字颜色）
+    黑色：\x1b[30m
+    红色：\x1b[31m
+    绿色：\x1b[32m
+    黄色：\x1b[33m
+    蓝色：\x1b[34m
+    品红：\x1b[35m
+    青色：\x1b[36m
+    白色：\x1b[37m
+背景色：
+    黑色：\x1b[40m
+    红色：\x1b[41m
+    绿色：\x1b[42m
+    黄色：\x1b[43m
+    蓝色：\x1b[44m
+    品红：\x1b[45m
+    青色：\x1b[46m
+    白色：\x1b[47m
+*/
+
+
+
+mframe.proxy = function (o) {
+    if (mframe.memory.config.proxy == false) return o;
+    // 定义无需打印的属性
+    const ignoreProerties = ['prototype', 'constructor', 'jsdomMemory', '0', 'toJSON'];  // Preperties属性
+    const ignoreSymbols = ['Symbol(nodejs.util.inspect.custom)', 'Symbol(Symbol.toStringTag)'];                // Symbol属性
+    const objLength = mframe.memory.config.log['objLength'];    //  日志长度
+    const propertyLength = mframe.memory.config.log['propertyLength'];
+    const typeLength = mframe.memory.config.log['typeLength'];
+    return new Proxy(o, {
+        set(target, property, value, receiver) {
+            // 一.清洗日志
+            const isSpecial = ignoreProerties.includes(property);
+            const isImplSymbol = typeof property === 'symbol' && ignoreSymbols.includes(property.toString());
+            if (isSpecial || isImplSymbol) {
+                return Reflect.set(target, property, value, receiver);
+            }
+            // mframe.memory.config.proxy = false;
+            // 二.日志打印
+            var logContent = `方法:set 对象 ${padString(target.constructor.name, objLength)} 属性 ${padString(String(property), propertyLength)} 值类型 ${padString(typeof value, typeLength)}`; // 基础日志
+            if (mframe.memory.config.proxyValue) logContent += " 值" + formatValueForDisplay(value);          // 全量日志
+            console.log(logContent);
+            // mframe.memory.config.proxy = true;
+            // 三.正常设置
+            return Reflect.set(target, property, value, receiver);
+        },
+        get(target, property, receiver) {
+
+            if(property==="_bx") {
+                console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                
+            }
+            // console.log(property,mframe.proxy['jsdomFlag'] );
+            // 一.清洗日志
+            const isSpecial = ignoreProerties.includes(property);
+            const isImplSymbol = typeof property === 'symbol' && ignoreSymbols.includes(property.toString());
+            if (isSpecial || isImplSymbol) {
+                return Reflect.get(target, property, receiver);
+            }
+            if(property==="_bx") {
+                console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", target.constructor.name);
+                
+            }
+            // mframe.memory.config.proxy = false;
+            // 二.日志打印
+            // 获取属性值
+            const value = Reflect.get(target, property, receiver);
+
+            // 打印获取操作的日志   
+            var logContent = `方法:\x1b[32mget\x1b[0m 对象 ${padString(target.constructor.name, objLength)} 属性 ${padString(String(property), propertyLength)} 值类型 ${value === undefined ? "\x1b[31m" + padString("undefined", typeLength) + "\x1b[0m" : padString(typeof value, typeLength)}`;
+            if (mframe.memory.config.proxyValue) logContent += " 值" + formatValueForDisplay(value);                                 // 全量日志
+            if (value === undefined)
+                logContent = `\x1b[1m${logContent}\x1b[0m`
+            logContent = parseColorString(logContent);
+            console.log(logContent);
+            // mframe.memory.config.proxy = true;
+            // 三.正常返回
+            return value;
+        }
+    });
+}
+mframe.jsdomProxy = function (o) {
+    if (mframe.memory.config.proxy == false || mframe.memory.config.jsdomProxy == false) return o;
+    // 定义无需打印的属性
+    const ignoreProerties = ['prototype', 'constructor','toJSON'];  // Preperties属性
+    const ignoreSymbols = ['Symbol(impl)', 'Symbol(SameObject caches)']; // Symbol属性
+    const objLength = mframe.memory.config.log['objLength'];    //  日志长度
+    const propertyLength = mframe.memory.config.log['propertyLength'];
+    const typeLength = mframe.memory.config.log['typeLength'];
+
+    return new Proxy(o, {
+        set(target, property, value, receiver) {
+            // 一.清洗日志
+            const isSpecial = ignoreProerties.includes(property);
+            const isImplSymbol = typeof property === 'symbol' && ignoreSymbols.includes(property.toString());
+            if (isSpecial || isImplSymbol) return Reflect.set(target, property, value, receiver);
+            // mframe.memory.config.proxy = false;
+            // 二.日志打印
+            var logContent = `方法:\x1b[37mset\x1b[0m 对象 ${padString(target.constructor.name, objLength)} 属性 ${padString(String(property), propertyLength)} 值类型 ${padString(typeof value, typeLength)}`; // 基础日志
+            if (mframe.memory.config.proxyValue) logContent += " 值" + formatValueForDisplay(value);          // 全量日志
+            logContent = `\x1b[36m${logContent}\x1b[0m`;
+            logContent = parseColorString(logContent);
+            console.log(logContent);
+            // mframe.memory.config.proxy = true;
+            // 三.正常设置
+            return Reflect.set(target, property, value, receiver);
+        },
+        get(target, property, receiver) {
+            // 一.清洗日志
+            const isSpecial = ignoreProerties.includes(property);
+            const isImplSymbol = typeof property === 'symbol' && ignoreSymbols.includes(property.toString());
+            if (isSpecial || isImplSymbol) {
+                return Reflect.get(target, property, receiver);
+            }
+            // mframe.memory.config.proxy = false;
+            // 二.日志打印
+            // 获取属性值
+            const value = Reflect.get(target, property, receiver);
+
+            // 打印获取操作的日志   
+            var logContent = `方法:\x1b[32mget\x1b[0m 对象 ${padString(target.constructor.name, objLength)} 属性 ${padString(String(property), propertyLength)} 值类型 ${value === undefined ? "\x1b[31" + padString("mundefined", 10) + "\x1b[0m" : padString(typeof value, 10)}`;
+            // var logContent = `方法:\x1b[32mget\x1b[0m 对象 ${target.constructor.name} 属性 ${String(property)} 值类型 ${value === undefined ? "\x1b[31mundefined\x1b[0m" : typeof value}`;
+            if (mframe.memory.config.proxyValue) logContent += " 值" + formatValueForDisplay(value);                                 // 全量日志
+            logContent = `\x1b[36m${logContent}\x1b[0m`;
+            logContent = parseColorString(logContent);
+            console.log(logContent);
+            // mframe.memory.config.proxy = true;
+            // 三.正常返回
+            return value;
+        }
+    });
+}
+
+
+// 格式化值以便打印
+function formatValueForDisplay(value, orderLength = 30) {
+    if (value === null) return "null";
+    if (value === undefined) return "undefined";
+    const type = typeof value;
+    
+    // 处理不同类型的值，并确保移除所有换行符
+    let result = "";
+    
+    if (type === "symbol") {
+        result = value.toString();
+    } else if (type === "function") {
+        const funcStr = value.toString().replace(/\r?\n/g, " ").replace(/\s+/g, " ");
+        result = funcStr.length > orderLength ? funcStr.substring(0, orderLength - 3) + '...' : funcStr;
+    } else if (type === "object") {
+        if (Array.isArray(value)) {
+            result = value.length > 10 ? `[${value.slice(0, 5).join(", ")}, ... ${value.length} items]` : JSON.stringify(value);
+        } else if (value instanceof Date || value instanceof RegExp) {
+            result = value.toString();
+        } else {
+            try {
+                const str = JSON.stringify(value).replace(/\r?\n/g, " ");
+                result = str.length > orderLength ? str.substring(0, orderLength - 3) + "..." : str;
+            } catch (e) {
+                result = `[object ${value.constructor.name || 'Object'}]`;
+            }
+        }
+    } else if (type === "string") {
+        result = value.replace(/\r?\n/g, " ").replace(/\s+/g, " ");
+        result = result.length > orderLength ? result.substring(0, orderLength - 3) + "..." : result;
+    } else {
+        result = String(value).replace(/\r?\n/g, " ").replace(/\s+/g, " ");
+    }
+    
+    // 最终确保移除所有换行并压缩多余空格
+    return result.replace(/\r?\n/g, " ").replace(/\s+/g, " ");
+}
+
+/** 解析带有ANSI转义颜色代码的字符串，正确处理嵌套颜色
+ * 
+ * @param {string} input 带有ANSI转义颜色代码的字符串
+ * @return {string} 处理后的字符串，正确处理嵌套颜色
+ */
+function parseColorString(input) {
+    // 用于匹配ANSI颜色代码的正则表达式
+    const colorRegex = /\x1b\[([\d;]+)m/g;
+
+    // 用于存储颜色代码栈
+    const colorStack = [];
+
+    // 结果字符串
+    let result = '';
+
+    // 上一个匹配位置
+    let lastIndex = 0;
+
+    // 查找所有的颜色代码
+    let match;
+    while ((match = colorRegex.exec(input)) !== null) {
+        // 获取匹配的颜色代码
+        const fullColorCode = match[0];
+        const colorValue = match[1];
+
+        // 添加颜色代码前的文本
+        result += input.substring(lastIndex, match.index);
+
+        // 处理颜色代码
+        if (colorValue === '0') {
+            // 这是重置代码
+            result += fullColorCode;
+
+            // 弹出当前颜色
+            colorStack.pop();
+
+            // 如果栈不为空，则添加栈顶的颜色代码
+            if (colorStack.length > 0) {
+                result += colorStack[colorStack.length - 1];
+            }
+        } else {
+            // 这是设置颜色的代码
+            result += fullColorCode;
+
+            // 将颜色代码压入栈
+            colorStack.push(fullColorCode);
+        }
+
+        // 更新上一个匹配位置
+        lastIndex = match.index + fullColorCode.length;
+    }
+
+    // 添加剩余的文本
+    result += input.substring(lastIndex);
+
+    return result;
+}
+
+/**
+ * 将字符串填充到固定长度，过长则截断并添加省略号
+ * @param {string} str 原始字符串
+ * @param {number} length 目标长度
+ * @return {string} 处理后的固定长度字符串
+ */
+function padString(str, length = 10) {
+    if (!str) return ' '.repeat(length);
+
+    // 如果字符串长度超过指定长度，截断并添加省略号
+    if (str.length > length) {
+        return str.substring(0, length - 3) + '...';
+    }
+
+    // 如果字符串长度不足，填充空格
+    return str.padEnd(length, ' ');
+}
+// [Tool] toString 保护
+!(() => {
+    "use strict";
+    const $toString = Function.toString;
+    const myFunction_toString_symbol = Symbol('('.concat('', ')_', (Math.random() + '').toString(36)));
+    const myToString = function() {
+        return typeof this == 'function' && this[myFunction_toString_symbol] || $toString.call(this);
+    };
+    function set_native(func, key, value) {
+        Object.defineProperty(func, key, {
+            "enumerable": false,
+            "configurable": true,
+            "writable": true,
+            "value": value
+        })
+    };
+    delete Function.prototype['toString']; //删除原型链上的toString
+    set_native(Function.prototype, "toString", myToString); //自己定义个getter方法
+    set_native(Function.prototype.toString, myFunction_toString_symbol, "function toString() { [native code] }"); //套个娃 保护一下我们定义的toString 否则就暴露了
+    mframe.safefunction = (func) => {
+        set_native(func, myFunction_toString_symbol, `function ${myFunction_toString_symbol,func.name || ''}() { [native code] }`);
+    }; //导出函数到globalThis
+}).call(this);
+
+
+
+
+// 日志打印(如方法传递等)
+/**
+ *  传入: * 'property', 'function'必须传入, 且只能传入,最好是用户调用的时候, 让其选择
+ *  方法日志: 
+ *     * console.log(`类:${class} 方法:${methodName} 传入:${inputVal} 返回:${res}`);
+ *  property: 
+ *     * method为 get: console.log(`类:${class}, 属性:${propertyName} 方法:${method} 返回:${val}`);
+ *     * method为 set: console.log(`类:${class}, 属性:${propertyName} 方法:${method} 设置:${val}`);
+ */
+
+// 日志打印方法
+/**
+ * 记录属性访问或方法调用的日志
+ * @param {object} options - 日志选项
+ * @param {'property' | 'function'} options.flag - 日志类型: 'property' 或 'function'
+ * @param {string} options.className - 类名
+ * @param {string} [options.methodName] - 方法名 (当 flag 为 'function')
+ * @param {*} [options.inputVal] - 方法输入值 (当 flag 为 'function')
+ * @param {*} [options.res] - 方法返回值 (当 flag 为 'function')
+ * @param {string} [options.propertyName] - 属性名 (当 flag 为 'property')
+ * @param {'get' | 'set'} [options.method] - 属性访问方法 (当 flag 为 'property')
+ * @param {*} [options.val] - 属性值 (当 flag 为 'property')
+ * 实例:
+ *   * 方法: mframe.log({ flag: 'function', className: 'window', methodName: 'btoa', inputVal: stringToEncode, res: res });
+ */
+mframe.log = function (options) {
+    mframe.memory.config.proxy = false;
+    const { flag, className } = options;
+
+    // 定义固定宽度
+    const classNameWidth = mframe.memory.config.log['objLength'];         // [方法/属性] 对象(名)长度
+    const propertyNameWidth = mframe.memory.config.log['propertyLength']; // [方法/属性] 属性(名)长度
+    const methodTypeWidth = mframe.memory.config.log['typeLength']+2;       // [属性]方法类型get/set长度
+    const inputLength = mframe.memory.config.log['inputLength'];          // [方法]传入
+    const resLength = mframe.memory.config.log['resLength'];              // [方法]返回值
+
+    if (!flag || !className) {
+        console.error("mframe.log: 'flag' and 'className' are required options.");
+        mframe.memory.config.proxy = true;
+        return;
+    }
+
+    const paddedClassName = padString(className, classNameWidth);
+
+    // 增强的formatValue函数，确保对象调用toString
+    function formatValueWithObjectName(value, maxLength = 30) {
+        if (value === null) return "null";
+        if (value === undefined) return "undefined";
+
+        const type = typeof value;
+        let result = "";
+
+        if (type === "object" && value !== null) {
+            // 处理Arguments对象
+            if (Object.prototype.toString.call(value) === '[object Arguments]') {
+                try {
+                    // 将Arguments转换为数组并格式化
+                    const argsArray = Array.from(value);
+                    const argsStr = argsArray.length > 5 ?
+                        `[${argsArray.slice(0, 3).map(arg => formatValueWithObjectName(arg, maxLength / 2)).join(", ")}, ... ${argsArray.length} args]` :
+                        `[${argsArray.map(arg => formatValueWithObjectName(arg, maxLength / 2)).join(", ")}]`;
+                    return `${argsStr}`;
+                } catch (e) {
+                    return "Arguments:[无法序列化]";
+                }
+            }
+
+            // 尝试获取对象的类型名称
+            let objName = value.constructor ? value.constructor.name : "Object";
+
+            // 尝试获取对象的字符串表示
+            let strValue = "";
+            try {
+                // 首先尝试使用toString方法
+                if (typeof value.toString === 'function' &&
+                    value.toString !== Object.prototype.toString) {
+                    // 使用自定义的toString方法
+                    strValue = value.toString();
+                } else if (value instanceof Error) {
+                    // 特殊处理Error对象
+                    strValue = `${value.name}: ${value.message}`;
+                } else if (Array.isArray(value)) {
+                    // 特殊处理数组
+                    strValue = value.length > 5 ?
+                        `[${value.slice(0, 3).map(item => formatValueWithObjectName(item, maxLength / 3)).join(", ")}, ... ${value.length} items]` :
+                        `[${value.map(item => formatValueWithObjectName(item, maxLength / 3)).join(", ")}]`;
+                } else if (value instanceof Date || value instanceof RegExp) {
+                    // Date和RegExp已经有好的toString实现
+                    strValue = value.toString();
+                } else {
+                    // 最后尝试使用JSON序列化
+                    strValue = JSON.stringify(value);
+                    if (strValue && strValue.length > maxLength - objName.length - 3) {
+                        strValue = strValue.substring(0, maxLength - objName.length - 6) + "...";
+                    }
+                }
+            } catch (e) {
+                // 如果序列化失败
+                strValue = "[无法序列化]";
+            }
+
+            result = `${objName}:${strValue}`;
+        } else if (type === "function") {
+            // 处理函数
+            const funcStr = value.toString().replace(/\r?\n/g, " ").replace(/\s+/g, " ");
+            result = funcStr.length > maxLength ? funcStr.substring(0, maxLength - 3) + '...' : funcStr;
+        } else if (type === "string") {
+            // 处理字符串
+            result = value.replace(/\r?\n/g, " ").replace(/\s+/g, " ");
+            result = `"${result}"`;
+            if (result.length > maxLength) {
+                result = result.substring(0, maxLength - 3) + '..."';
+            }
+        } else {
+            // 处理其他基本类型
+            result = String(value);
+        }
+
+        // 确保移除所有换行并压缩多余空格
+        return result.replace(/\r?\n/g, " ").replace(/\s+/g, " ");
+    }
+
+    if (flag === "function") {
+        const { methodName, inputVal, res } = options;
+        if (methodName === undefined) { // 检查 undefined 而非 !methodName 以允许空字符串方法名
+            console.error("mframe.log: 'methodName' is required when flag is 'function'.");
+            mframe.memory.config.proxy = true;
+            return;
+        }
+        const paddedMethodName = padString(methodName, propertyNameWidth);
+        const formattedInput = formatValueWithObjectName(inputVal, inputLength);
+        const formattedRes = formatValueWithObjectName(res, resLength);
+
+        // 使用固定宽度打印
+        console.log(`======>>>\x1b[35m对象:${paddedClassName} 方法:${paddedMethodName} 传入:${formattedInput} 返回:${formattedRes}\x1b[0m`);
+
+    } else if (flag === "property") {
+        const { propertyName, method, val } = options;
+        if (propertyName === undefined || !method) { // 检查 undefined 而非 !propertyName
+            console.error("mframe.log: 'propertyName' and 'method' are required when flag is 'property'.");
+            mframe.memory.config.proxy = true;
+            return;
+        }
+
+        const paddedPropertyName = padString(propertyName, propertyNameWidth);
+        const paddedMethod = padString(method, methodTypeWidth); // 填充 'get' 或 'set'
+        const formattedVal = formatValueWithObjectName(val);
+
+        if (method === 'get') {
+            // 使用固定宽度打印
+            console.log(`======>>>\x1b[35m对象:${paddedClassName} 属性:${paddedPropertyName} 方法:${paddedMethod} 返回:${formattedVal}\x1b[0m`);
+        } else if (method === 'set') {
+            // 使用固定宽度打印
+            console.log(`======>>>\x1b[35m对象:${paddedClassName} 属性:${paddedPropertyName} 方法:${paddedMethod} 设置:${formattedVal}\x1b[0m`);
+        } else {
+            console.error(`mframe.log: Invalid method '${method}' for property log. Use 'get' or 'set'.`);
+        }
+        mframe.memory.config.proxy = true;
+    } else {
+        console.error(`mframe.log: Invalid flag '${flag}'. Use 'property' or 'function'.`);
+        mframe.memory.config.proxy = true;
+    }
+};
+
+mframe.memory.config.nodeEnv=true
+mframe.memory.config.proxy=true
+mframe.memory.config.log={"objLength":20,"propertyLength":30,"typeLength":10,"inputLength":100,"resLength":30}
+mframe.memory.config.initLocation={"href":"https://union.jd.com/proManager/index","origin":"https://union.jd.com","protocol":"https:","host":"union.jd.com","hostname":"union.jd.com","port":"","pathname":"/proManager/index","search":"","hash":""}
+mframe.memory.config.initNavigator={"userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0","language":"zh-CN","languages":["zh-CN","zh","zh-TW","zh-HK","en-US","en"],"appVersion":"5.0 (Windows)","platform":"Win32","hardwareConcurrency":16,"webdriver":false,"appName":"Netscape","appCodeName":"Mozilla","maxTouchPoints":20,"onLine":true,"pdfViewerEnabled":true,"vendor":"","vendorSub":"","product":"Gecko","productSub":"20100101"}
+//////////////////当前环境为node环境/////////////////////////
+//////////////////当前环境为node环境/////////////////////////
+//////////////////当前环境为node环境/////////////////////////
+
+const { XMLHttpRequest } = require('xmlhttprequest');  // 引入 XMLHttpRequest 模拟库
+const { JSDOM } = require('jsdom');
+const dom = new JSDOM(`<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0" name="description" content="A comprehensive example of meta attributes." name="keywords" content="HTML, Meta, Attributes" name="author" content="Kimi" http-equiv="refresh" content="30">
+        <script></script>
+        <link rel="icon" href="//www.jd.com/favicon.ico" type="image/x-icon">
+    </head>
+    <body>
+        <div class="theup-submit-text">感谢您的反馈</div>
+    </body>
+</html>`);
+
+mframe.memory.jsdom = {};
+mframe.memory.jsdom.window = dom.window;
+mframe.memory.jsdom.document = dom.window.document;
+
+
+//////////////////当前环境为node环境/////////////////////////
+//////////////////当前环境为node环境/////////////////////////
+//////////////////当前环境为node环境/////////////////////////
+var Storage = function Storage() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(Storage)
+
+Object.defineProperties(Storage.prototype, {
+    [Symbol.toStringTag]: {
+        value: "Storage",
+        configurable: true,
+    }
+})
+
+//////////////////////////////////
+//===================Storage 的原型属性 START===================
+// 长度(hook但未保护hook方法)
+Storage.prototype.length = 0;
+Storage.prototype.__defineGetter__("length", function length() {
+    var res = Object.keys(this).length;
+    mframe.log({ flag: 'property', className: 'Storage', propertyName: 'length', method: 'get', val: res });
+    return res;
+})
+// 通过键获取值
+Storage.prototype.getItem = function getItem(keyName) {
+    var res = this[keyName] || null; // 这个this是指向实例的
+    mframe.log({ flag: 'function', className: 'Storage', methodName: 'getItem', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Storage.prototype.getItem);
+
+// 设置键值对
+Storage.prototype.setItem = function setItem(keyName, keyValue) {
+    this[keyName] = keyValue;
+    mframe.log({ flag: 'function', className: 'Storage', methodName: 'setItem', inputVal: arguments, res: undefined });
+    return undefined;
+}; mframe.safefunction(Storage.prototype.setItem);
+
+// 清空所有
+Storage.prototype.clear = function clear() {
+    let keyArray = Object.keys(this);
+    for (let i = 0; i < keyArray.length; i++) {
+        delete this[keyArray[i]];
+    }
+    mframe.log({ flag: 'function', className: 'Storage', methodName: 'clear', inputVal: arguments, res: undefined });
+    return undefined;
+}; mframe.safefunction(Storage.prototype.clear);
+
+// 返回第index个value
+Storage.prototype.key = function key(index) {
+    var res = Object.keys(this)[index];
+    mframe.log({ flag: 'function', className: 'Storage', methodName: 'key', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Storage.prototype.key);
+
+// 删除指定的键
+Storage.prototype.removeItem = function removeItem(keyName) {
+    delete this[keyName];
+    mframe.log({ flag: 'function', className: 'Storage', methodName: 'removeItem', inputVal: arguments, res: undefined });
+    return undefined;
+}; mframe.safefunction(Storage.prototype.removeItem);
+//================ ↑↑↑Storage 的原型属性 END↑↑↑ ================
+//////////////////////////////////
+
+
+/** 小变量定义 && 原型链的定义 */
+var localStorage = {};
+var sessionStorage = {};
+localStorage.__proto__ = Storage.prototype;
+localStorage = mframe.proxy(localStorage);
+sessionStorage.__proto__ = Storage.prototype;
+sessionStorage = mframe.proxy(sessionStorage);
+
+
+
+var EventTarget = function EventTarget() { }; mframe.safefunction(EventTarget)
+Object.defineProperties(EventTarget.prototype, {
+    [Symbol.toStringTag]: {
+        value: "EventTarget",
+        configurable: true,
+    }
+})
+
+// 方法
+EventTarget.prototype.addEventListener = function addEventListener() {
+    mframe.log({ flag: 'function', className: 'EventTarget', methodName: 'addEventListener', inputVal: arguments, res: undefined });
+}; mframe.safefunction(EventTarget.prototype.addEventListener)
+EventTarget.prototype.removeEventListener = function removeEventListener() {
+    mframe.log({ flag: 'function', className: 'EventTarget', methodName: 'removeEventListener', inputVal: arguments, res: undefined });
+}; mframe.safefunction(EventTarget.prototype.removeEventListener)
+EventTarget.prototype.dispatchEvent = function dispatchEvent() {
+    mframe.log({ flag: 'function', className: 'EventTarget', methodName: 'dispatchEvent', inputVal: arguments, res: undefined });
+}; mframe.safefunction(EventTarget.prototype.dispatchEvent)
+
+
+// 代理
+EventTarget = mframe.proxy(EventTarget)
+var ScreenOrientation = function ScreenOrientation() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(ScreenOrientation)
+Object.defineProperties(ScreenOrientation.prototype, {
+    [Symbol.toStringTag]: {
+        value: "ScreenOrientation",
+        configurable: true,
+    }
+})
+mframe.screenOrientation = {
+    angle: mframe.memory.config.initScreen.orientation.angle,
+    onchange: mframe.memory.config.initScreen.orientation.onchange,
+    type: mframe.memory.config.initScreen.orientation.type,
+};
+/////////////////////////////////////////
+var curMemoryArea = mframe.memory.ScreenOrientation = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+// angle
+curMemoryArea.angle_getter = function angle() { return this.angle; }; mframe.safefunction(curMemoryArea.angle_getter);
+Object.defineProperty(curMemoryArea.angle_getter, "name", { value: "get angle", configurable: true, });
+Object.defineProperty(ScreenOrientation.prototype, "angle", { get: curMemoryArea.angle_getter, enumerable: true, configurable: true, });
+curMemoryArea.angle_smart_getter = function angle() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this.angle !== undefined ? this.angle : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.angle_smart_getter);
+ScreenOrientation.prototype.__defineGetter__("angle", curMemoryArea.angle_smart_getter);
+
+// type
+curMemoryArea.type_getter = function type() { return this.type; }; mframe.safefunction(curMemoryArea.type_getter);
+Object.defineProperty(curMemoryArea.type_getter, "name", { value: "get type", configurable: true, });
+Object.defineProperty(ScreenOrientation.prototype, "type", { get: curMemoryArea.type_getter, enumerable: true, configurable: true, });
+curMemoryArea.type_smart_getter = function type() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this.type !== undefined ? this.type : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.type_smart_getter);
+ScreenOrientation.prototype.__defineGetter__("type", curMemoryArea.type_smart_getter);
+
+// onchange
+curMemoryArea.onchange_getter = function onchange() { return this.onchange; }; mframe.safefunction(curMemoryArea.onchange_getter);
+Object.defineProperty(curMemoryArea.onchange_getter, "name", { value: "get onchange", configurable: true, });
+// onchange
+curMemoryArea.onchange_setter = function onchange(val) { this.onchange = val; }; mframe.safefunction(curMemoryArea.onchange_setter);
+Object.defineProperty(curMemoryArea.onchange_setter, "name", { value: "set onchange", configurable: true, });
+Object.defineProperty(ScreenOrientation.prototype, "onchange", { get: curMemoryArea.onchange_getter, set: curMemoryArea.onchange_setter, enumerable: true, configurable: true, });
+curMemoryArea.onchange_smart_getter = function onchange() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this.onchange !== undefined ? this.onchange : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onchange_smart_getter);
+ScreenOrientation.prototype.__defineGetter__("onchange", curMemoryArea.onchange_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+ScreenOrientation.prototype["lock"] = function lock() { debugger; }; mframe.safefunction(ScreenOrientation.prototype["lock"]);
+ScreenOrientation.prototype["unlock"] = function unlock() { debugger; }; mframe.safefunction(ScreenOrientation.prototype["unlock"]);
+//==============↑↑Function END↑↑====================
+/////////////////////////////////////////
+
+console.log(EventTarget);
+
+ScreenOrientation.prototype.__proto__ = EventTarget.prototype;
+mframe.screenOrientation.__proto__ = ScreenOrientation.prototype;
+mframe.screenOrientation = mframe.proxy(mframe.screenOrientation);
+var Screen = function Screen() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(Screen)
+Object.defineProperties(Screen.prototype, {
+    [Symbol.toStringTag]: {
+        value: "Screen",
+        configurable: true,
+    }
+})
+
+// 初始化
+screen = {
+    availHeight: mframe.memory.config.initScreen.availHeight,
+    availLeft: mframe.memory.config.initScreen.availLeft,
+    availTop: mframe.memory.config.initScreen.availTop,
+    availWidth: mframe.memory.config.initScreen.availWidth,
+    colorDepth: mframe.memory.config.initScreen.colorDepth,
+    height: mframe.memory.config.initScreen.height,
+    isExtended: mframe.memory.config.initScreen.isExtended,
+    onchange: mframe.memory.config.initScreen.onchange,
+    orientation: mframe.screenOrientation, // 注意哈
+    pixelDepth: mframe.memory.config.initScreen.pixelDepth,
+    width: mframe.memory.config.initScreen.width
+};
+//////////////////////////////////
+var curMemoryArea = mframe.memory.config.Screen = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+// availWidth
+curMemoryArea.availWidth_getter = function availWidth() { return this.availWidth; }; mframe.safefunction(curMemoryArea.availWidth_getter);
+Object.defineProperty(curMemoryArea.availWidth_getter, "name", { value: "get availWidth", configurable: true, });
+Object.defineProperty(Screen.prototype, "availWidth", { get: curMemoryArea.availWidth_getter, enumerable: true, configurable: true, });
+curMemoryArea.availWidth_smart_getter = function availWidth() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this.availWidth !== undefined ? this.availWidth : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.availWidth_smart_getter);
+Screen.prototype.__defineGetter__("availWidth", curMemoryArea.availWidth_smart_getter);
+
+// availHeight
+curMemoryArea.availHeight_getter = function availHeight() { return this.availHeight; }; mframe.safefunction(curMemoryArea.availHeight_getter);
+Object.defineProperty(curMemoryArea.availHeight_getter, "name", { value: "get availHeight", configurable: true, });
+Object.defineProperty(Screen.prototype, "availHeight", { get: curMemoryArea.availHeight_getter, enumerable: true, configurable: true, });
+curMemoryArea.availHeight_smart_getter = function availHeight() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this.availHeight !== undefined ? this.availHeight : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.availHeight_smart_getter);
+Screen.prototype.__defineGetter__("availHeight", curMemoryArea.availHeight_smart_getter);
+
+// width
+curMemoryArea.width_getter = function width() { return this.width; }; mframe.safefunction(curMemoryArea.width_getter);
+Object.defineProperty(curMemoryArea.width_getter, "name", { value: "get width", configurable: true, });
+Object.defineProperty(Screen.prototype, "width", { get: curMemoryArea.width_getter, enumerable: true, configurable: true, });
+curMemoryArea.width_smart_getter = function width() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this.width !== undefined ? this.width : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.width_smart_getter);
+Screen.prototype.__defineGetter__("width", curMemoryArea.width_smart_getter);
+
+// height
+curMemoryArea.height_getter = function height() { return this.height; }; mframe.safefunction(curMemoryArea.height_getter);
+Object.defineProperty(curMemoryArea.height_getter, "name", { value: "get height", configurable: true, });
+Object.defineProperty(Screen.prototype, "height", { get: curMemoryArea.height_getter, enumerable: true, configurable: true, });
+curMemoryArea.height_smart_getter = function height() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this.height !== undefined ? this.height : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.height_smart_getter);
+Screen.prototype.__defineGetter__("height", curMemoryArea.height_smart_getter);
+
+// colorDepth
+curMemoryArea.colorDepth_getter = function colorDepth() { return this.colorDepth; }; mframe.safefunction(curMemoryArea.colorDepth_getter);
+Object.defineProperty(curMemoryArea.colorDepth_getter, "name", { value: "get colorDepth", configurable: true, });
+Object.defineProperty(Screen.prototype, "colorDepth", { get: curMemoryArea.colorDepth_getter, enumerable: true, configurable: true, });
+curMemoryArea.colorDepth_smart_getter = function colorDepth() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this.colorDepth !== undefined ? this.colorDepth : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.colorDepth_smart_getter);
+Screen.prototype.__defineGetter__("colorDepth", curMemoryArea.colorDepth_smart_getter);
+
+// pixelDepth
+curMemoryArea.pixelDepth_getter = function pixelDepth() { return this.pixelDepth; }; mframe.safefunction(curMemoryArea.pixelDepth_getter);
+Object.defineProperty(curMemoryArea.pixelDepth_getter, "name", { value: "get pixelDepth", configurable: true, });
+Object.defineProperty(Screen.prototype, "pixelDepth", { get: curMemoryArea.pixelDepth_getter, enumerable: true, configurable: true, });
+curMemoryArea.pixelDepth_smart_getter = function pixelDepth() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this.pixelDepth !== undefined ? this.pixelDepth : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.pixelDepth_smart_getter);
+Screen.prototype.__defineGetter__("pixelDepth", curMemoryArea.pixelDepth_smart_getter);
+
+// availLeft
+curMemoryArea.availLeft_getter = function availLeft() { return this.availLeft; }; mframe.safefunction(curMemoryArea.availLeft_getter);
+Object.defineProperty(curMemoryArea.availLeft_getter, "name", { value: "get availLeft", configurable: true, });
+Object.defineProperty(Screen.prototype, "availLeft", { get: curMemoryArea.availLeft_getter, enumerable: true, configurable: true, });
+curMemoryArea.availLeft_smart_getter = function availLeft() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this.availLeft !== undefined ? this.availLeft : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.availLeft_smart_getter);
+Screen.prototype.__defineGetter__("availLeft", curMemoryArea.availLeft_smart_getter);
+
+// availTop
+curMemoryArea.availTop_getter = function availTop() { return this.availTop; }; mframe.safefunction(curMemoryArea.availTop_getter);
+Object.defineProperty(curMemoryArea.availTop_getter, "name", { value: "get availTop", configurable: true, });
+Object.defineProperty(Screen.prototype, "availTop", { get: curMemoryArea.availTop_getter, enumerable: true, configurable: true, });
+curMemoryArea.availTop_smart_getter = function availTop() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this.availTop !== undefined ? this.availTop : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.availTop_smart_getter);
+Screen.prototype.__defineGetter__("availTop", curMemoryArea.availTop_smart_getter);
+
+// orientation
+curMemoryArea.orientation_getter = function orientation() { return this.orientation; }; mframe.safefunction(curMemoryArea.orientation_getter);
+Object.defineProperty(curMemoryArea.orientation_getter, "name", { value: "get orientation", configurable: true, });
+Object.defineProperty(Screen.prototype, "orientation", { get: curMemoryArea.orientation_getter, enumerable: true, configurable: true, });
+curMemoryArea.orientation_smart_getter = function orientation() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this.orientation !== undefined ? this.orientation : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.orientation_smart_getter);
+Screen.prototype.__defineGetter__("orientation", curMemoryArea.orientation_smart_getter);
+
+// onchange
+curMemoryArea.onchange_getter = function onchange() { return this.onchange; }; mframe.safefunction(curMemoryArea.onchange_getter);
+Object.defineProperty(curMemoryArea.onchange_getter, "name", { value: "get onchange", configurable: true, });
+// onchange
+curMemoryArea.onchange_setter = function onchange(val) { this.onchange = val; }; mframe.safefunction(curMemoryArea.onchange_setter);
+Object.defineProperty(curMemoryArea.onchange_setter, "name", { value: "set onchange", configurable: true, });
+Object.defineProperty(Screen.prototype, "onchange", { get: curMemoryArea.onchange_getter, set: curMemoryArea.onchange_setter, enumerable: true, configurable: true, });
+curMemoryArea.onchange_smart_getter = function onchange() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this.onchange !== undefined ? this.onchange : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onchange_smart_getter);
+Screen.prototype.__defineGetter__("onchange", curMemoryArea.onchange_smart_getter);
+
+// isExtended
+curMemoryArea.isExtended_getter = function isExtended() { return this.isExtended; }; mframe.safefunction(curMemoryArea.isExtended_getter);
+Object.defineProperty(curMemoryArea.isExtended_getter, "name", { value: "get isExtended", configurable: true, });
+Object.defineProperty(Screen.prototype, "isExtended", { get: curMemoryArea.isExtended_getter, enumerable: true, configurable: true, });
+curMemoryArea.isExtended_smart_getter = function isExtended() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this.isExtended !== undefined ? this.isExtended : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.isExtended_smart_getter);
+Screen.prototype.__defineGetter__("isExtended", curMemoryArea.isExtended_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+//==============↑↑Function END↑↑====================
+//////////////////////////////////
+Screen.prototype.__proto__ = EventTarget.prototype;
+screen.__proto__ = Screen.prototype;
+Screen = mframe.proxy(Screen)
+var WindowProperties = function () {
+    debugger;
+    throw new TypeError('WindowProperties不允许被new')
+}; mframe.safefunction(WindowProperties);
+
+Object.defineProperties(WindowProperties.prototype, {
+    [Symbol.toStringTag]: {
+        value: "WindowProperties",
+        configurable: true,
+    }
+});
+
+
+WindowProperties.prototype.__proto__ = EventTarget.prototype
+
+
+
+
+window = mframe.memory.config.nodeEnv ? global : this;
+var Window = function Window() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(Window)
+Object.defineProperties(Window.prototype, {
+    [Symbol.toStringTag]: {
+        value: "Window",
+        configurable: true,
+    }
+})
+
+
+//////////////////////////////////
+// 常量
+Window.prototype.PERSISTENT = 1;
+Window.prototype.TEMPORARY = 0;
+
+/////////////////////////////////////////////////////////
+// 方法
+window["btoa"] = function btoa(stringToEncode) {
+    var res = undefined;
+    if (mframe.memory.jsdom.window) { // 如果有jsdomn
+        res = mframe.memory.jsdom.window.btoa(stringToEncode);
+    }
+    mframe.log({ flag: 'function', className: 'window', methodName: 'btoa', inputVal: arguments, res: res });
+}; mframe.safefunction(window["btoa"]);
+// setTimeout
+window.setTimeout = function setTimeout() {
+    var res = undefined;
+    mframe.log({ flag: 'function', className: 'window', methodName: 'setTimeout', inputVal: arguments, res: res });
+}; mframe.safefunction(window.setTimeout);
+// clearInterval
+window["clearInterval"] = function clearInterval() {
+    var res = undefined;
+    mframe.log({ flag: 'function', className: 'window', methodName: 'clearInterval', inputVal: arguments, res: res });
+}; mframe.safefunction(window["clearInterval"]);
+// setInterval
+window["setInterval"] = function setInterval() {
+    var res = undefined;
+    mframe.log({ flag: 'function', className: 'window', methodName: 'setInterval', inputVal: arguments, res: res });
+}; mframe.safefunction(window["setInterval"]);
+
+
+// CanvasRenderingContext2D
+window["CanvasRenderingContext2D"] = function CanvasRenderingContext2D() {
+    mframe.log({ flag: 'function', className: 'window', methodName: 'CanvasRenderingContext2D', inputVal: arguments, res: res });
+}; mframe.safefunction(window["CanvasRenderingContext2D"]);
+// WebSocket
+window["WebSocket"] = function WebSocket() {
+    mframe.log({ flag: 'function', className: 'window', methodName: 'WebSocket', inputVal: arguments, res: res });
+}; mframe.safefunction(window["WebSocket"]);
+// open
+window["open"] = function open() {
+    mframe.log({ flag: 'function', className: 'window', methodName: 'open', inputVal: arguments, res: res });
+}; mframe.safefunction(window["open"]);
+// prompt
+window["prompt"] = function prompt() {
+    mframe.log({ flag: 'function', className: 'window', methodName: 'prompt', inputVal: arguments, res: res });
+}; mframe.safefunction(window["prompt"]);
+
+
+///////////////////////////////////////////////////
+// 属性
+window.top = window;
+window.self = window;
+ActiveXObject = undefined; // 这个东西很多网站都查,且理论上也应该手动赋值undefined
+
+///////////////////////////////////////////////////
+// mframe原型链
+window.screen = screen;
+window.localStorage = localStorage;
+window.sessionStorage = sessionStorage;
+//////////////////////////////////
+
+/** 小变量定义 && 原型链的定义 */
+Window.prototype.__proto__ = WindowProperties.prototype;
+window.__proto__ = Window.prototype;
+
+/**代理 */
+Window = mframe.proxy(Window)
+window = mframe.proxy(window)
+
+var Location = function () {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(Location);
+Object.defineProperties(Location.prototype, {
+    [Symbol.toStringTag]: {
+        value: "Location",
+        configurable: true,
+    }
+});
+
+location = {
+    "ancestorOrigins": mframe.memory.config.initLocation["ancestorOrigins"],
+    "href": mframe.memory.config.initLocation["href"],
+    "origin": mframe.memory.config.initLocation["origin"],
+    "protocol": mframe.memory.config.initLocation["protocol"],
+    "host": mframe.memory.config.initLocation["host"],
+    "hostname": mframe.memory.config.initLocation["hostname"],
+    "port": mframe.memory.config.initLocation["port"],
+    "pathname": mframe.memory.config.initLocation["pathname"],
+    "search": mframe.memory.config.initLocation["search"],
+    "hash": mframe.memory.config.initLocation["hash"]
+};
+///////////////////////////////////////////////////
+// function
+location["valueOf"] = function valueOf() {  // 实现 `location+""`调用toString()
+    return this;
+}; mframe.safefunction(location["valueOf"]);
+location["assign"] = function assign() { debugger; }; mframe.safefunction(location["assign"]);    // 跳转
+location["reload"] = function reload() { debugger; }; mframe.safefunction(location["reload"]);    // 刷新
+location["replace"] = function replace() { debugger; }; mframe.safefunction(location["replace"]); // 跳转(不可返回)
+location["toString"] = function toString() {
+    return this.href;
+}; mframe.safefunction(location["toString"]);
+///////////////////////////////////////////////////
+location.__proto__ = Location.prototype;
+location = mframe.proxy(location)
+var IDBFactory = function IDBFactory() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(IDBFactory)
+Object.defineProperties(IDBFactory.prototype, {
+    [Symbol.toStringTag]: {
+        value: "IDBFactory",
+        configurable: true,
+    }
+})
+
+///////////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.IDBFactory = {};
+
+//============== Constant START ==================
+Object.defineProperty(IDBFactory, "arguments", { configurable: false, enumerable: false, value: null, writable: false, });
+Object.defineProperty(IDBFactory, "caller", { configurable: false, enumerable: false, value: null, writable: false, });
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%%%%%%
+//%%%%%%%↑↑Attribute END↑↑%%%%%%%%%%
+
+//============== Function START ====================
+IDBFactory.prototype["cmp"] = function cmp() { debugger; }; mframe.safefunction(IDBFactory.prototype["cmp"]);
+IDBFactory.prototype["databases"] = function databases() { debugger; }; mframe.safefunction(IDBFactory.prototype["databases"]);
+IDBFactory.prototype["deleteDatabase"] = function deleteDatabase() { debugger; }; mframe.safefunction(IDBFactory.prototype["deleteDatabase"]);
+IDBFactory.prototype["open"] = function open() {
+    var res = {};
+    mframe.log({ flag: 'function', className: 'IDBFactory', methodName: 'open', inputVal: arguments, res: res });
+    // return res;
+    return mframe.proxy(res);
+}; mframe.safefunction(IDBFactory.prototype["open"]);
+//==============↑↑Function END↑↑====================
+///////////////////////////////////////////////////////
+
+indexedDB = {};
+indexedDB.__proto__ = IDBFactory.prototype;
+indexedDB = mframe.proxy(indexedDB);
+var NetworkInformation = function NetworkInformation() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(NetworkInformation)
+
+Object.defineProperties(NetworkInformation.prototype, {
+    [Symbol.toStringTag]: {
+        value: "NetworkInformation",
+        configurable: true,
+    }
+})
+
+///////////////////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.NetworkInformation = {};
+
+//============== Constant START ==================
+Object.defineProperty(NetworkInformation, "arguments", { configurable: false, enumerable: false, value: null, writable: false, });
+Object.defineProperty(NetworkInformation, "caller", { configurable: false, enumerable: false, value: null, writable: false, });
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+// onchange
+curMemoryArea.onchange_getter = function onchange() { return this._onchange; }; mframe.safefunction(curMemoryArea.onchange_getter);
+Object.defineProperty(curMemoryArea.onchange_getter, "name", {value: "get onchange",configurable: true,});
+// onchange
+curMemoryArea.onchange_setter = function onchange(val) { this._onchange = val; }; mframe.safefunction(curMemoryArea.onchange_setter);
+Object.defineProperty(curMemoryArea.onchange_setter, "name", {value: "set onchange",configurable: true,});
+Object.defineProperty(NetworkInformation.prototype, "onchange", {get: curMemoryArea.onchange_getter,set: curMemoryArea.onchange_setter,enumerable: true,configurable: true,});
+curMemoryArea.onchange_smart_getter = function onchange() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onchange !== undefined ? this._onchange : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onchange_smart_getter);
+NetworkInformation.prototype.__defineGetter__("onchange", curMemoryArea.onchange_smart_getter);
+
+// effectiveType
+curMemoryArea.effectiveType_getter = function effectiveType() { return this._effectiveType; }; mframe.safefunction(curMemoryArea.effectiveType_getter);
+Object.defineProperty(curMemoryArea.effectiveType_getter, "name", {value: "get effectiveType",configurable: true,});
+Object.defineProperty(NetworkInformation.prototype, "effectiveType", {get: curMemoryArea.effectiveType_getter,enumerable: true,configurable: true,});
+curMemoryArea.effectiveType_smart_getter = function effectiveType() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return "4g"; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.effectiveType_smart_getter);
+NetworkInformation.prototype.__defineGetter__("effectiveType", curMemoryArea.effectiveType_smart_getter);
+
+// rtt
+curMemoryArea.rtt_getter = function rtt() { return this._rtt; }; mframe.safefunction(curMemoryArea.rtt_getter);
+Object.defineProperty(curMemoryArea.rtt_getter, "name", {value: "get rtt",configurable: true,});
+Object.defineProperty(NetworkInformation.prototype, "rtt", {get: curMemoryArea.rtt_getter,enumerable: true,configurable: true,});
+curMemoryArea.rtt_smart_getter = function rtt() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return 200; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.rtt_smart_getter);
+NetworkInformation.prototype.__defineGetter__("rtt", curMemoryArea.rtt_smart_getter);
+
+// downlink
+curMemoryArea.downlink_getter = function downlink() { return this._downlink; }; mframe.safefunction(curMemoryArea.downlink_getter);
+Object.defineProperty(curMemoryArea.downlink_getter, "name", {value: "get downlink",configurable: true,});
+Object.defineProperty(NetworkInformation.prototype, "downlink", {get: curMemoryArea.downlink_getter,enumerable: true,configurable: true,});
+curMemoryArea.downlink_smart_getter = function downlink() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return "10"; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.downlink_smart_getter);
+NetworkInformation.prototype.__defineGetter__("downlink", curMemoryArea.downlink_smart_getter);
+
+// saveData
+curMemoryArea.saveData_getter = function saveData() { return this._saveData; }; mframe.safefunction(curMemoryArea.saveData_getter);
+Object.defineProperty(curMemoryArea.saveData_getter, "name", {value: "get saveData",configurable: true,});
+Object.defineProperty(NetworkInformation.prototype, "saveData", {get: curMemoryArea.saveData_getter,enumerable: true,configurable: true,});
+curMemoryArea.saveData_smart_getter = function saveData() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return false; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.saveData_smart_getter);
+NetworkInformation.prototype.__defineGetter__("saveData", curMemoryArea.saveData_smart_getter);
+
+// type
+curMemoryArea.type_getter = function type() { return this._type; }; mframe.safefunction(curMemoryArea.type_getter);
+Object.defineProperty(curMemoryArea.type_getter, "name", {value: "get type",configurable: true,});
+Object.defineProperty(NetworkInformation.prototype, "type", {get: curMemoryArea.type_getter,enumerable: true,configurable: true,});
+curMemoryArea.type_smart_getter = function type() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return '4g'; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.type_smart_getter);
+NetworkInformation.prototype.__defineGetter__("type", curMemoryArea.type_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+//==============↑↑Function END↑↑====================
+///////////////////////////////////////////////////////////////
+NetworkInformation.prototype.__proto__ = EventTarget.prototype;
+mframe.networkInformation = {};
+mframe.networkInformation.__proto__ = NetworkInformation.prototype;
+mframe.networkInformation = mframe.proxy(mframe.networkInformation);
+
+var Navigator = function () {
+    throw new TypeError('Illegal constructor')
+}; mframe.safefunction(Navigator);
+
+Object.defineProperties(Navigator.prototype, {
+    [Symbol.toStringTag]: {
+        value: "Navigator",
+        configurable: true,
+    }
+});
+
+navigator = {};
+///////////////////////////////////////////////////
+navigator.userAgent= mframe.memory.config.initNavigator['userAgent']
+navigator.language= mframe.memory.config.initNavigator['language']
+navigator.languages= mframe.memory.config.initNavigator['languages']
+navigator.appVersion= mframe.memory.config.initNavigator['appVersion']
+navigator.platform= mframe.memory.config.initNavigator['platform']
+navigator.hardwareConcurrency= mframe.memory.config.initNavigator['hardwareConcurrency']
+navigator.webdriver= mframe.memory.config.initNavigator['webdriver']
+navigator.appName= mframe.memory.config.initNavigator['appName']
+navigator.appCodeName= mframe.memory.config.initNavigator['appCodeName']
+navigator.deviceMemory= mframe.memory.config.initNavigator['deviceMemory']
+navigator.maxTouchPoints= mframe.memory.config.initNavigator['maxTouchPoints']
+navigator.onLine= mframe.memory.config.initNavigator['onLine']
+navigator.pdfViewerEnabled= mframe.memory.config.initNavigator['pdfViewerEnabled']
+navigator.vendor= mframe.memory.config.initNavigator['vendor']
+navigator.vendorSub= mframe.memory.config.initNavigator['vendorSub']
+navigator.product= mframe.memory.config.initNavigator['product']
+navigator.productSub= mframe.memory.config.initNavigator['productSub']
+//////////////===ATTRIBUTES==///////////////////////////////
+// connection
+curMemoryArea.connection_getter = function connection() { return this._connection; }; mframe.safefunction(curMemoryArea.connection_getter);
+Object.defineProperty(curMemoryArea.connection_getter, "name", { value: "get connection", configurable: true, });
+Object.defineProperty(Navigator.prototype, "connection", { get: curMemoryArea.connection_getter, enumerable: true, configurable: true, });
+curMemoryArea.connection_smart_getter = function connection() {
+    var res = mframe.networkInformation;
+    mframe.log({ flag: 'property', className: 'Navigator', propertyName: 'connection', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.connection_smart_getter);
+Navigator.prototype.__defineGetter__("connection", curMemoryArea.connection_smart_getter);
+
+
+////////////////==FUNCTION==////////////////////////////////
+Navigator.prototype["getBattery"] = function getBattery() {
+    var res = new Promise();
+    mframe.log({ flag: 'function', className: 'Navigator', methodName: 'getBattery', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Navigator.prototype["getBattery"]);
+///////////////////////////////////////////////////
+
+
+
+navigator.__proto__ = Navigator.prototype;
+
+// // 解决Navigator.prototype.属性抛异常, 只能通过navigator.属性去调用 (本质上可以理解为代理的简写); Navigator中所有属性都是这样的
+// for (var prototype_ in Navigator.prototype) {
+//     navigator[prototype_] = Navigator.prototype[prototype_];
+//     Navigator.prototype.__defineGetter__(prototype_, function () {
+//         debugger;// 啥网站啊,这都检测-_-!
+//         throw new TypeError('不允许Navigator.prototype.属性 这样的操作')
+//     });
+// }
+
+
+
+
+navigator = mframe.proxy(navigator)
+var MimeType = function MimeType() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(MimeType)
+Object.defineProperties(MimeType.prototype, {
+    [Symbol.toStringTag]: {
+        value: "MimeType",
+        configurable: true,
+    }
+})
+
+
+//////////////////////////////////
+var curMemoryArea = mframe.memory.MimeType = {};
+
+//%%%%%%% Attribute START %%%%%%%%%%
+// type
+curMemoryArea.type_getter = function type() { debugger; }; mframe.safefunction(curMemoryArea.type_getter);
+Object.defineProperty(curMemoryArea.type_getter, "name", { value: "get type", configurable: true, });
+Object.defineProperty(MimeType.prototype, "type", { get: curMemoryArea.type_getter, enumerable: true, configurable: true, });
+curMemoryArea.type_smart_getter = function type() {
+    let defaultValue = 0;
+    if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
+    console.log(`${this}调用了"MimeType"中的type的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
+    return defaultValue; // 如果是实例访问，返回默认值
+}; mframe.safefunction(curMemoryArea.type_smart_getter);
+MimeType.prototype.__defineGetter__("type", curMemoryArea.type_smart_getter);
+
+// suffixes
+curMemoryArea.suffixes_getter = function suffixes() { debugger; }; mframe.safefunction(curMemoryArea.suffixes_getter);
+Object.defineProperty(curMemoryArea.suffixes_getter, "name", { value: "get suffixes", configurable: true, });
+Object.defineProperty(MimeType.prototype, "suffixes", { get: curMemoryArea.suffixes_getter, enumerable: true, configurable: true, });
+curMemoryArea.suffixes_smart_getter = function suffixes() {
+    let defaultValue = 0;
+    if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
+    console.log(`${this}调用了"MimeType"中的suffixes的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
+    return defaultValue; // 如果是实例访问，返回默认值
+}; mframe.safefunction(curMemoryArea.suffixes_smart_getter);
+MimeType.prototype.__defineGetter__("suffixes", curMemoryArea.suffixes_smart_getter);
+
+// description
+curMemoryArea.description_getter = function description() { debugger; }; mframe.safefunction(curMemoryArea.description_getter);
+Object.defineProperty(curMemoryArea.description_getter, "name", { value: "get description", configurable: true, });
+Object.defineProperty(MimeType.prototype, "description", { get: curMemoryArea.description_getter, enumerable: true, configurable: true, });
+curMemoryArea.description_smart_getter = function description() {
+    let defaultValue = "";
+    if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
+    console.log(`${this}调用了"MimeType"中的description的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
+    return defaultValue; // 如果是实例访问，返回默认值
+}; mframe.safefunction(curMemoryArea.description_smart_getter);
+MimeType.prototype.__defineGetter__("description", curMemoryArea.description_smart_getter);
+
+// enabledPlugin
+curMemoryArea.enabledPlugin_getter = function enabledPlugin() { debugger; }; mframe.safefunction(curMemoryArea.enabledPlugin_getter);
+Object.defineProperty(curMemoryArea.enabledPlugin_getter, "name", { value: "get enabledPlugin", configurable: true, });
+Object.defineProperty(MimeType.prototype, "enabledPlugin", { get: curMemoryArea.enabledPlugin_getter, enumerable: true, configurable: true, });
+curMemoryArea.enabledPlugin_smart_getter = function enabledPlugin() {
+    let defaultValue = null;
+    if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
+    console.log(`${this}调用了"MimeType"中的enabledPlugin的get方法,\x1b[31m返回默认值:${defaultValue}\x1b[0m`);
+    return defaultValue; // 如果是实例访问，返回默认值
+}; mframe.safefunction(curMemoryArea.enabledPlugin_smart_getter);
+MimeType.prototype.__defineGetter__("enabledPlugin", curMemoryArea.enabledPlugin_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%%%%%%
+
+//============== Function START ====================
+//==============↑↑Function END↑↑====================
+//////////////////////////////////
+
+// 保持原型属性和实例属性相同(如果没有原型,会直接报错)
+for (let prototypeName in MimeType.prototype) {
+    // 这样不会触发 直接访问实例属性的报错
+    const descriptor = Object.getOwnPropertyDescriptor(MimeType.prototype, prototypeName);
+    if (descriptor && (descriptor.value && typeof descriptor.value === 'function')) { //是方法
+
+    } else {// 是属性or类
+        MimeType.prototype.__defineGetter__(prototypeName, function () {
+            return this[prototypeName];
+        })
+    }
+}
+
+/** 支持内部 new MimeType
+ * 
+ * @param {*} mimeTypeObj 
+ * @returns 
+ * 传入mimeTypeObj示例:
+ * 
+var mm = mframe.memory.MimeType.new({
+    description: "Portable Document Format1",
+    enabledPlugin: "Plugin1",
+    suffixes: "pd1f",
+    type: "application/pdf1",
+});
+ */
+mframe.memory.MimeType.new = function (mimeTypeObj, initPlugin) {
+    var mimeType = {};
+    mimeType.description = mimeTypeObj.description;
+    mimeType.enabledPlugin = initPlugin; //这个属性是Plugin的实例
+    mimeType.suffixes = mimeTypeObj.suffixes;
+    mimeType.type = mimeTypeObj.type;
+    mimeType.__proto__ = MimeType.prototype;
+    return mimeType;
+}
+
+
+/**代理 */
+MimeType = mframe.proxy(MimeType)
+mframe.memory.Plugin = {}; // 内存给Plugin开一片空间, 存储Plugin的全局变量,避免污染window的全局
+
+var Plugin = function Plugin() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(Plugin)
+
+
+mframe.memory.Plugin.iterator = function values() { // 迭代器
+    return {
+        next: function () {
+            if (this.index_ == undefined) {
+                this.index_ = 0;
+            }
+            var tmp = this.self_[this.index_];
+            this.index_ += 1;
+            return { value: tmp, done: tmp == undefined };
+        },
+        self_: this
+    }
+}; mframe.safefunction(mframe.memory.Plugin.iterator);
+
+Object.defineProperties(Plugin.prototype, {
+    [Symbol.toStringTag]: {
+        value: "Plugin",
+        configurable: true,
+    },
+    [Symbol.iterator]: {
+        value: mframe.memory.Plugin.iterator,
+        configurable: true
+    },
+})
+
+
+//////////////////////////////////
+//===================Plugin 的原型属性 START===================
+Plugin.prototype.name = "";
+Plugin.prototype.filename = "";
+Plugin.prototype.description = "";
+Plugin.prototype.length = 0;
+
+Plugin.prototype.item = function item() { debugger; }; mframe.safefunction(Plugin.prototype.item);
+Plugin.prototype.namedItem = function namedItem() { debugger; }; mframe.safefunction(Plugin.prototype.namedItem);
+//================ ↑↑↑Plugin 的原型属性 END↑↑↑ ================
+
+//////////////////////////////////
+
+
+// 保持原型属性和实例属性相同(如果没有原型,会直接报错)
+for (let prototypeName in Plugin.prototype) {
+    if (typeof (Plugin.prototype[prototypeName]) != "function") {
+        Plugin.prototype.__defineGetter__(prototypeName, function () {
+            return this[prototypeName];
+        })
+    }
+}
+
+
+/** 支持内部 new Plugin
+ * 
+ * @param {*} pluginObj 包含Plugin基本信息的对象
+ * Plugin不允许被new, 那Plugin从哪来呢???
+ * 但Plugin只是我们用, 网站只会检测, 不可能new一个Plugin往里加入
+ * 所以new只有我们会用, so, 给一个方法来new即可
+传入的pluginObj示例:
+var aa = mframe.memory.Plugin.new({
+    description: "Portable Document Format",
+    filename: "internal-pdf-viewer",
+    name: "PDF Viewer",
+    mimeTypeArray: [
+        {
+          description: "Portable Document Format",
+          enabledPlugin: "Plugin",
+          suffixes: "pdf",
+          type: "application/pdf",
+        },
+        {
+          description: "Portable Document Format1",
+          enabledPlugin: "Plugin1",
+          suffixes: "pd1f",
+          type: "application/pdf1",
+        },
+    ]
+});
+ */
+mframe.memory.Plugin.new = function (pluginObj) {
+    var plugin = {};
+    plugin.description = pluginObj.description;
+    plugin.filename = pluginObj.filename;
+    plugin.name = pluginObj.name;
+
+    for (let i = 0; i < pluginObj.mimeTypeArray.length; i++) {
+        // part1: MineType索引: MineType实例
+        plugin[i] = mframe.memory.MimeType.new(pluginObj.mimeTypeArray[i], plugin);
+
+        // part2: MineType名字表示; 处理名字为灰色的
+        Object.defineProperty(
+            plugin,                                    // 哪个对象
+            pluginObj.mimeTypeArray[i].type,           // 哪个属性
+            { value: pluginObj.mimeTypeArray[i] }      // 属性的值,还是属性的是否可写...
+        );
+    }
+    plugin.length = pluginObj.mimeTypeArray.length;
+    plugin.__proto__ = Plugin.prototype;
+    /** 实例和原型的 属性名相同, 原型的该属性会被实例的该属性覆盖*/
+    return plugin;
+}
+
+
+/**代理 */
+Plugin = mframe.proxy(Plugin)
+mframe.memory.PluginArray = {}
+var PluginArray = function PluginArray() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(PluginArray)
+
+mframe.memory.PluginArray.iterator = function values() {
+    return {
+        next: function () {
+            if (this.index_ == undefined) {
+                this.index_ = 0;
+            }
+            var tmp = this.self_[this.index_];
+            this.index_ += 1;
+            return { value: tmp, done: tmp == undefined };
+        },
+        self_: this
+    }
+}; mframe.safefunction(mframe.memory.PluginArray.iterator);
+Object.defineProperties(PluginArray.prototype, {
+    [Symbol.toStringTag]: {
+        value: "PluginArray",
+        configurable: true,
+    },
+    [Symbol.iterator]: {
+        value: mframe.memory.PluginArray.iterator,
+        configurable: true,
+    },
+})
+
+
+//////////////////////////////////
+var curMemoryArea = mframe.memory.PluginArray;
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%%%%%%
+// length
+curMemoryArea.length_getter = function length() { debugger; }; mframe.safefunction(curMemoryArea.length_getter);
+Object.defineProperty(curMemoryArea.length_getter, "name", { value: "get length", configurable: true, });
+Object.defineProperty(PluginArray.prototype, "length", { get: curMemoryArea.length_getter, enumerable: true, configurable: true, });
+curMemoryArea.length_smart_getter = function length() {
+    let defaultValue = this.length;
+    if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
+    return defaultValue; // 已经正确修改返回值
+}; mframe.safefunction(curMemoryArea.length_smart_getter);
+PluginArray.prototype.__defineGetter__("length", curMemoryArea.length_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%%%%%%
+
+//============== Function START ====================
+PluginArray.prototype["item"] = function item() { debugger; }; mframe.safefunction(PluginArray.prototype["item"]);
+PluginArray.prototype["namedItem"] = function namedItem() { debugger; }; mframe.safefunction(PluginArray.prototype["namedItem"]);
+PluginArray.prototype["refresh"] = function refresh() { debugger; }; mframe.safefunction(PluginArray.prototype["refresh"]);
+//==============↑↑Function END↑↑====================
+//////////////////////////////////
+
+
+// window里面不能有 PluginArray 的实例, 只有navigator中可以有
+mframe.memory.PluginArray._ ={};
+for (let index = 0; index < mframe.memory.config.pluginArray.length; index++) {
+    // part1: 索引
+    mframe.memory.PluginArray._[index] = mframe.memory.Plugin.new( mframe.memory.config.pluginArray[index]);
+    // part2: 名字变色
+    Object.defineProperty(mframe.memory.PluginArray._,
+        mframe.memory.config.pluginArray[index].name, {
+        value: mframe.memory.config.pluginArray[index]
+    });
+    mframe.memory.PluginArray._.length = mframe.memory.config.pluginArray.length;
+}
+
+mframe.memory.PluginArray._.__proto__ = PluginArray.prototype;
+navigator.plugins = mframe.memory.PluginArray._;
+
+/**代理 */
+navigator.plugins = mframe.proxy(navigator.plugins)
+mframe.memory.MimeTypeArray = {}
+var MimeTypeArray = function MimeTypeArray() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(MimeTypeArray)
+
+mframe.memory.MimeTypeArray.iterator = function values() {
+    return {
+        next: function () {
+            if (this.index_ == undefined) {
+                this.index_ = 0;
+            }
+            var tmp = this.self_[this.index_];
+            this.index_ += 1;
+            return { value: tmp, done: tmp == undefined };
+        },
+        self_: this
+    }
+}; mframe.safefunction(mframe.memory.MimeTypeArray.iterator);
+Object.defineProperties(MimeTypeArray.prototype, {
+    [Symbol.toStringTag]: {
+        value: "MimeTypeArray",
+        configurable: true,
+    },
+    [Symbol.iterator]: {
+        value: mframe.memory.MimeTypeArray.iterator,
+        configurable: true,
+    },
+})
+
+
+//////////////////////////////////
+var curMemoryArea = mframe.memory.MimeTypeArray;
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%%%%%%
+// length
+curMemoryArea.length_getter = function length() { debugger; }; mframe.safefunction(curMemoryArea.length_getter);
+Object.defineProperty(curMemoryArea.length_getter, "name", { value: "get length", configurable: true, });
+Object.defineProperty(MimeTypeArray.prototype, "length", { get: curMemoryArea.length_getter, enumerable: true, configurable: true, });
+curMemoryArea.length_smart_getter = function length() {
+    let defaultValue = this.length;
+    if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
+    return defaultValue; // 已经正确修改返回值
+}; mframe.safefunction(curMemoryArea.length_smart_getter);
+MimeTypeArray.prototype.__defineGetter__("length", curMemoryArea.length_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%%%%%%
+
+//============== Function START ====================
+MimeTypeArray.prototype["item"] = function item() { debugger; }; mframe.safefunction(MimeTypeArray.prototype["item"]);
+MimeTypeArray.prototype["namedItem"] = function namedItem() { debugger; }; mframe.safefunction(MimeTypeArray.prototype["namedItem"]);
+//==============↑↑Function END↑↑====================
+//////////////////////////////////
+
+
+
+mframe.memory.MimeTypeArray._ = {}
+// 初始化所有MimeType并和PluginArray建立关联
+
+let mimeTypeIndex = 0; // 记录mimeTypeArray的长度
+for (let pluginIndex = 0; pluginIndex < mframe.memory.config.pluginArray.length; pluginIndex++) {
+    const pluginConfig = mframe.memory.config.pluginArray[pluginIndex];
+    const pluginInstance = mframe.memory.PluginArray._[pluginIndex];
+    
+    for (let mimeIndex = 0; mimeIndex < pluginConfig.mimeTypeArray.length; mimeIndex++) {
+        const mimeConfig = pluginConfig.mimeTypeArray[mimeIndex];
+        
+        // 创建MimeType实例，enabledPlugin参数传入对应的Plugin实例
+        const mimeInstance = mframe.memory.MimeType.new(mimeConfig, pluginInstance);
+        
+        // 添加到MimeTypeArray中，使用数字索引
+        mframe.memory.MimeTypeArray._[mimeTypeIndex] = mimeInstance;
+        
+        // 添加到MimeTypeArray中，使用类型名称作为索引
+        Object.defineProperty(mframe.memory.MimeTypeArray._, mimeConfig.type, {
+            value: mimeInstance,
+            enumerable: false,
+            configurable: true
+        });
+        
+        mimeTypeIndex++;
+    }
+}
+mframe.memory.MimeTypeArray._.length = mimeTypeIndex; // mimeTypeArray的长度
+
+
+mframe.memory.MimeTypeArray._.__proto__ = MimeTypeArray.prototype;
+navigator.mimeTypes = mframe.memory.MimeTypeArray._;
+
+
+/**代理 */
+navigator.mimeTypes = mframe.proxy(navigator.mimeTypes)
+
+var History = function () {
+    throw new TypeError('Illegal constructor')
+}; mframe.safefunction(History);
+
+Object.defineProperties(History.prototype, {
+    [Symbol.toStringTag]: {
+        value: "History",
+        configurable: true,
+    }
+});
+
+
+///////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.History = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+// length
+curMemoryArea.length_getter = function length() { debugger; }; mframe.safefunction(curMemoryArea.length_getter);
+Object.defineProperty(curMemoryArea.length_getter, "name", { value: "get length", configurable: true, });
+Object.defineProperty(History.prototype, "length", { get: curMemoryArea.length_getter, enumerable: true, configurable: true, });
+curMemoryArea.length_smart_getter = function length() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = 3; // 返回实例属性或默认值
+    mframe.log({ flag: 'property', className: 'History', propertyName: 'length', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.length_smart_getter);
+History.prototype.__defineGetter__("length", curMemoryArea.length_smart_getter);
+
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+// History.prototype["back"] = function back() { debugger; }; mframe.safefunction(History.prototype["back"]);
+// History.prototype["forward"] = function forward() { debugger; }; mframe.safefunction(History.prototype["forward"]);
+// History.prototype["go"] = function go() { debugger; }; mframe.safefunction(History.prototype["go"]);
+// History.prototype["pushState"] = function pushState() { debugger; }; mframe.safefunction(History.prototype["pushState"]);
+History.prototype["replaceState"] = function replaceState() { debugger; }; mframe.safefunction(History.prototype["replaceState"]);
+//==============↑↑Function END↑↑====================
+History.prototype.back = function back() { debugger; }; mframe.safefunction(History.prototype.back);
+
+
+///////////////////////////////////////////////////
+history = {}
+history.__proto__ = History.prototype;
+history = mframe.proxy(history) // 代理
+var Node = function Node() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(Node)
+
+Object.defineProperties(Node.prototype, {
+    [Symbol.toStringTag]: {
+        value: "Node",
+        configurable: true,
+    }
+})
+
+
+////////////////Prototype Prototype Prototype////////////////
+var curMemoryArea = mframe.memory.Node = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%%%%%%%%%%%%%%%%%%%%
+
+// parentNode
+curMemoryArea.parentNode_getter = function parentNode() { debugger; }; mframe.safefunction(curMemoryArea.parentNode_getter);
+Object.defineProperty(curMemoryArea.parentNode_getter, "name", { value: "get parentNode", configurable: true, });
+Object.defineProperty(Node.prototype, "parentNode", { get: curMemoryArea.parentNode_getter, enumerable: true, configurable: true, });
+curMemoryArea.parentNode_smart_getter = function parentNode() {
+    var res = this.jsdomMemory.parentNode;
+    mframe.log({ flag: 'property', className: 'Node', propertyName: 'parentNode', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.parentNode_smart_getter);
+Node.prototype.__defineGetter__("parentNode", curMemoryArea.parentNode_smart_getter);
+
+// parentElement
+curMemoryArea.parentElement_getter = function parentElement() { debugger; }; mframe.safefunction(curMemoryArea.parentElement_getter);
+Object.defineProperty(curMemoryArea.parentElement_getter, "name", { value: "get parentElement", configurable: true, });
+Object.defineProperty(Node.prototype, "parentElement", { get: curMemoryArea.parentElement_getter, enumerable: true, configurable: true, });
+curMemoryArea.parentElement_smart_getter = function parentElement() {
+    var res = this.jsdomMemory.parentElement;
+    mframe.log({ flag: 'property', className: 'Node', propertyName: 'parentElement', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.parentElement_smart_getter);
+Node.prototype.__defineGetter__("parentElement", curMemoryArea.parentElement_smart_getter);
+
+// firstChild
+curMemoryArea.firstChild_getter = function firstChild() { debugger; }; mframe.safefunction(curMemoryArea.firstChild_getter);
+Object.defineProperty(curMemoryArea.firstChild_getter, "name", { value: "get firstChild", configurable: true, });
+Object.defineProperty(Node.prototype, "firstChild", { get: curMemoryArea.firstChild_getter, enumerable: true, configurable: true, });
+curMemoryArea.firstChild_smart_getter = function firstChild() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this.jsdomMemory.firstChild; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'Node', propertyName: 'firstChild', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.firstChild_smart_getter);
+Node.prototype.__defineGetter__("firstChild", curMemoryArea.firstChild_smart_getter);
+//%%%%%%%↑↑Attribute END↑↑%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+//============== Function START ====================
+// appendChild
+Node.prototype["appendChild"] = function appendChild(aChild) {
+    // 一定是一个实例来调用appendChild才有用,this.jsdomMemory是jsdom的; aChild是我们伪造的,aChild.jsdomMemory是jsdom创建的
+    var res = this.jsdomMemory.appendChild(aChild.jsdomMemory);
+    mframe.log({ flag: 'function', className: 'Node', methodName: 'appendChild', inputVal: arguments, res: res });
+    return res;
+
+}; mframe.safefunction(Node.prototype["appendChild"]);
+
+//removeChild
+Node.prototype["removeChild"] = function removeChild(child) {
+
+    var res = this.jsdomMemory.removeChild(child)
+    mframe.log({ flag: 'function', className: 'Node', methodName: 'removeChild', inputVal: arguments, res: res });
+    return res;
+
+}; mframe.safefunction(Node.prototype["removeChild"]);
+Node.prototype["replaceChild"] = function replaceChild() { debugger; }; mframe.safefunction(Node.prototype["replaceChild"]);
+
+
+/**insertBefore
+ * newNode:要插入的节点。
+ * referenceNode: 在其之前插入 newNode 的节点。如果为 null，newNode 将被插入到节点的子节点列表末尾。
+*/
+Node.prototype["insertBefore"] = function insertBefore(newNode, referenceNode) {
+    var res = this.jsdomMemory["insertBefore"](newNode.jsdomMemory, referenceNode.jsdomMemory);
+    mframe.log({ flag: 'function', className: 'Node', methodName: 'insertBefore', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Node.prototype["insertBefore"]);
+//==============↑↑Function END↑↑====================
+
+
+////////////////Instance Instance Instance///////////////////
+
+// === hook jsdom===========================================
+// remove
+const or_removeChild = mframe.memory.jsdom.window.Node.prototype.removeChild
+mframe.memory.jsdom.window.Node.prototype.removeChild = function (child) {
+    var res = or_removeChild.call(this, child.jsdomMemory ? child.jsdomMemory : child);
+    mframe.log({ flag: 'function', className: 'Node', methodName: '[Hook JSOM内部] removeChild', inputVal: arguments, res: res });
+
+    return res;
+}
+// =======end================================================
+
+/////////////////////////////////////////////////////////////
+
+
+/**代理 */
+Node.prototype.__proto__ = EventTarget.prototype;
+Node = mframe.proxy(Node)
+var Element = function Element() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(Element)
+
+Object.defineProperties(Element.prototype, {
+    [Symbol.toStringTag]: {
+        value: "Element",
+        configurable: true,
+    }
+})
+
+////////////////////////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.Element = {};
+
+//============== Constant START ==================
+
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%%%%%%%%%%%%%%%%%%%%
+// tagName
+curMemoryArea.tagName_getter = function tagName() { debugger; }; mframe.safefunction(curMemoryArea.tagName_getter);
+Object.defineProperty(curMemoryArea.tagName_getter, "name", {value: "get tagName",configurable: true,});
+Object.defineProperty(Element.prototype, "tagName", {get: curMemoryArea.tagName_getter,enumerable: true,configurable: true,});
+curMemoryArea.tagName_smart_getter = function tagName() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this.jsdomMemory.tagName; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'Element', propertyName: 'tagName', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.tagName_smart_getter);
+Element.prototype.__defineGetter__("tagName", curMemoryArea.tagName_smart_getter);
+
+// childElementCount
+curMemoryArea.childElementCount_getter = function childElementCount() { debugger; }; mframe.safefunction(curMemoryArea.childElementCount_getter);
+Object.defineProperty(curMemoryArea.childElementCount_getter, "name", {value: "get childElementCount",configurable: true,});
+Object.defineProperty(Element.prototype, "childElementCount", {get: curMemoryArea.childElementCount_getter,enumerable: true,configurable: true,});
+curMemoryArea.childElementCount_smart_getter = function childElementCount() {    
+    console.log(this.tagName);
+    debugger;
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res =  this.jsdomMemory.childElementCount; // 返回实例属性或jsdom值
+    res = 100;
+    mframe.log({ flag: 'property', className: 'Element', propertyName: 'childElementCount', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.childElementCount_smart_getter);
+Element.prototype.__defineGetter__("childElementCount", curMemoryArea.childElementCount_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%%%%%%%%%%%%%%%%%%%%
+
+//============== Function START ====================
+Element.prototype["getElementsByTagName"] = function getElementsByTagName() {
+    // Element 和Document这个方法的区别是, 一个调用的全局, 一个是实例下的TageName
+    var elements = this.jsdomMemory.getElementsByTagName(...arguments);
+    var res = mframe.memory.htmlelements['collection'](elements);
+    mframe.log({ flag: 'function', className: 'Element', methodName: 'getElementsByTagName', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Element.prototype["getElementsByTagName"]);
+Element.prototype["setAttribute"] = function setAttribute() {
+    console.log(this.jsdomMemory.tagName);
+    var res = this.jsdomMemory.setAttribute(...arguments);
+    mframe.log({ flag: 'function', className: 'Element', methodName: 'setAttribute', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Element.prototype["setAttribute"]);
+
+// 2025年4月12日14:28:38; 你知道吗? 这个bug我找了2天(20h), 终于明白日志的重要性, 准备封装完整的日志功能 TODO
+Element.prototype["getAttribute"] = function getAttribute() {
+    var res = this.jsdomMemory.getAttribute(...arguments);
+    mframe.log({ flag: 'function', className: 'Element', methodName: 'getAttribute', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Element.prototype["getAttribute"]);
+
+//==============↑↑Function END↑↑====================
+
+
+// === hook jsdom====
+// append
+const or_append = mframe.memory.jsdom.window.Element.prototype.append
+mframe.memory.jsdom.window.Element.prototype.append = function (child) {
+    console.log("调用jsdom内部的 Element.prototype.append", child);
+    mframe.log({ flag: 'function', className: 'Node', methodName: '[Hook JSOM内部] append', inputVal: arguments, res: res });
+    return or_append.call(this, child.jsdomMemory ? child.jsdomMemory : child);
+}
+// =======end========
+
+////////////////////////////////////////////////////////////////////
+
+
+/**代理 */
+Element.prototype.__proto__ = Node.prototype;
+Element = mframe.proxy(Element)
+var HTMLElement = function HTMLElement() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(HTMLElement)
+
+Object.defineProperties(HTMLElement.prototype, {
+    [Symbol.toStringTag]: {
+        value: "HTMLElement",
+        configurable: true,
+    }
+})
+
+
+//////////////////////////////////
+var curMemoryArea = mframe.memory.HTMLElement = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+// title
+curMemoryArea.title_getter = function title() { return this._title; }; mframe.safefunction(curMemoryArea.title_getter);
+Object.defineProperty(curMemoryArea.title_getter, "name", {value: "get title",configurable: true,});
+// title
+curMemoryArea.title_setter = function title(val) { this._title = val; }; mframe.safefunction(curMemoryArea.title_setter);
+Object.defineProperty(curMemoryArea.title_setter, "name", {value: "set title",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "title", {get: curMemoryArea.title_getter,set: curMemoryArea.title_setter,enumerable: true,configurable: true,});
+curMemoryArea.title_smart_getter = function title() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.title;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._title !== undefined ? this._title : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.title_smart_getter);
+HTMLElement.prototype.__defineGetter__("title", curMemoryArea.title_smart_getter);
+
+// lang
+curMemoryArea.lang_getter = function lang() { return this._lang; }; mframe.safefunction(curMemoryArea.lang_getter);
+Object.defineProperty(curMemoryArea.lang_getter, "name", {value: "get lang",configurable: true,});
+// lang
+curMemoryArea.lang_setter = function lang(val) { this._lang = val; }; mframe.safefunction(curMemoryArea.lang_setter);
+Object.defineProperty(curMemoryArea.lang_setter, "name", {value: "set lang",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "lang", {get: curMemoryArea.lang_getter,set: curMemoryArea.lang_setter,enumerable: true,configurable: true,});
+curMemoryArea.lang_smart_getter = function lang() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.lang;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._lang !== undefined ? this._lang : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.lang_smart_getter);
+HTMLElement.prototype.__defineGetter__("lang", curMemoryArea.lang_smart_getter);
+
+// translate
+curMemoryArea.translate_getter = function translate() { return this._translate; }; mframe.safefunction(curMemoryArea.translate_getter);
+Object.defineProperty(curMemoryArea.translate_getter, "name", {value: "get translate",configurable: true,});
+// translate
+curMemoryArea.translate_setter = function translate(val) { this._translate = val; }; mframe.safefunction(curMemoryArea.translate_setter);
+Object.defineProperty(curMemoryArea.translate_setter, "name", {value: "set translate",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "translate", {get: curMemoryArea.translate_getter,set: curMemoryArea.translate_setter,enumerable: true,configurable: true,});
+curMemoryArea.translate_smart_getter = function translate() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.translate;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._translate !== undefined ? this._translate : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.translate_smart_getter);
+HTMLElement.prototype.__defineGetter__("translate", curMemoryArea.translate_smart_getter);
+
+// dir
+curMemoryArea.dir_getter = function dir() { return this._dir; }; mframe.safefunction(curMemoryArea.dir_getter);
+Object.defineProperty(curMemoryArea.dir_getter, "name", {value: "get dir",configurable: true,});
+// dir
+curMemoryArea.dir_setter = function dir(val) { this._dir = val; }; mframe.safefunction(curMemoryArea.dir_setter);
+Object.defineProperty(curMemoryArea.dir_setter, "name", {value: "set dir",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "dir", {get: curMemoryArea.dir_getter,set: curMemoryArea.dir_setter,enumerable: true,configurable: true,});
+curMemoryArea.dir_smart_getter = function dir() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.dir;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._dir !== undefined ? this._dir : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.dir_smart_getter);
+HTMLElement.prototype.__defineGetter__("dir", curMemoryArea.dir_smart_getter);
+
+// hidden
+curMemoryArea.hidden_getter = function hidden() { return this._hidden; }; mframe.safefunction(curMemoryArea.hidden_getter);
+Object.defineProperty(curMemoryArea.hidden_getter, "name", {value: "get hidden",configurable: true,});
+// hidden
+curMemoryArea.hidden_setter = function hidden(val) { this._hidden = val; }; mframe.safefunction(curMemoryArea.hidden_setter);
+Object.defineProperty(curMemoryArea.hidden_setter, "name", {value: "set hidden",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "hidden", {get: curMemoryArea.hidden_getter,set: curMemoryArea.hidden_setter,enumerable: true,configurable: true,});
+curMemoryArea.hidden_smart_getter = function hidden() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.hidden;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._hidden !== undefined ? this._hidden : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.hidden_smart_getter);
+HTMLElement.prototype.__defineGetter__("hidden", curMemoryArea.hidden_smart_getter);
+
+// inert
+curMemoryArea.inert_getter = function inert() { return this._inert; }; mframe.safefunction(curMemoryArea.inert_getter);
+Object.defineProperty(curMemoryArea.inert_getter, "name", {value: "get inert",configurable: true,});
+// inert
+curMemoryArea.inert_setter = function inert(val) { this._inert = val; }; mframe.safefunction(curMemoryArea.inert_setter);
+Object.defineProperty(curMemoryArea.inert_setter, "name", {value: "set inert",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "inert", {get: curMemoryArea.inert_getter,set: curMemoryArea.inert_setter,enumerable: true,configurable: true,});
+curMemoryArea.inert_smart_getter = function inert() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.inert;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._inert !== undefined ? this._inert : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.inert_smart_getter);
+HTMLElement.prototype.__defineGetter__("inert", curMemoryArea.inert_smart_getter);
+
+// accessKey
+curMemoryArea.accessKey_getter = function accessKey() { return this._accessKey; }; mframe.safefunction(curMemoryArea.accessKey_getter);
+Object.defineProperty(curMemoryArea.accessKey_getter, "name", {value: "get accessKey",configurable: true,});
+// accessKey
+curMemoryArea.accessKey_setter = function accessKey(val) { this._accessKey = val; }; mframe.safefunction(curMemoryArea.accessKey_setter);
+Object.defineProperty(curMemoryArea.accessKey_setter, "name", {value: "set accessKey",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "accessKey", {get: curMemoryArea.accessKey_getter,set: curMemoryArea.accessKey_setter,enumerable: true,configurable: true,});
+curMemoryArea.accessKey_smart_getter = function accessKey() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.accessKey;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._accessKey !== undefined ? this._accessKey : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.accessKey_smart_getter);
+HTMLElement.prototype.__defineGetter__("accessKey", curMemoryArea.accessKey_smart_getter);
+
+// draggable
+curMemoryArea.draggable_getter = function draggable() { return this._draggable; }; mframe.safefunction(curMemoryArea.draggable_getter);
+Object.defineProperty(curMemoryArea.draggable_getter, "name", {value: "get draggable",configurable: true,});
+// draggable
+curMemoryArea.draggable_setter = function draggable(val) { this._draggable = val; }; mframe.safefunction(curMemoryArea.draggable_setter);
+Object.defineProperty(curMemoryArea.draggable_setter, "name", {value: "set draggable",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "draggable", {get: curMemoryArea.draggable_getter,set: curMemoryArea.draggable_setter,enumerable: true,configurable: true,});
+curMemoryArea.draggable_smart_getter = function draggable() {
+    console.log("开始补吧");
+    
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.draggable;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._draggable !== undefined ? this._draggable : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.draggable_smart_getter);
+HTMLElement.prototype.__defineGetter__("draggable", curMemoryArea.draggable_smart_getter);
+
+// spellcheck
+curMemoryArea.spellcheck_getter = function spellcheck() { return this._spellcheck; }; mframe.safefunction(curMemoryArea.spellcheck_getter);
+Object.defineProperty(curMemoryArea.spellcheck_getter, "name", {value: "get spellcheck",configurable: true,});
+// spellcheck
+curMemoryArea.spellcheck_setter = function spellcheck(val) { this._spellcheck = val; }; mframe.safefunction(curMemoryArea.spellcheck_setter);
+Object.defineProperty(curMemoryArea.spellcheck_setter, "name", {value: "set spellcheck",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "spellcheck", {get: curMemoryArea.spellcheck_getter,set: curMemoryArea.spellcheck_setter,enumerable: true,configurable: true,});
+curMemoryArea.spellcheck_smart_getter = function spellcheck() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.spellcheck;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._spellcheck !== undefined ? this._spellcheck : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.spellcheck_smart_getter);
+HTMLElement.prototype.__defineGetter__("spellcheck", curMemoryArea.spellcheck_smart_getter);
+
+// autocapitalize
+curMemoryArea.autocapitalize_getter = function autocapitalize() { return this._autocapitalize; }; mframe.safefunction(curMemoryArea.autocapitalize_getter);
+Object.defineProperty(curMemoryArea.autocapitalize_getter, "name", {value: "get autocapitalize",configurable: true,});
+// autocapitalize
+curMemoryArea.autocapitalize_setter = function autocapitalize(val) { this._autocapitalize = val; }; mframe.safefunction(curMemoryArea.autocapitalize_setter);
+Object.defineProperty(curMemoryArea.autocapitalize_setter, "name", {value: "set autocapitalize",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "autocapitalize", {get: curMemoryArea.autocapitalize_getter,set: curMemoryArea.autocapitalize_setter,enumerable: true,configurable: true,});
+curMemoryArea.autocapitalize_smart_getter = function autocapitalize() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.autocapitalize;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._autocapitalize !== undefined ? this._autocapitalize : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.autocapitalize_smart_getter);
+HTMLElement.prototype.__defineGetter__("autocapitalize", curMemoryArea.autocapitalize_smart_getter);
+
+// editContext
+curMemoryArea.editContext_getter = function editContext() { return this._editContext; }; mframe.safefunction(curMemoryArea.editContext_getter);
+Object.defineProperty(curMemoryArea.editContext_getter, "name", {value: "get editContext",configurable: true,});
+// editContext
+curMemoryArea.editContext_setter = function editContext(val) { this._editContext = val; }; mframe.safefunction(curMemoryArea.editContext_setter);
+Object.defineProperty(curMemoryArea.editContext_setter, "name", {value: "set editContext",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "editContext", {get: curMemoryArea.editContext_getter,set: curMemoryArea.editContext_setter,enumerable: true,configurable: true,});
+curMemoryArea.editContext_smart_getter = function editContext() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.editContext;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._editContext !== undefined ? this._editContext : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.editContext_smart_getter);
+HTMLElement.prototype.__defineGetter__("editContext", curMemoryArea.editContext_smart_getter);
+
+// contentEditable
+curMemoryArea.contentEditable_getter = function contentEditable() { return this._contentEditable; }; mframe.safefunction(curMemoryArea.contentEditable_getter);
+Object.defineProperty(curMemoryArea.contentEditable_getter, "name", {value: "get contentEditable",configurable: true,});
+// contentEditable
+curMemoryArea.contentEditable_setter = function contentEditable(val) { this._contentEditable = val; }; mframe.safefunction(curMemoryArea.contentEditable_setter);
+Object.defineProperty(curMemoryArea.contentEditable_setter, "name", {value: "set contentEditable",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "contentEditable", {get: curMemoryArea.contentEditable_getter,set: curMemoryArea.contentEditable_setter,enumerable: true,configurable: true,});
+curMemoryArea.contentEditable_smart_getter = function contentEditable() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.contentEditable;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._contentEditable !== undefined ? this._contentEditable : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.contentEditable_smart_getter);
+HTMLElement.prototype.__defineGetter__("contentEditable", curMemoryArea.contentEditable_smart_getter);
+
+// enterKeyHint
+curMemoryArea.enterKeyHint_getter = function enterKeyHint() { return this._enterKeyHint; }; mframe.safefunction(curMemoryArea.enterKeyHint_getter);
+Object.defineProperty(curMemoryArea.enterKeyHint_getter, "name", {value: "get enterKeyHint",configurable: true,});
+// enterKeyHint
+curMemoryArea.enterKeyHint_setter = function enterKeyHint(val) { this._enterKeyHint = val; }; mframe.safefunction(curMemoryArea.enterKeyHint_setter);
+Object.defineProperty(curMemoryArea.enterKeyHint_setter, "name", {value: "set enterKeyHint",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "enterKeyHint", {get: curMemoryArea.enterKeyHint_getter,set: curMemoryArea.enterKeyHint_setter,enumerable: true,configurable: true,});
+curMemoryArea.enterKeyHint_smart_getter = function enterKeyHint() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.enterKeyHint;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._enterKeyHint !== undefined ? this._enterKeyHint : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.enterKeyHint_smart_getter);
+HTMLElement.prototype.__defineGetter__("enterKeyHint", curMemoryArea.enterKeyHint_smart_getter);
+
+// isContentEditable
+curMemoryArea.isContentEditable_getter = function isContentEditable() { return this._isContentEditable; }; mframe.safefunction(curMemoryArea.isContentEditable_getter);
+Object.defineProperty(curMemoryArea.isContentEditable_getter, "name", {value: "get isContentEditable",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "isContentEditable", {get: curMemoryArea.isContentEditable_getter,enumerable: true,configurable: true,});
+curMemoryArea.isContentEditable_smart_getter = function isContentEditable() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.isContentEditable;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._isContentEditable !== undefined ? this._isContentEditable : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.isContentEditable_smart_getter);
+HTMLElement.prototype.__defineGetter__("isContentEditable", curMemoryArea.isContentEditable_smart_getter);
+
+// inputMode
+curMemoryArea.inputMode_getter = function inputMode() { return this._inputMode; }; mframe.safefunction(curMemoryArea.inputMode_getter);
+Object.defineProperty(curMemoryArea.inputMode_getter, "name", {value: "get inputMode",configurable: true,});
+// inputMode
+curMemoryArea.inputMode_setter = function inputMode(val) { this._inputMode = val; }; mframe.safefunction(curMemoryArea.inputMode_setter);
+Object.defineProperty(curMemoryArea.inputMode_setter, "name", {value: "set inputMode",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "inputMode", {get: curMemoryArea.inputMode_getter,set: curMemoryArea.inputMode_setter,enumerable: true,configurable: true,});
+curMemoryArea.inputMode_smart_getter = function inputMode() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.inputMode;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._inputMode !== undefined ? this._inputMode : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.inputMode_smart_getter);
+HTMLElement.prototype.__defineGetter__("inputMode", curMemoryArea.inputMode_smart_getter);
+
+// virtualKeyboardPolicy
+curMemoryArea.virtualKeyboardPolicy_getter = function virtualKeyboardPolicy() { return this._virtualKeyboardPolicy; }; mframe.safefunction(curMemoryArea.virtualKeyboardPolicy_getter);
+Object.defineProperty(curMemoryArea.virtualKeyboardPolicy_getter, "name", {value: "get virtualKeyboardPolicy",configurable: true,});
+// virtualKeyboardPolicy
+curMemoryArea.virtualKeyboardPolicy_setter = function virtualKeyboardPolicy(val) { this._virtualKeyboardPolicy = val; }; mframe.safefunction(curMemoryArea.virtualKeyboardPolicy_setter);
+Object.defineProperty(curMemoryArea.virtualKeyboardPolicy_setter, "name", {value: "set virtualKeyboardPolicy",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "virtualKeyboardPolicy", {get: curMemoryArea.virtualKeyboardPolicy_getter,set: curMemoryArea.virtualKeyboardPolicy_setter,enumerable: true,configurable: true,});
+curMemoryArea.virtualKeyboardPolicy_smart_getter = function virtualKeyboardPolicy() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.virtualKeyboardPolicy;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._virtualKeyboardPolicy !== undefined ? this._virtualKeyboardPolicy : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.virtualKeyboardPolicy_smart_getter);
+HTMLElement.prototype.__defineGetter__("virtualKeyboardPolicy", curMemoryArea.virtualKeyboardPolicy_smart_getter);
+
+// offsetParent
+curMemoryArea.offsetParent_getter = function offsetParent() { return this._offsetParent; }; mframe.safefunction(curMemoryArea.offsetParent_getter);
+Object.defineProperty(curMemoryArea.offsetParent_getter, "name", {value: "get offsetParent",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "offsetParent", {get: curMemoryArea.offsetParent_getter,enumerable: true,configurable: true,});
+curMemoryArea.offsetParent_smart_getter = function offsetParent() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.offsetParent;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._offsetParent !== undefined ? this._offsetParent : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.offsetParent_smart_getter);
+HTMLElement.prototype.__defineGetter__("offsetParent", curMemoryArea.offsetParent_smart_getter);
+
+// offsetTop
+curMemoryArea.offsetTop_getter = function offsetTop() { return this._offsetTop; }; mframe.safefunction(curMemoryArea.offsetTop_getter);
+Object.defineProperty(curMemoryArea.offsetTop_getter, "name", {value: "get offsetTop",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "offsetTop", {get: curMemoryArea.offsetTop_getter,enumerable: true,configurable: true,});
+curMemoryArea.offsetTop_smart_getter = function offsetTop() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.offsetTop;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._offsetTop !== undefined ? this._offsetTop : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.offsetTop_smart_getter);
+HTMLElement.prototype.__defineGetter__("offsetTop", curMemoryArea.offsetTop_smart_getter);
+
+// offsetLeft
+curMemoryArea.offsetLeft_getter = function offsetLeft() { return this._offsetLeft; }; mframe.safefunction(curMemoryArea.offsetLeft_getter);
+Object.defineProperty(curMemoryArea.offsetLeft_getter, "name", {value: "get offsetLeft",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "offsetLeft", {get: curMemoryArea.offsetLeft_getter,enumerable: true,configurable: true,});
+curMemoryArea.offsetLeft_smart_getter = function offsetLeft() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.offsetLeft;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._offsetLeft !== undefined ? this._offsetLeft : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.offsetLeft_smart_getter);
+HTMLElement.prototype.__defineGetter__("offsetLeft", curMemoryArea.offsetLeft_smart_getter);
+
+// offsetWidth
+curMemoryArea.offsetWidth_getter = function offsetWidth() { return this._offsetWidth; }; mframe.safefunction(curMemoryArea.offsetWidth_getter);
+Object.defineProperty(curMemoryArea.offsetWidth_getter, "name", {value: "get offsetWidth",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "offsetWidth", {get: curMemoryArea.offsetWidth_getter,enumerable: true,configurable: true,});
+curMemoryArea.offsetWidth_smart_getter = function offsetWidth() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.offsetWidth;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._offsetWidth !== undefined ? this._offsetWidth : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.offsetWidth_smart_getter);
+HTMLElement.prototype.__defineGetter__("offsetWidth", curMemoryArea.offsetWidth_smart_getter);
+
+// offsetHeight
+curMemoryArea.offsetHeight_getter = function offsetHeight() { return this._offsetHeight; }; mframe.safefunction(curMemoryArea.offsetHeight_getter);
+Object.defineProperty(curMemoryArea.offsetHeight_getter, "name", {value: "get offsetHeight",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "offsetHeight", {get: curMemoryArea.offsetHeight_getter,enumerable: true,configurable: true,});
+curMemoryArea.offsetHeight_smart_getter = function offsetHeight() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.offsetHeight;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._offsetHeight !== undefined ? this._offsetHeight : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.offsetHeight_smart_getter);
+HTMLElement.prototype.__defineGetter__("offsetHeight", curMemoryArea.offsetHeight_smart_getter);
+
+// popover
+curMemoryArea.popover_getter = function popover() { return this._popover; }; mframe.safefunction(curMemoryArea.popover_getter);
+Object.defineProperty(curMemoryArea.popover_getter, "name", {value: "get popover",configurable: true,});
+// popover
+curMemoryArea.popover_setter = function popover(val) { this._popover = val; }; mframe.safefunction(curMemoryArea.popover_setter);
+Object.defineProperty(curMemoryArea.popover_setter, "name", {value: "set popover",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "popover", {get: curMemoryArea.popover_getter,set: curMemoryArea.popover_setter,enumerable: true,configurable: true,});
+curMemoryArea.popover_smart_getter = function popover() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.popover;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._popover !== undefined ? this._popover : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.popover_smart_getter);
+HTMLElement.prototype.__defineGetter__("popover", curMemoryArea.popover_smart_getter);
+
+// innerText
+curMemoryArea.innerText_getter = function innerText() { return this._innerText; }; mframe.safefunction(curMemoryArea.innerText_getter);
+Object.defineProperty(curMemoryArea.innerText_getter, "name", {value: "get innerText",configurable: true,});
+// innerText
+curMemoryArea.innerText_setter = function innerText(val) { this._innerText = val; }; mframe.safefunction(curMemoryArea.innerText_setter);
+Object.defineProperty(curMemoryArea.innerText_setter, "name", {value: "set innerText",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "innerText", {get: curMemoryArea.innerText_getter,set: curMemoryArea.innerText_setter,enumerable: true,configurable: true,});
+curMemoryArea.innerText_smart_getter = function innerText() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.innerText;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._innerText !== undefined ? this._innerText : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.innerText_smart_getter);
+HTMLElement.prototype.__defineGetter__("innerText", curMemoryArea.innerText_smart_getter);
+
+// outerText
+curMemoryArea.outerText_getter = function outerText() { return this._outerText; }; mframe.safefunction(curMemoryArea.outerText_getter);
+Object.defineProperty(curMemoryArea.outerText_getter, "name", {value: "get outerText",configurable: true,});
+// outerText
+curMemoryArea.outerText_setter = function outerText(val) { this._outerText = val; }; mframe.safefunction(curMemoryArea.outerText_setter);
+Object.defineProperty(curMemoryArea.outerText_setter, "name", {value: "set outerText",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "outerText", {get: curMemoryArea.outerText_getter,set: curMemoryArea.outerText_setter,enumerable: true,configurable: true,});
+curMemoryArea.outerText_smart_getter = function outerText() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.outerText;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._outerText !== undefined ? this._outerText : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.outerText_smart_getter);
+HTMLElement.prototype.__defineGetter__("outerText", curMemoryArea.outerText_smart_getter);
+
+// writingSuggestions
+curMemoryArea.writingSuggestions_getter = function writingSuggestions() { return this._writingSuggestions; }; mframe.safefunction(curMemoryArea.writingSuggestions_getter);
+Object.defineProperty(curMemoryArea.writingSuggestions_getter, "name", {value: "get writingSuggestions",configurable: true,});
+// writingSuggestions
+curMemoryArea.writingSuggestions_setter = function writingSuggestions(val) { this._writingSuggestions = val; }; mframe.safefunction(curMemoryArea.writingSuggestions_setter);
+Object.defineProperty(curMemoryArea.writingSuggestions_setter, "name", {value: "set writingSuggestions",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "writingSuggestions", {get: curMemoryArea.writingSuggestions_getter,set: curMemoryArea.writingSuggestions_setter,enumerable: true,configurable: true,});
+curMemoryArea.writingSuggestions_smart_getter = function writingSuggestions() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.writingSuggestions;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._writingSuggestions !== undefined ? this._writingSuggestions : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.writingSuggestions_smart_getter);
+HTMLElement.prototype.__defineGetter__("writingSuggestions", curMemoryArea.writingSuggestions_smart_getter);
+
+// onbeforexrselect
+curMemoryArea.onbeforexrselect_getter = function onbeforexrselect() { return this._onbeforexrselect; }; mframe.safefunction(curMemoryArea.onbeforexrselect_getter);
+Object.defineProperty(curMemoryArea.onbeforexrselect_getter, "name", {value: "get onbeforexrselect",configurable: true,});
+// onbeforexrselect
+curMemoryArea.onbeforexrselect_setter = function onbeforexrselect(val) { this._onbeforexrselect = val; }; mframe.safefunction(curMemoryArea.onbeforexrselect_setter);
+Object.defineProperty(curMemoryArea.onbeforexrselect_setter, "name", {value: "set onbeforexrselect",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onbeforexrselect", {get: curMemoryArea.onbeforexrselect_getter,set: curMemoryArea.onbeforexrselect_setter,enumerable: true,configurable: true,});
+curMemoryArea.onbeforexrselect_smart_getter = function onbeforexrselect() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onbeforexrselect;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onbeforexrselect !== undefined ? this._onbeforexrselect : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onbeforexrselect_smart_getter);
+HTMLElement.prototype.__defineGetter__("onbeforexrselect", curMemoryArea.onbeforexrselect_smart_getter);
+
+// onabort
+curMemoryArea.onabort_getter = function onabort() { return this._onabort; }; mframe.safefunction(curMemoryArea.onabort_getter);
+Object.defineProperty(curMemoryArea.onabort_getter, "name", {value: "get onabort",configurable: true,});
+// onabort
+curMemoryArea.onabort_setter = function onabort(val) { this._onabort = val; }; mframe.safefunction(curMemoryArea.onabort_setter);
+Object.defineProperty(curMemoryArea.onabort_setter, "name", {value: "set onabort",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onabort", {get: curMemoryArea.onabort_getter,set: curMemoryArea.onabort_setter,enumerable: true,configurable: true,});
+curMemoryArea.onabort_smart_getter = function onabort() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onabort;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onabort !== undefined ? this._onabort : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onabort_smart_getter);
+HTMLElement.prototype.__defineGetter__("onabort", curMemoryArea.onabort_smart_getter);
+
+// onbeforeinput
+curMemoryArea.onbeforeinput_getter = function onbeforeinput() { return this._onbeforeinput; }; mframe.safefunction(curMemoryArea.onbeforeinput_getter);
+Object.defineProperty(curMemoryArea.onbeforeinput_getter, "name", {value: "get onbeforeinput",configurable: true,});
+// onbeforeinput
+curMemoryArea.onbeforeinput_setter = function onbeforeinput(val) { this._onbeforeinput = val; }; mframe.safefunction(curMemoryArea.onbeforeinput_setter);
+Object.defineProperty(curMemoryArea.onbeforeinput_setter, "name", {value: "set onbeforeinput",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onbeforeinput", {get: curMemoryArea.onbeforeinput_getter,set: curMemoryArea.onbeforeinput_setter,enumerable: true,configurable: true,});
+curMemoryArea.onbeforeinput_smart_getter = function onbeforeinput() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onbeforeinput;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onbeforeinput !== undefined ? this._onbeforeinput : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onbeforeinput_smart_getter);
+HTMLElement.prototype.__defineGetter__("onbeforeinput", curMemoryArea.onbeforeinput_smart_getter);
+
+// onbeforematch
+curMemoryArea.onbeforematch_getter = function onbeforematch() { return this._onbeforematch; }; mframe.safefunction(curMemoryArea.onbeforematch_getter);
+Object.defineProperty(curMemoryArea.onbeforematch_getter, "name", {value: "get onbeforematch",configurable: true,});
+// onbeforematch
+curMemoryArea.onbeforematch_setter = function onbeforematch(val) { this._onbeforematch = val; }; mframe.safefunction(curMemoryArea.onbeforematch_setter);
+Object.defineProperty(curMemoryArea.onbeforematch_setter, "name", {value: "set onbeforematch",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onbeforematch", {get: curMemoryArea.onbeforematch_getter,set: curMemoryArea.onbeforematch_setter,enumerable: true,configurable: true,});
+curMemoryArea.onbeforematch_smart_getter = function onbeforematch() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onbeforematch;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onbeforematch !== undefined ? this._onbeforematch : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onbeforematch_smart_getter);
+HTMLElement.prototype.__defineGetter__("onbeforematch", curMemoryArea.onbeforematch_smart_getter);
+
+// onbeforetoggle
+curMemoryArea.onbeforetoggle_getter = function onbeforetoggle() { return this._onbeforetoggle; }; mframe.safefunction(curMemoryArea.onbeforetoggle_getter);
+Object.defineProperty(curMemoryArea.onbeforetoggle_getter, "name", {value: "get onbeforetoggle",configurable: true,});
+// onbeforetoggle
+curMemoryArea.onbeforetoggle_setter = function onbeforetoggle(val) { this._onbeforetoggle = val; }; mframe.safefunction(curMemoryArea.onbeforetoggle_setter);
+Object.defineProperty(curMemoryArea.onbeforetoggle_setter, "name", {value: "set onbeforetoggle",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onbeforetoggle", {get: curMemoryArea.onbeforetoggle_getter,set: curMemoryArea.onbeforetoggle_setter,enumerable: true,configurable: true,});
+curMemoryArea.onbeforetoggle_smart_getter = function onbeforetoggle() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onbeforetoggle;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onbeforetoggle !== undefined ? this._onbeforetoggle : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onbeforetoggle_smart_getter);
+HTMLElement.prototype.__defineGetter__("onbeforetoggle", curMemoryArea.onbeforetoggle_smart_getter);
+
+// onblur
+curMemoryArea.onblur_getter = function onblur() { return this._onblur; }; mframe.safefunction(curMemoryArea.onblur_getter);
+Object.defineProperty(curMemoryArea.onblur_getter, "name", {value: "get onblur",configurable: true,});
+// onblur
+curMemoryArea.onblur_setter = function onblur(val) { this._onblur = val; }; mframe.safefunction(curMemoryArea.onblur_setter);
+Object.defineProperty(curMemoryArea.onblur_setter, "name", {value: "set onblur",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onblur", {get: curMemoryArea.onblur_getter,set: curMemoryArea.onblur_setter,enumerable: true,configurable: true,});
+curMemoryArea.onblur_smart_getter = function onblur() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onblur;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onblur !== undefined ? this._onblur : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onblur_smart_getter);
+HTMLElement.prototype.__defineGetter__("onblur", curMemoryArea.onblur_smart_getter);
+
+// oncancel
+curMemoryArea.oncancel_getter = function oncancel() { return this._oncancel; }; mframe.safefunction(curMemoryArea.oncancel_getter);
+Object.defineProperty(curMemoryArea.oncancel_getter, "name", {value: "get oncancel",configurable: true,});
+// oncancel
+curMemoryArea.oncancel_setter = function oncancel(val) { this._oncancel = val; }; mframe.safefunction(curMemoryArea.oncancel_setter);
+Object.defineProperty(curMemoryArea.oncancel_setter, "name", {value: "set oncancel",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "oncancel", {get: curMemoryArea.oncancel_getter,set: curMemoryArea.oncancel_setter,enumerable: true,configurable: true,});
+curMemoryArea.oncancel_smart_getter = function oncancel() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.oncancel;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._oncancel !== undefined ? this._oncancel : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.oncancel_smart_getter);
+HTMLElement.prototype.__defineGetter__("oncancel", curMemoryArea.oncancel_smart_getter);
+
+// oncanplay
+curMemoryArea.oncanplay_getter = function oncanplay() { return this._oncanplay; }; mframe.safefunction(curMemoryArea.oncanplay_getter);
+Object.defineProperty(curMemoryArea.oncanplay_getter, "name", {value: "get oncanplay",configurable: true,});
+// oncanplay
+curMemoryArea.oncanplay_setter = function oncanplay(val) { this._oncanplay = val; }; mframe.safefunction(curMemoryArea.oncanplay_setter);
+Object.defineProperty(curMemoryArea.oncanplay_setter, "name", {value: "set oncanplay",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "oncanplay", {get: curMemoryArea.oncanplay_getter,set: curMemoryArea.oncanplay_setter,enumerable: true,configurable: true,});
+curMemoryArea.oncanplay_smart_getter = function oncanplay() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.oncanplay;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._oncanplay !== undefined ? this._oncanplay : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.oncanplay_smart_getter);
+HTMLElement.prototype.__defineGetter__("oncanplay", curMemoryArea.oncanplay_smart_getter);
+
+// oncanplaythrough
+curMemoryArea.oncanplaythrough_getter = function oncanplaythrough() { return this._oncanplaythrough; }; mframe.safefunction(curMemoryArea.oncanplaythrough_getter);
+Object.defineProperty(curMemoryArea.oncanplaythrough_getter, "name", {value: "get oncanplaythrough",configurable: true,});
+// oncanplaythrough
+curMemoryArea.oncanplaythrough_setter = function oncanplaythrough(val) { this._oncanplaythrough = val; }; mframe.safefunction(curMemoryArea.oncanplaythrough_setter);
+Object.defineProperty(curMemoryArea.oncanplaythrough_setter, "name", {value: "set oncanplaythrough",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "oncanplaythrough", {get: curMemoryArea.oncanplaythrough_getter,set: curMemoryArea.oncanplaythrough_setter,enumerable: true,configurable: true,});
+curMemoryArea.oncanplaythrough_smart_getter = function oncanplaythrough() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.oncanplaythrough;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._oncanplaythrough !== undefined ? this._oncanplaythrough : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.oncanplaythrough_smart_getter);
+HTMLElement.prototype.__defineGetter__("oncanplaythrough", curMemoryArea.oncanplaythrough_smart_getter);
+
+// onchange
+curMemoryArea.onchange_getter = function onchange() { return this._onchange; }; mframe.safefunction(curMemoryArea.onchange_getter);
+Object.defineProperty(curMemoryArea.onchange_getter, "name", {value: "get onchange",configurable: true,});
+// onchange
+curMemoryArea.onchange_setter = function onchange(val) { this._onchange = val; }; mframe.safefunction(curMemoryArea.onchange_setter);
+Object.defineProperty(curMemoryArea.onchange_setter, "name", {value: "set onchange",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onchange", {get: curMemoryArea.onchange_getter,set: curMemoryArea.onchange_setter,enumerable: true,configurable: true,});
+curMemoryArea.onchange_smart_getter = function onchange() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onchange;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onchange !== undefined ? this._onchange : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onchange_smart_getter);
+HTMLElement.prototype.__defineGetter__("onchange", curMemoryArea.onchange_smart_getter);
+
+// onclick
+curMemoryArea.onclick_getter = function onclick() { return this._onclick; }; mframe.safefunction(curMemoryArea.onclick_getter);
+Object.defineProperty(curMemoryArea.onclick_getter, "name", {value: "get onclick",configurable: true,});
+// onclick
+curMemoryArea.onclick_setter = function onclick(val) { this._onclick = val; }; mframe.safefunction(curMemoryArea.onclick_setter);
+Object.defineProperty(curMemoryArea.onclick_setter, "name", {value: "set onclick",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onclick", {get: curMemoryArea.onclick_getter,set: curMemoryArea.onclick_setter,enumerable: true,configurable: true,});
+curMemoryArea.onclick_smart_getter = function onclick() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onclick;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onclick !== undefined ? this._onclick : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onclick_smart_getter);
+HTMLElement.prototype.__defineGetter__("onclick", curMemoryArea.onclick_smart_getter);
+
+// onclose
+curMemoryArea.onclose_getter = function onclose() { return this._onclose; }; mframe.safefunction(curMemoryArea.onclose_getter);
+Object.defineProperty(curMemoryArea.onclose_getter, "name", {value: "get onclose",configurable: true,});
+// onclose
+curMemoryArea.onclose_setter = function onclose(val) { this._onclose = val; }; mframe.safefunction(curMemoryArea.onclose_setter);
+Object.defineProperty(curMemoryArea.onclose_setter, "name", {value: "set onclose",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onclose", {get: curMemoryArea.onclose_getter,set: curMemoryArea.onclose_setter,enumerable: true,configurable: true,});
+curMemoryArea.onclose_smart_getter = function onclose() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onclose;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onclose !== undefined ? this._onclose : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onclose_smart_getter);
+HTMLElement.prototype.__defineGetter__("onclose", curMemoryArea.onclose_smart_getter);
+
+// oncontentvisibilityautostatechange
+curMemoryArea.oncontentvisibilityautostatechange_getter = function oncontentvisibilityautostatechange() { return this._oncontentvisibilityautostatechange; }; mframe.safefunction(curMemoryArea.oncontentvisibilityautostatechange_getter);
+Object.defineProperty(curMemoryArea.oncontentvisibilityautostatechange_getter, "name", {value: "get oncontentvisibilityautostatechange",configurable: true,});
+// oncontentvisibilityautostatechange
+curMemoryArea.oncontentvisibilityautostatechange_setter = function oncontentvisibilityautostatechange(val) { this._oncontentvisibilityautostatechange = val; }; mframe.safefunction(curMemoryArea.oncontentvisibilityautostatechange_setter);
+Object.defineProperty(curMemoryArea.oncontentvisibilityautostatechange_setter, "name", {value: "set oncontentvisibilityautostatechange",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "oncontentvisibilityautostatechange", {get: curMemoryArea.oncontentvisibilityautostatechange_getter,set: curMemoryArea.oncontentvisibilityautostatechange_setter,enumerable: true,configurable: true,});
+curMemoryArea.oncontentvisibilityautostatechange_smart_getter = function oncontentvisibilityautostatechange() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.oncontentvisibilityautostatechange;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._oncontentvisibilityautostatechange !== undefined ? this._oncontentvisibilityautostatechange : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.oncontentvisibilityautostatechange_smart_getter);
+HTMLElement.prototype.__defineGetter__("oncontentvisibilityautostatechange", curMemoryArea.oncontentvisibilityautostatechange_smart_getter);
+
+// oncontextlost
+curMemoryArea.oncontextlost_getter = function oncontextlost() { return this._oncontextlost; }; mframe.safefunction(curMemoryArea.oncontextlost_getter);
+Object.defineProperty(curMemoryArea.oncontextlost_getter, "name", {value: "get oncontextlost",configurable: true,});
+// oncontextlost
+curMemoryArea.oncontextlost_setter = function oncontextlost(val) { this._oncontextlost = val; }; mframe.safefunction(curMemoryArea.oncontextlost_setter);
+Object.defineProperty(curMemoryArea.oncontextlost_setter, "name", {value: "set oncontextlost",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "oncontextlost", {get: curMemoryArea.oncontextlost_getter,set: curMemoryArea.oncontextlost_setter,enumerable: true,configurable: true,});
+curMemoryArea.oncontextlost_smart_getter = function oncontextlost() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.oncontextlost;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._oncontextlost !== undefined ? this._oncontextlost : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.oncontextlost_smart_getter);
+HTMLElement.prototype.__defineGetter__("oncontextlost", curMemoryArea.oncontextlost_smart_getter);
+
+// oncontextmenu
+curMemoryArea.oncontextmenu_getter = function oncontextmenu() { return this._oncontextmenu; }; mframe.safefunction(curMemoryArea.oncontextmenu_getter);
+Object.defineProperty(curMemoryArea.oncontextmenu_getter, "name", {value: "get oncontextmenu",configurable: true,});
+// oncontextmenu
+curMemoryArea.oncontextmenu_setter = function oncontextmenu(val) { this._oncontextmenu = val; }; mframe.safefunction(curMemoryArea.oncontextmenu_setter);
+Object.defineProperty(curMemoryArea.oncontextmenu_setter, "name", {value: "set oncontextmenu",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "oncontextmenu", {get: curMemoryArea.oncontextmenu_getter,set: curMemoryArea.oncontextmenu_setter,enumerable: true,configurable: true,});
+curMemoryArea.oncontextmenu_smart_getter = function oncontextmenu() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.oncontextmenu;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._oncontextmenu !== undefined ? this._oncontextmenu : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.oncontextmenu_smart_getter);
+HTMLElement.prototype.__defineGetter__("oncontextmenu", curMemoryArea.oncontextmenu_smart_getter);
+
+// oncontextrestored
+curMemoryArea.oncontextrestored_getter = function oncontextrestored() { return this._oncontextrestored; }; mframe.safefunction(curMemoryArea.oncontextrestored_getter);
+Object.defineProperty(curMemoryArea.oncontextrestored_getter, "name", {value: "get oncontextrestored",configurable: true,});
+// oncontextrestored
+curMemoryArea.oncontextrestored_setter = function oncontextrestored(val) { this._oncontextrestored = val; }; mframe.safefunction(curMemoryArea.oncontextrestored_setter);
+Object.defineProperty(curMemoryArea.oncontextrestored_setter, "name", {value: "set oncontextrestored",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "oncontextrestored", {get: curMemoryArea.oncontextrestored_getter,set: curMemoryArea.oncontextrestored_setter,enumerable: true,configurable: true,});
+curMemoryArea.oncontextrestored_smart_getter = function oncontextrestored() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.oncontextrestored;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._oncontextrestored !== undefined ? this._oncontextrestored : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.oncontextrestored_smart_getter);
+HTMLElement.prototype.__defineGetter__("oncontextrestored", curMemoryArea.oncontextrestored_smart_getter);
+
+// oncuechange
+curMemoryArea.oncuechange_getter = function oncuechange() { return this._oncuechange; }; mframe.safefunction(curMemoryArea.oncuechange_getter);
+Object.defineProperty(curMemoryArea.oncuechange_getter, "name", {value: "get oncuechange",configurable: true,});
+// oncuechange
+curMemoryArea.oncuechange_setter = function oncuechange(val) { this._oncuechange = val; }; mframe.safefunction(curMemoryArea.oncuechange_setter);
+Object.defineProperty(curMemoryArea.oncuechange_setter, "name", {value: "set oncuechange",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "oncuechange", {get: curMemoryArea.oncuechange_getter,set: curMemoryArea.oncuechange_setter,enumerable: true,configurable: true,});
+curMemoryArea.oncuechange_smart_getter = function oncuechange() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.oncuechange;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._oncuechange !== undefined ? this._oncuechange : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.oncuechange_smart_getter);
+HTMLElement.prototype.__defineGetter__("oncuechange", curMemoryArea.oncuechange_smart_getter);
+
+// ondblclick
+curMemoryArea.ondblclick_getter = function ondblclick() { return this._ondblclick; }; mframe.safefunction(curMemoryArea.ondblclick_getter);
+Object.defineProperty(curMemoryArea.ondblclick_getter, "name", {value: "get ondblclick",configurable: true,});
+// ondblclick
+curMemoryArea.ondblclick_setter = function ondblclick(val) { this._ondblclick = val; }; mframe.safefunction(curMemoryArea.ondblclick_setter);
+Object.defineProperty(curMemoryArea.ondblclick_setter, "name", {value: "set ondblclick",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ondblclick", {get: curMemoryArea.ondblclick_getter,set: curMemoryArea.ondblclick_setter,enumerable: true,configurable: true,});
+curMemoryArea.ondblclick_smart_getter = function ondblclick() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ondblclick;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ondblclick !== undefined ? this._ondblclick : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ondblclick_smart_getter);
+HTMLElement.prototype.__defineGetter__("ondblclick", curMemoryArea.ondblclick_smart_getter);
+
+// ondrag
+curMemoryArea.ondrag_getter = function ondrag() { return this._ondrag; }; mframe.safefunction(curMemoryArea.ondrag_getter);
+Object.defineProperty(curMemoryArea.ondrag_getter, "name", {value: "get ondrag",configurable: true,});
+// ondrag
+curMemoryArea.ondrag_setter = function ondrag(val) { this._ondrag = val; }; mframe.safefunction(curMemoryArea.ondrag_setter);
+Object.defineProperty(curMemoryArea.ondrag_setter, "name", {value: "set ondrag",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ondrag", {get: curMemoryArea.ondrag_getter,set: curMemoryArea.ondrag_setter,enumerable: true,configurable: true,});
+curMemoryArea.ondrag_smart_getter = function ondrag() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ondrag;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ondrag !== undefined ? this._ondrag : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ondrag_smart_getter);
+HTMLElement.prototype.__defineGetter__("ondrag", curMemoryArea.ondrag_smart_getter);
+
+// ondragend
+curMemoryArea.ondragend_getter = function ondragend() { return this._ondragend; }; mframe.safefunction(curMemoryArea.ondragend_getter);
+Object.defineProperty(curMemoryArea.ondragend_getter, "name", {value: "get ondragend",configurable: true,});
+// ondragend
+curMemoryArea.ondragend_setter = function ondragend(val) { this._ondragend = val; }; mframe.safefunction(curMemoryArea.ondragend_setter);
+Object.defineProperty(curMemoryArea.ondragend_setter, "name", {value: "set ondragend",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ondragend", {get: curMemoryArea.ondragend_getter,set: curMemoryArea.ondragend_setter,enumerable: true,configurable: true,});
+curMemoryArea.ondragend_smart_getter = function ondragend() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ondragend;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ondragend !== undefined ? this._ondragend : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ondragend_smart_getter);
+HTMLElement.prototype.__defineGetter__("ondragend", curMemoryArea.ondragend_smart_getter);
+
+// ondragenter
+curMemoryArea.ondragenter_getter = function ondragenter() { return this._ondragenter; }; mframe.safefunction(curMemoryArea.ondragenter_getter);
+Object.defineProperty(curMemoryArea.ondragenter_getter, "name", {value: "get ondragenter",configurable: true,});
+// ondragenter
+curMemoryArea.ondragenter_setter = function ondragenter(val) { this._ondragenter = val; }; mframe.safefunction(curMemoryArea.ondragenter_setter);
+Object.defineProperty(curMemoryArea.ondragenter_setter, "name", {value: "set ondragenter",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ondragenter", {get: curMemoryArea.ondragenter_getter,set: curMemoryArea.ondragenter_setter,enumerable: true,configurable: true,});
+curMemoryArea.ondragenter_smart_getter = function ondragenter() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ondragenter;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ondragenter !== undefined ? this._ondragenter : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ondragenter_smart_getter);
+HTMLElement.prototype.__defineGetter__("ondragenter", curMemoryArea.ondragenter_smart_getter);
+
+// ondragleave
+curMemoryArea.ondragleave_getter = function ondragleave() { return this._ondragleave; }; mframe.safefunction(curMemoryArea.ondragleave_getter);
+Object.defineProperty(curMemoryArea.ondragleave_getter, "name", {value: "get ondragleave",configurable: true,});
+// ondragleave
+curMemoryArea.ondragleave_setter = function ondragleave(val) { this._ondragleave = val; }; mframe.safefunction(curMemoryArea.ondragleave_setter);
+Object.defineProperty(curMemoryArea.ondragleave_setter, "name", {value: "set ondragleave",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ondragleave", {get: curMemoryArea.ondragleave_getter,set: curMemoryArea.ondragleave_setter,enumerable: true,configurable: true,});
+curMemoryArea.ondragleave_smart_getter = function ondragleave() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ondragleave;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ondragleave !== undefined ? this._ondragleave : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ondragleave_smart_getter);
+HTMLElement.prototype.__defineGetter__("ondragleave", curMemoryArea.ondragleave_smart_getter);
+
+// ondragover
+curMemoryArea.ondragover_getter = function ondragover() { return this._ondragover; }; mframe.safefunction(curMemoryArea.ondragover_getter);
+Object.defineProperty(curMemoryArea.ondragover_getter, "name", {value: "get ondragover",configurable: true,});
+// ondragover
+curMemoryArea.ondragover_setter = function ondragover(val) { this._ondragover = val; }; mframe.safefunction(curMemoryArea.ondragover_setter);
+Object.defineProperty(curMemoryArea.ondragover_setter, "name", {value: "set ondragover",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ondragover", {get: curMemoryArea.ondragover_getter,set: curMemoryArea.ondragover_setter,enumerable: true,configurable: true,});
+curMemoryArea.ondragover_smart_getter = function ondragover() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ondragover;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ondragover !== undefined ? this._ondragover : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ondragover_smart_getter);
+HTMLElement.prototype.__defineGetter__("ondragover", curMemoryArea.ondragover_smart_getter);
+
+// ondragstart
+curMemoryArea.ondragstart_getter = function ondragstart() { return this._ondragstart; }; mframe.safefunction(curMemoryArea.ondragstart_getter);
+Object.defineProperty(curMemoryArea.ondragstart_getter, "name", {value: "get ondragstart",configurable: true,});
+// ondragstart
+curMemoryArea.ondragstart_setter = function ondragstart(val) { this._ondragstart = val; }; mframe.safefunction(curMemoryArea.ondragstart_setter);
+Object.defineProperty(curMemoryArea.ondragstart_setter, "name", {value: "set ondragstart",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ondragstart", {get: curMemoryArea.ondragstart_getter,set: curMemoryArea.ondragstart_setter,enumerable: true,configurable: true,});
+curMemoryArea.ondragstart_smart_getter = function ondragstart() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ondragstart;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ondragstart !== undefined ? this._ondragstart : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ondragstart_smart_getter);
+HTMLElement.prototype.__defineGetter__("ondragstart", curMemoryArea.ondragstart_smart_getter);
+
+// ondrop
+curMemoryArea.ondrop_getter = function ondrop() { return this._ondrop; }; mframe.safefunction(curMemoryArea.ondrop_getter);
+Object.defineProperty(curMemoryArea.ondrop_getter, "name", {value: "get ondrop",configurable: true,});
+// ondrop
+curMemoryArea.ondrop_setter = function ondrop(val) { this._ondrop = val; }; mframe.safefunction(curMemoryArea.ondrop_setter);
+Object.defineProperty(curMemoryArea.ondrop_setter, "name", {value: "set ondrop",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ondrop", {get: curMemoryArea.ondrop_getter,set: curMemoryArea.ondrop_setter,enumerable: true,configurable: true,});
+curMemoryArea.ondrop_smart_getter = function ondrop() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ondrop;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ondrop !== undefined ? this._ondrop : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ondrop_smart_getter);
+HTMLElement.prototype.__defineGetter__("ondrop", curMemoryArea.ondrop_smart_getter);
+
+// ondurationchange
+curMemoryArea.ondurationchange_getter = function ondurationchange() { return this._ondurationchange; }; mframe.safefunction(curMemoryArea.ondurationchange_getter);
+Object.defineProperty(curMemoryArea.ondurationchange_getter, "name", {value: "get ondurationchange",configurable: true,});
+// ondurationchange
+curMemoryArea.ondurationchange_setter = function ondurationchange(val) { this._ondurationchange = val; }; mframe.safefunction(curMemoryArea.ondurationchange_setter);
+Object.defineProperty(curMemoryArea.ondurationchange_setter, "name", {value: "set ondurationchange",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ondurationchange", {get: curMemoryArea.ondurationchange_getter,set: curMemoryArea.ondurationchange_setter,enumerable: true,configurable: true,});
+curMemoryArea.ondurationchange_smart_getter = function ondurationchange() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ondurationchange;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ondurationchange !== undefined ? this._ondurationchange : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ondurationchange_smart_getter);
+HTMLElement.prototype.__defineGetter__("ondurationchange", curMemoryArea.ondurationchange_smart_getter);
+
+// onemptied
+curMemoryArea.onemptied_getter = function onemptied() { return this._onemptied; }; mframe.safefunction(curMemoryArea.onemptied_getter);
+Object.defineProperty(curMemoryArea.onemptied_getter, "name", {value: "get onemptied",configurable: true,});
+// onemptied
+curMemoryArea.onemptied_setter = function onemptied(val) { this._onemptied = val; }; mframe.safefunction(curMemoryArea.onemptied_setter);
+Object.defineProperty(curMemoryArea.onemptied_setter, "name", {value: "set onemptied",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onemptied", {get: curMemoryArea.onemptied_getter,set: curMemoryArea.onemptied_setter,enumerable: true,configurable: true,});
+curMemoryArea.onemptied_smart_getter = function onemptied() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onemptied;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onemptied !== undefined ? this._onemptied : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onemptied_smart_getter);
+HTMLElement.prototype.__defineGetter__("onemptied", curMemoryArea.onemptied_smart_getter);
+
+// onended
+curMemoryArea.onended_getter = function onended() { return this._onended; }; mframe.safefunction(curMemoryArea.onended_getter);
+Object.defineProperty(curMemoryArea.onended_getter, "name", {value: "get onended",configurable: true,});
+// onended
+curMemoryArea.onended_setter = function onended(val) { this._onended = val; }; mframe.safefunction(curMemoryArea.onended_setter);
+Object.defineProperty(curMemoryArea.onended_setter, "name", {value: "set onended",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onended", {get: curMemoryArea.onended_getter,set: curMemoryArea.onended_setter,enumerable: true,configurable: true,});
+curMemoryArea.onended_smart_getter = function onended() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onended;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onended !== undefined ? this._onended : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onended_smart_getter);
+HTMLElement.prototype.__defineGetter__("onended", curMemoryArea.onended_smart_getter);
+
+// onerror
+curMemoryArea.onerror_getter = function onerror() { return this._onerror; }; mframe.safefunction(curMemoryArea.onerror_getter);
+Object.defineProperty(curMemoryArea.onerror_getter, "name", {value: "get onerror",configurable: true,});
+// onerror
+curMemoryArea.onerror_setter = function onerror(val) { this._onerror = val; }; mframe.safefunction(curMemoryArea.onerror_setter);
+Object.defineProperty(curMemoryArea.onerror_setter, "name", {value: "set onerror",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onerror", {get: curMemoryArea.onerror_getter,set: curMemoryArea.onerror_setter,enumerable: true,configurable: true,});
+curMemoryArea.onerror_smart_getter = function onerror() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onerror;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onerror !== undefined ? this._onerror : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onerror_smart_getter);
+HTMLElement.prototype.__defineGetter__("onerror", curMemoryArea.onerror_smart_getter);
+
+// onfocus
+curMemoryArea.onfocus_getter = function onfocus() { return this._onfocus; }; mframe.safefunction(curMemoryArea.onfocus_getter);
+Object.defineProperty(curMemoryArea.onfocus_getter, "name", {value: "get onfocus",configurable: true,});
+// onfocus
+curMemoryArea.onfocus_setter = function onfocus(val) { this._onfocus = val; }; mframe.safefunction(curMemoryArea.onfocus_setter);
+Object.defineProperty(curMemoryArea.onfocus_setter, "name", {value: "set onfocus",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onfocus", {get: curMemoryArea.onfocus_getter,set: curMemoryArea.onfocus_setter,enumerable: true,configurable: true,});
+curMemoryArea.onfocus_smart_getter = function onfocus() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onfocus;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onfocus !== undefined ? this._onfocus : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onfocus_smart_getter);
+HTMLElement.prototype.__defineGetter__("onfocus", curMemoryArea.onfocus_smart_getter);
+
+// onformdata
+curMemoryArea.onformdata_getter = function onformdata() { return this._onformdata; }; mframe.safefunction(curMemoryArea.onformdata_getter);
+Object.defineProperty(curMemoryArea.onformdata_getter, "name", {value: "get onformdata",configurable: true,});
+// onformdata
+curMemoryArea.onformdata_setter = function onformdata(val) { this._onformdata = val; }; mframe.safefunction(curMemoryArea.onformdata_setter);
+Object.defineProperty(curMemoryArea.onformdata_setter, "name", {value: "set onformdata",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onformdata", {get: curMemoryArea.onformdata_getter,set: curMemoryArea.onformdata_setter,enumerable: true,configurable: true,});
+curMemoryArea.onformdata_smart_getter = function onformdata() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onformdata;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onformdata !== undefined ? this._onformdata : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onformdata_smart_getter);
+HTMLElement.prototype.__defineGetter__("onformdata", curMemoryArea.onformdata_smart_getter);
+
+// oninput
+curMemoryArea.oninput_getter = function oninput() { return this._oninput; }; mframe.safefunction(curMemoryArea.oninput_getter);
+Object.defineProperty(curMemoryArea.oninput_getter, "name", {value: "get oninput",configurable: true,});
+// oninput
+curMemoryArea.oninput_setter = function oninput(val) { this._oninput = val; }; mframe.safefunction(curMemoryArea.oninput_setter);
+Object.defineProperty(curMemoryArea.oninput_setter, "name", {value: "set oninput",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "oninput", {get: curMemoryArea.oninput_getter,set: curMemoryArea.oninput_setter,enumerable: true,configurable: true,});
+curMemoryArea.oninput_smart_getter = function oninput() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.oninput;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._oninput !== undefined ? this._oninput : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.oninput_smart_getter);
+HTMLElement.prototype.__defineGetter__("oninput", curMemoryArea.oninput_smart_getter);
+
+// oninvalid
+curMemoryArea.oninvalid_getter = function oninvalid() { return this._oninvalid; }; mframe.safefunction(curMemoryArea.oninvalid_getter);
+Object.defineProperty(curMemoryArea.oninvalid_getter, "name", {value: "get oninvalid",configurable: true,});
+// oninvalid
+curMemoryArea.oninvalid_setter = function oninvalid(val) { this._oninvalid = val; }; mframe.safefunction(curMemoryArea.oninvalid_setter);
+Object.defineProperty(curMemoryArea.oninvalid_setter, "name", {value: "set oninvalid",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "oninvalid", {get: curMemoryArea.oninvalid_getter,set: curMemoryArea.oninvalid_setter,enumerable: true,configurable: true,});
+curMemoryArea.oninvalid_smart_getter = function oninvalid() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.oninvalid;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._oninvalid !== undefined ? this._oninvalid : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.oninvalid_smart_getter);
+HTMLElement.prototype.__defineGetter__("oninvalid", curMemoryArea.oninvalid_smart_getter);
+
+// onkeydown
+curMemoryArea.onkeydown_getter = function onkeydown() { return this._onkeydown; }; mframe.safefunction(curMemoryArea.onkeydown_getter);
+Object.defineProperty(curMemoryArea.onkeydown_getter, "name", {value: "get onkeydown",configurable: true,});
+// onkeydown
+curMemoryArea.onkeydown_setter = function onkeydown(val) { this._onkeydown = val; }; mframe.safefunction(curMemoryArea.onkeydown_setter);
+Object.defineProperty(curMemoryArea.onkeydown_setter, "name", {value: "set onkeydown",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onkeydown", {get: curMemoryArea.onkeydown_getter,set: curMemoryArea.onkeydown_setter,enumerable: true,configurable: true,});
+curMemoryArea.onkeydown_smart_getter = function onkeydown() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onkeydown;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onkeydown !== undefined ? this._onkeydown : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onkeydown_smart_getter);
+HTMLElement.prototype.__defineGetter__("onkeydown", curMemoryArea.onkeydown_smart_getter);
+
+// onkeypress
+curMemoryArea.onkeypress_getter = function onkeypress() { return this._onkeypress; }; mframe.safefunction(curMemoryArea.onkeypress_getter);
+Object.defineProperty(curMemoryArea.onkeypress_getter, "name", {value: "get onkeypress",configurable: true,});
+// onkeypress
+curMemoryArea.onkeypress_setter = function onkeypress(val) { this._onkeypress = val; }; mframe.safefunction(curMemoryArea.onkeypress_setter);
+Object.defineProperty(curMemoryArea.onkeypress_setter, "name", {value: "set onkeypress",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onkeypress", {get: curMemoryArea.onkeypress_getter,set: curMemoryArea.onkeypress_setter,enumerable: true,configurable: true,});
+curMemoryArea.onkeypress_smart_getter = function onkeypress() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onkeypress;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onkeypress !== undefined ? this._onkeypress : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onkeypress_smart_getter);
+HTMLElement.prototype.__defineGetter__("onkeypress", curMemoryArea.onkeypress_smart_getter);
+
+// onkeyup
+curMemoryArea.onkeyup_getter = function onkeyup() { return this._onkeyup; }; mframe.safefunction(curMemoryArea.onkeyup_getter);
+Object.defineProperty(curMemoryArea.onkeyup_getter, "name", {value: "get onkeyup",configurable: true,});
+// onkeyup
+curMemoryArea.onkeyup_setter = function onkeyup(val) { this._onkeyup = val; }; mframe.safefunction(curMemoryArea.onkeyup_setter);
+Object.defineProperty(curMemoryArea.onkeyup_setter, "name", {value: "set onkeyup",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onkeyup", {get: curMemoryArea.onkeyup_getter,set: curMemoryArea.onkeyup_setter,enumerable: true,configurable: true,});
+curMemoryArea.onkeyup_smart_getter = function onkeyup() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onkeyup;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onkeyup !== undefined ? this._onkeyup : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onkeyup_smart_getter);
+HTMLElement.prototype.__defineGetter__("onkeyup", curMemoryArea.onkeyup_smart_getter);
+
+// onload
+curMemoryArea.onload_getter = function onload() { return this._onload; }; mframe.safefunction(curMemoryArea.onload_getter);
+Object.defineProperty(curMemoryArea.onload_getter, "name", {value: "get onload",configurable: true,});
+// onload
+curMemoryArea.onload_setter = function onload(val) { this._onload = val; }; mframe.safefunction(curMemoryArea.onload_setter);
+Object.defineProperty(curMemoryArea.onload_setter, "name", {value: "set onload",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onload", {get: curMemoryArea.onload_getter,set: curMemoryArea.onload_setter,enumerable: true,configurable: true,});
+curMemoryArea.onload_smart_getter = function onload() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onload;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onload !== undefined ? this._onload : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onload_smart_getter);
+HTMLElement.prototype.__defineGetter__("onload", curMemoryArea.onload_smart_getter);
+
+// onloadeddata
+curMemoryArea.onloadeddata_getter = function onloadeddata() { return this._onloadeddata; }; mframe.safefunction(curMemoryArea.onloadeddata_getter);
+Object.defineProperty(curMemoryArea.onloadeddata_getter, "name", {value: "get onloadeddata",configurable: true,});
+// onloadeddata
+curMemoryArea.onloadeddata_setter = function onloadeddata(val) { this._onloadeddata = val; }; mframe.safefunction(curMemoryArea.onloadeddata_setter);
+Object.defineProperty(curMemoryArea.onloadeddata_setter, "name", {value: "set onloadeddata",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onloadeddata", {get: curMemoryArea.onloadeddata_getter,set: curMemoryArea.onloadeddata_setter,enumerable: true,configurable: true,});
+curMemoryArea.onloadeddata_smart_getter = function onloadeddata() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onloadeddata;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onloadeddata !== undefined ? this._onloadeddata : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onloadeddata_smart_getter);
+HTMLElement.prototype.__defineGetter__("onloadeddata", curMemoryArea.onloadeddata_smart_getter);
+
+// onloadedmetadata
+curMemoryArea.onloadedmetadata_getter = function onloadedmetadata() { return this._onloadedmetadata; }; mframe.safefunction(curMemoryArea.onloadedmetadata_getter);
+Object.defineProperty(curMemoryArea.onloadedmetadata_getter, "name", {value: "get onloadedmetadata",configurable: true,});
+// onloadedmetadata
+curMemoryArea.onloadedmetadata_setter = function onloadedmetadata(val) { this._onloadedmetadata = val; }; mframe.safefunction(curMemoryArea.onloadedmetadata_setter);
+Object.defineProperty(curMemoryArea.onloadedmetadata_setter, "name", {value: "set onloadedmetadata",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onloadedmetadata", {get: curMemoryArea.onloadedmetadata_getter,set: curMemoryArea.onloadedmetadata_setter,enumerable: true,configurable: true,});
+curMemoryArea.onloadedmetadata_smart_getter = function onloadedmetadata() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onloadedmetadata;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onloadedmetadata !== undefined ? this._onloadedmetadata : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onloadedmetadata_smart_getter);
+HTMLElement.prototype.__defineGetter__("onloadedmetadata", curMemoryArea.onloadedmetadata_smart_getter);
+
+// onloadstart
+curMemoryArea.onloadstart_getter = function onloadstart() { return this._onloadstart; }; mframe.safefunction(curMemoryArea.onloadstart_getter);
+Object.defineProperty(curMemoryArea.onloadstart_getter, "name", {value: "get onloadstart",configurable: true,});
+// onloadstart
+curMemoryArea.onloadstart_setter = function onloadstart(val) { this._onloadstart = val; }; mframe.safefunction(curMemoryArea.onloadstart_setter);
+Object.defineProperty(curMemoryArea.onloadstart_setter, "name", {value: "set onloadstart",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onloadstart", {get: curMemoryArea.onloadstart_getter,set: curMemoryArea.onloadstart_setter,enumerable: true,configurable: true,});
+curMemoryArea.onloadstart_smart_getter = function onloadstart() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onloadstart;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onloadstart !== undefined ? this._onloadstart : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onloadstart_smart_getter);
+HTMLElement.prototype.__defineGetter__("onloadstart", curMemoryArea.onloadstart_smart_getter);
+
+// onmousedown
+curMemoryArea.onmousedown_getter = function onmousedown() { return this._onmousedown; }; mframe.safefunction(curMemoryArea.onmousedown_getter);
+Object.defineProperty(curMemoryArea.onmousedown_getter, "name", {value: "get onmousedown",configurable: true,});
+// onmousedown
+curMemoryArea.onmousedown_setter = function onmousedown(val) { this._onmousedown = val; }; mframe.safefunction(curMemoryArea.onmousedown_setter);
+Object.defineProperty(curMemoryArea.onmousedown_setter, "name", {value: "set onmousedown",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onmousedown", {get: curMemoryArea.onmousedown_getter,set: curMemoryArea.onmousedown_setter,enumerable: true,configurable: true,});
+curMemoryArea.onmousedown_smart_getter = function onmousedown() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onmousedown;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onmousedown !== undefined ? this._onmousedown : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onmousedown_smart_getter);
+HTMLElement.prototype.__defineGetter__("onmousedown", curMemoryArea.onmousedown_smart_getter);
+
+// onmouseenter
+curMemoryArea.onmouseenter_getter = function onmouseenter() { return this._onmouseenter; }; mframe.safefunction(curMemoryArea.onmouseenter_getter);
+Object.defineProperty(curMemoryArea.onmouseenter_getter, "name", {value: "get onmouseenter",configurable: true,});
+// onmouseenter
+curMemoryArea.onmouseenter_setter = function onmouseenter(val) { this._onmouseenter = val; }; mframe.safefunction(curMemoryArea.onmouseenter_setter);
+Object.defineProperty(curMemoryArea.onmouseenter_setter, "name", {value: "set onmouseenter",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onmouseenter", {get: curMemoryArea.onmouseenter_getter,set: curMemoryArea.onmouseenter_setter,enumerable: true,configurable: true,});
+curMemoryArea.onmouseenter_smart_getter = function onmouseenter() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onmouseenter;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onmouseenter !== undefined ? this._onmouseenter : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onmouseenter_smart_getter);
+HTMLElement.prototype.__defineGetter__("onmouseenter", curMemoryArea.onmouseenter_smart_getter);
+
+// onmouseleave
+curMemoryArea.onmouseleave_getter = function onmouseleave() { return this._onmouseleave; }; mframe.safefunction(curMemoryArea.onmouseleave_getter);
+Object.defineProperty(curMemoryArea.onmouseleave_getter, "name", {value: "get onmouseleave",configurable: true,});
+// onmouseleave
+curMemoryArea.onmouseleave_setter = function onmouseleave(val) { this._onmouseleave = val; }; mframe.safefunction(curMemoryArea.onmouseleave_setter);
+Object.defineProperty(curMemoryArea.onmouseleave_setter, "name", {value: "set onmouseleave",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onmouseleave", {get: curMemoryArea.onmouseleave_getter,set: curMemoryArea.onmouseleave_setter,enumerable: true,configurable: true,});
+curMemoryArea.onmouseleave_smart_getter = function onmouseleave() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onmouseleave;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onmouseleave !== undefined ? this._onmouseleave : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onmouseleave_smart_getter);
+HTMLElement.prototype.__defineGetter__("onmouseleave", curMemoryArea.onmouseleave_smart_getter);
+
+// onmousemove
+curMemoryArea.onmousemove_getter = function onmousemove() { return this._onmousemove; }; mframe.safefunction(curMemoryArea.onmousemove_getter);
+Object.defineProperty(curMemoryArea.onmousemove_getter, "name", {value: "get onmousemove",configurable: true,});
+// onmousemove
+curMemoryArea.onmousemove_setter = function onmousemove(val) { this._onmousemove = val; }; mframe.safefunction(curMemoryArea.onmousemove_setter);
+Object.defineProperty(curMemoryArea.onmousemove_setter, "name", {value: "set onmousemove",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onmousemove", {get: curMemoryArea.onmousemove_getter,set: curMemoryArea.onmousemove_setter,enumerable: true,configurable: true,});
+curMemoryArea.onmousemove_smart_getter = function onmousemove() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onmousemove;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onmousemove !== undefined ? this._onmousemove : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onmousemove_smart_getter);
+HTMLElement.prototype.__defineGetter__("onmousemove", curMemoryArea.onmousemove_smart_getter);
+
+// onmouseout
+curMemoryArea.onmouseout_getter = function onmouseout() { return this._onmouseout; }; mframe.safefunction(curMemoryArea.onmouseout_getter);
+Object.defineProperty(curMemoryArea.onmouseout_getter, "name", {value: "get onmouseout",configurable: true,});
+// onmouseout
+curMemoryArea.onmouseout_setter = function onmouseout(val) { this._onmouseout = val; }; mframe.safefunction(curMemoryArea.onmouseout_setter);
+Object.defineProperty(curMemoryArea.onmouseout_setter, "name", {value: "set onmouseout",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onmouseout", {get: curMemoryArea.onmouseout_getter,set: curMemoryArea.onmouseout_setter,enumerable: true,configurable: true,});
+curMemoryArea.onmouseout_smart_getter = function onmouseout() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onmouseout;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onmouseout !== undefined ? this._onmouseout : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onmouseout_smart_getter);
+HTMLElement.prototype.__defineGetter__("onmouseout", curMemoryArea.onmouseout_smart_getter);
+
+// onmouseover
+curMemoryArea.onmouseover_getter = function onmouseover() { return this._onmouseover; }; mframe.safefunction(curMemoryArea.onmouseover_getter);
+Object.defineProperty(curMemoryArea.onmouseover_getter, "name", {value: "get onmouseover",configurable: true,});
+// onmouseover
+curMemoryArea.onmouseover_setter = function onmouseover(val) { this._onmouseover = val; }; mframe.safefunction(curMemoryArea.onmouseover_setter);
+Object.defineProperty(curMemoryArea.onmouseover_setter, "name", {value: "set onmouseover",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onmouseover", {get: curMemoryArea.onmouseover_getter,set: curMemoryArea.onmouseover_setter,enumerable: true,configurable: true,});
+curMemoryArea.onmouseover_smart_getter = function onmouseover() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onmouseover;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onmouseover !== undefined ? this._onmouseover : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onmouseover_smart_getter);
+HTMLElement.prototype.__defineGetter__("onmouseover", curMemoryArea.onmouseover_smart_getter);
+
+// onmouseup
+curMemoryArea.onmouseup_getter = function onmouseup() { return this._onmouseup; }; mframe.safefunction(curMemoryArea.onmouseup_getter);
+Object.defineProperty(curMemoryArea.onmouseup_getter, "name", {value: "get onmouseup",configurable: true,});
+// onmouseup
+curMemoryArea.onmouseup_setter = function onmouseup(val) { this._onmouseup = val; }; mframe.safefunction(curMemoryArea.onmouseup_setter);
+Object.defineProperty(curMemoryArea.onmouseup_setter, "name", {value: "set onmouseup",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onmouseup", {get: curMemoryArea.onmouseup_getter,set: curMemoryArea.onmouseup_setter,enumerable: true,configurable: true,});
+curMemoryArea.onmouseup_smart_getter = function onmouseup() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onmouseup;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onmouseup !== undefined ? this._onmouseup : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onmouseup_smart_getter);
+HTMLElement.prototype.__defineGetter__("onmouseup", curMemoryArea.onmouseup_smart_getter);
+
+// onmousewheel
+curMemoryArea.onmousewheel_getter = function onmousewheel() { return this._onmousewheel; }; mframe.safefunction(curMemoryArea.onmousewheel_getter);
+Object.defineProperty(curMemoryArea.onmousewheel_getter, "name", {value: "get onmousewheel",configurable: true,});
+// onmousewheel
+curMemoryArea.onmousewheel_setter = function onmousewheel(val) { this._onmousewheel = val; }; mframe.safefunction(curMemoryArea.onmousewheel_setter);
+Object.defineProperty(curMemoryArea.onmousewheel_setter, "name", {value: "set onmousewheel",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onmousewheel", {get: curMemoryArea.onmousewheel_getter,set: curMemoryArea.onmousewheel_setter,enumerable: true,configurable: true,});
+curMemoryArea.onmousewheel_smart_getter = function onmousewheel() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onmousewheel;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onmousewheel !== undefined ? this._onmousewheel : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onmousewheel_smart_getter);
+HTMLElement.prototype.__defineGetter__("onmousewheel", curMemoryArea.onmousewheel_smart_getter);
+
+// onpause
+curMemoryArea.onpause_getter = function onpause() { return this._onpause; }; mframe.safefunction(curMemoryArea.onpause_getter);
+Object.defineProperty(curMemoryArea.onpause_getter, "name", {value: "get onpause",configurable: true,});
+// onpause
+curMemoryArea.onpause_setter = function onpause(val) { this._onpause = val; }; mframe.safefunction(curMemoryArea.onpause_setter);
+Object.defineProperty(curMemoryArea.onpause_setter, "name", {value: "set onpause",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onpause", {get: curMemoryArea.onpause_getter,set: curMemoryArea.onpause_setter,enumerable: true,configurable: true,});
+curMemoryArea.onpause_smart_getter = function onpause() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onpause;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onpause !== undefined ? this._onpause : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onpause_smart_getter);
+HTMLElement.prototype.__defineGetter__("onpause", curMemoryArea.onpause_smart_getter);
+
+// onplay
+curMemoryArea.onplay_getter = function onplay() { return this._onplay; }; mframe.safefunction(curMemoryArea.onplay_getter);
+Object.defineProperty(curMemoryArea.onplay_getter, "name", {value: "get onplay",configurable: true,});
+// onplay
+curMemoryArea.onplay_setter = function onplay(val) { this._onplay = val; }; mframe.safefunction(curMemoryArea.onplay_setter);
+Object.defineProperty(curMemoryArea.onplay_setter, "name", {value: "set onplay",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onplay", {get: curMemoryArea.onplay_getter,set: curMemoryArea.onplay_setter,enumerable: true,configurable: true,});
+curMemoryArea.onplay_smart_getter = function onplay() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onplay;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onplay !== undefined ? this._onplay : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onplay_smart_getter);
+HTMLElement.prototype.__defineGetter__("onplay", curMemoryArea.onplay_smart_getter);
+
+// onplaying
+curMemoryArea.onplaying_getter = function onplaying() { return this._onplaying; }; mframe.safefunction(curMemoryArea.onplaying_getter);
+Object.defineProperty(curMemoryArea.onplaying_getter, "name", {value: "get onplaying",configurable: true,});
+// onplaying
+curMemoryArea.onplaying_setter = function onplaying(val) { this._onplaying = val; }; mframe.safefunction(curMemoryArea.onplaying_setter);
+Object.defineProperty(curMemoryArea.onplaying_setter, "name", {value: "set onplaying",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onplaying", {get: curMemoryArea.onplaying_getter,set: curMemoryArea.onplaying_setter,enumerable: true,configurable: true,});
+curMemoryArea.onplaying_smart_getter = function onplaying() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onplaying;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onplaying !== undefined ? this._onplaying : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onplaying_smart_getter);
+HTMLElement.prototype.__defineGetter__("onplaying", curMemoryArea.onplaying_smart_getter);
+
+// onprogress
+curMemoryArea.onprogress_getter = function onprogress() { return this._onprogress; }; mframe.safefunction(curMemoryArea.onprogress_getter);
+Object.defineProperty(curMemoryArea.onprogress_getter, "name", {value: "get onprogress",configurable: true,});
+// onprogress
+curMemoryArea.onprogress_setter = function onprogress(val) { this._onprogress = val; }; mframe.safefunction(curMemoryArea.onprogress_setter);
+Object.defineProperty(curMemoryArea.onprogress_setter, "name", {value: "set onprogress",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onprogress", {get: curMemoryArea.onprogress_getter,set: curMemoryArea.onprogress_setter,enumerable: true,configurable: true,});
+curMemoryArea.onprogress_smart_getter = function onprogress() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onprogress;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onprogress !== undefined ? this._onprogress : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onprogress_smart_getter);
+HTMLElement.prototype.__defineGetter__("onprogress", curMemoryArea.onprogress_smart_getter);
+
+// onratechange
+curMemoryArea.onratechange_getter = function onratechange() { return this._onratechange; }; mframe.safefunction(curMemoryArea.onratechange_getter);
+Object.defineProperty(curMemoryArea.onratechange_getter, "name", {value: "get onratechange",configurable: true,});
+// onratechange
+curMemoryArea.onratechange_setter = function onratechange(val) { this._onratechange = val; }; mframe.safefunction(curMemoryArea.onratechange_setter);
+Object.defineProperty(curMemoryArea.onratechange_setter, "name", {value: "set onratechange",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onratechange", {get: curMemoryArea.onratechange_getter,set: curMemoryArea.onratechange_setter,enumerable: true,configurable: true,});
+curMemoryArea.onratechange_smart_getter = function onratechange() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onratechange;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onratechange !== undefined ? this._onratechange : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onratechange_smart_getter);
+HTMLElement.prototype.__defineGetter__("onratechange", curMemoryArea.onratechange_smart_getter);
+
+// onreset
+curMemoryArea.onreset_getter = function onreset() { return this._onreset; }; mframe.safefunction(curMemoryArea.onreset_getter);
+Object.defineProperty(curMemoryArea.onreset_getter, "name", {value: "get onreset",configurable: true,});
+// onreset
+curMemoryArea.onreset_setter = function onreset(val) { this._onreset = val; }; mframe.safefunction(curMemoryArea.onreset_setter);
+Object.defineProperty(curMemoryArea.onreset_setter, "name", {value: "set onreset",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onreset", {get: curMemoryArea.onreset_getter,set: curMemoryArea.onreset_setter,enumerable: true,configurable: true,});
+curMemoryArea.onreset_smart_getter = function onreset() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onreset;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onreset !== undefined ? this._onreset : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onreset_smart_getter);
+HTMLElement.prototype.__defineGetter__("onreset", curMemoryArea.onreset_smart_getter);
+
+// onresize
+curMemoryArea.onresize_getter = function onresize() { return this._onresize; }; mframe.safefunction(curMemoryArea.onresize_getter);
+Object.defineProperty(curMemoryArea.onresize_getter, "name", {value: "get onresize",configurable: true,});
+// onresize
+curMemoryArea.onresize_setter = function onresize(val) { this._onresize = val; }; mframe.safefunction(curMemoryArea.onresize_setter);
+Object.defineProperty(curMemoryArea.onresize_setter, "name", {value: "set onresize",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onresize", {get: curMemoryArea.onresize_getter,set: curMemoryArea.onresize_setter,enumerable: true,configurable: true,});
+curMemoryArea.onresize_smart_getter = function onresize() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onresize;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onresize !== undefined ? this._onresize : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onresize_smart_getter);
+HTMLElement.prototype.__defineGetter__("onresize", curMemoryArea.onresize_smart_getter);
+
+// onscroll
+curMemoryArea.onscroll_getter = function onscroll() { return this._onscroll; }; mframe.safefunction(curMemoryArea.onscroll_getter);
+Object.defineProperty(curMemoryArea.onscroll_getter, "name", {value: "get onscroll",configurable: true,});
+// onscroll
+curMemoryArea.onscroll_setter = function onscroll(val) { this._onscroll = val; }; mframe.safefunction(curMemoryArea.onscroll_setter);
+Object.defineProperty(curMemoryArea.onscroll_setter, "name", {value: "set onscroll",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onscroll", {get: curMemoryArea.onscroll_getter,set: curMemoryArea.onscroll_setter,enumerable: true,configurable: true,});
+curMemoryArea.onscroll_smart_getter = function onscroll() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onscroll;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onscroll !== undefined ? this._onscroll : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onscroll_smart_getter);
+HTMLElement.prototype.__defineGetter__("onscroll", curMemoryArea.onscroll_smart_getter);
+
+// onsecuritypolicyviolation
+curMemoryArea.onsecuritypolicyviolation_getter = function onsecuritypolicyviolation() { return this._onsecuritypolicyviolation; }; mframe.safefunction(curMemoryArea.onsecuritypolicyviolation_getter);
+Object.defineProperty(curMemoryArea.onsecuritypolicyviolation_getter, "name", {value: "get onsecuritypolicyviolation",configurable: true,});
+// onsecuritypolicyviolation
+curMemoryArea.onsecuritypolicyviolation_setter = function onsecuritypolicyviolation(val) { this._onsecuritypolicyviolation = val; }; mframe.safefunction(curMemoryArea.onsecuritypolicyviolation_setter);
+Object.defineProperty(curMemoryArea.onsecuritypolicyviolation_setter, "name", {value: "set onsecuritypolicyviolation",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onsecuritypolicyviolation", {get: curMemoryArea.onsecuritypolicyviolation_getter,set: curMemoryArea.onsecuritypolicyviolation_setter,enumerable: true,configurable: true,});
+curMemoryArea.onsecuritypolicyviolation_smart_getter = function onsecuritypolicyviolation() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onsecuritypolicyviolation;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onsecuritypolicyviolation !== undefined ? this._onsecuritypolicyviolation : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onsecuritypolicyviolation_smart_getter);
+HTMLElement.prototype.__defineGetter__("onsecuritypolicyviolation", curMemoryArea.onsecuritypolicyviolation_smart_getter);
+
+// onseeked
+curMemoryArea.onseeked_getter = function onseeked() { return this._onseeked; }; mframe.safefunction(curMemoryArea.onseeked_getter);
+Object.defineProperty(curMemoryArea.onseeked_getter, "name", {value: "get onseeked",configurable: true,});
+// onseeked
+curMemoryArea.onseeked_setter = function onseeked(val) { this._onseeked = val; }; mframe.safefunction(curMemoryArea.onseeked_setter);
+Object.defineProperty(curMemoryArea.onseeked_setter, "name", {value: "set onseeked",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onseeked", {get: curMemoryArea.onseeked_getter,set: curMemoryArea.onseeked_setter,enumerable: true,configurable: true,});
+curMemoryArea.onseeked_smart_getter = function onseeked() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onseeked;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onseeked !== undefined ? this._onseeked : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onseeked_smart_getter);
+HTMLElement.prototype.__defineGetter__("onseeked", curMemoryArea.onseeked_smart_getter);
+
+// onseeking
+curMemoryArea.onseeking_getter = function onseeking() { return this._onseeking; }; mframe.safefunction(curMemoryArea.onseeking_getter);
+Object.defineProperty(curMemoryArea.onseeking_getter, "name", {value: "get onseeking",configurable: true,});
+// onseeking
+curMemoryArea.onseeking_setter = function onseeking(val) { this._onseeking = val; }; mframe.safefunction(curMemoryArea.onseeking_setter);
+Object.defineProperty(curMemoryArea.onseeking_setter, "name", {value: "set onseeking",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onseeking", {get: curMemoryArea.onseeking_getter,set: curMemoryArea.onseeking_setter,enumerable: true,configurable: true,});
+curMemoryArea.onseeking_smart_getter = function onseeking() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onseeking;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onseeking !== undefined ? this._onseeking : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onseeking_smart_getter);
+HTMLElement.prototype.__defineGetter__("onseeking", curMemoryArea.onseeking_smart_getter);
+
+// onselect
+curMemoryArea.onselect_getter = function onselect() { return this._onselect; }; mframe.safefunction(curMemoryArea.onselect_getter);
+Object.defineProperty(curMemoryArea.onselect_getter, "name", {value: "get onselect",configurable: true,});
+// onselect
+curMemoryArea.onselect_setter = function onselect(val) { this._onselect = val; }; mframe.safefunction(curMemoryArea.onselect_setter);
+Object.defineProperty(curMemoryArea.onselect_setter, "name", {value: "set onselect",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onselect", {get: curMemoryArea.onselect_getter,set: curMemoryArea.onselect_setter,enumerable: true,configurable: true,});
+curMemoryArea.onselect_smart_getter = function onselect() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onselect;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onselect !== undefined ? this._onselect : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onselect_smart_getter);
+HTMLElement.prototype.__defineGetter__("onselect", curMemoryArea.onselect_smart_getter);
+
+// onslotchange
+curMemoryArea.onslotchange_getter = function onslotchange() { return this._onslotchange; }; mframe.safefunction(curMemoryArea.onslotchange_getter);
+Object.defineProperty(curMemoryArea.onslotchange_getter, "name", {value: "get onslotchange",configurable: true,});
+// onslotchange
+curMemoryArea.onslotchange_setter = function onslotchange(val) { this._onslotchange = val; }; mframe.safefunction(curMemoryArea.onslotchange_setter);
+Object.defineProperty(curMemoryArea.onslotchange_setter, "name", {value: "set onslotchange",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onslotchange", {get: curMemoryArea.onslotchange_getter,set: curMemoryArea.onslotchange_setter,enumerable: true,configurable: true,});
+curMemoryArea.onslotchange_smart_getter = function onslotchange() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onslotchange;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onslotchange !== undefined ? this._onslotchange : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onslotchange_smart_getter);
+HTMLElement.prototype.__defineGetter__("onslotchange", curMemoryArea.onslotchange_smart_getter);
+
+// onstalled
+curMemoryArea.onstalled_getter = function onstalled() { return this._onstalled; }; mframe.safefunction(curMemoryArea.onstalled_getter);
+Object.defineProperty(curMemoryArea.onstalled_getter, "name", {value: "get onstalled",configurable: true,});
+// onstalled
+curMemoryArea.onstalled_setter = function onstalled(val) { this._onstalled = val; }; mframe.safefunction(curMemoryArea.onstalled_setter);
+Object.defineProperty(curMemoryArea.onstalled_setter, "name", {value: "set onstalled",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onstalled", {get: curMemoryArea.onstalled_getter,set: curMemoryArea.onstalled_setter,enumerable: true,configurable: true,});
+curMemoryArea.onstalled_smart_getter = function onstalled() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onstalled;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onstalled !== undefined ? this._onstalled : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onstalled_smart_getter);
+HTMLElement.prototype.__defineGetter__("onstalled", curMemoryArea.onstalled_smart_getter);
+
+// onsubmit
+curMemoryArea.onsubmit_getter = function onsubmit() { return this._onsubmit; }; mframe.safefunction(curMemoryArea.onsubmit_getter);
+Object.defineProperty(curMemoryArea.onsubmit_getter, "name", {value: "get onsubmit",configurable: true,});
+// onsubmit
+curMemoryArea.onsubmit_setter = function onsubmit(val) { this._onsubmit = val; }; mframe.safefunction(curMemoryArea.onsubmit_setter);
+Object.defineProperty(curMemoryArea.onsubmit_setter, "name", {value: "set onsubmit",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onsubmit", {get: curMemoryArea.onsubmit_getter,set: curMemoryArea.onsubmit_setter,enumerable: true,configurable: true,});
+curMemoryArea.onsubmit_smart_getter = function onsubmit() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onsubmit;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onsubmit !== undefined ? this._onsubmit : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onsubmit_smart_getter);
+HTMLElement.prototype.__defineGetter__("onsubmit", curMemoryArea.onsubmit_smart_getter);
+
+// onsuspend
+curMemoryArea.onsuspend_getter = function onsuspend() { return this._onsuspend; }; mframe.safefunction(curMemoryArea.onsuspend_getter);
+Object.defineProperty(curMemoryArea.onsuspend_getter, "name", {value: "get onsuspend",configurable: true,});
+// onsuspend
+curMemoryArea.onsuspend_setter = function onsuspend(val) { this._onsuspend = val; }; mframe.safefunction(curMemoryArea.onsuspend_setter);
+Object.defineProperty(curMemoryArea.onsuspend_setter, "name", {value: "set onsuspend",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onsuspend", {get: curMemoryArea.onsuspend_getter,set: curMemoryArea.onsuspend_setter,enumerable: true,configurable: true,});
+curMemoryArea.onsuspend_smart_getter = function onsuspend() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onsuspend;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onsuspend !== undefined ? this._onsuspend : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onsuspend_smart_getter);
+HTMLElement.prototype.__defineGetter__("onsuspend", curMemoryArea.onsuspend_smart_getter);
+
+// ontimeupdate
+curMemoryArea.ontimeupdate_getter = function ontimeupdate() { return this._ontimeupdate; }; mframe.safefunction(curMemoryArea.ontimeupdate_getter);
+Object.defineProperty(curMemoryArea.ontimeupdate_getter, "name", {value: "get ontimeupdate",configurable: true,});
+// ontimeupdate
+curMemoryArea.ontimeupdate_setter = function ontimeupdate(val) { this._ontimeupdate = val; }; mframe.safefunction(curMemoryArea.ontimeupdate_setter);
+Object.defineProperty(curMemoryArea.ontimeupdate_setter, "name", {value: "set ontimeupdate",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ontimeupdate", {get: curMemoryArea.ontimeupdate_getter,set: curMemoryArea.ontimeupdate_setter,enumerable: true,configurable: true,});
+curMemoryArea.ontimeupdate_smart_getter = function ontimeupdate() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ontimeupdate;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ontimeupdate !== undefined ? this._ontimeupdate : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ontimeupdate_smart_getter);
+HTMLElement.prototype.__defineGetter__("ontimeupdate", curMemoryArea.ontimeupdate_smart_getter);
+
+// ontoggle
+curMemoryArea.ontoggle_getter = function ontoggle() { return this._ontoggle; }; mframe.safefunction(curMemoryArea.ontoggle_getter);
+Object.defineProperty(curMemoryArea.ontoggle_getter, "name", {value: "get ontoggle",configurable: true,});
+// ontoggle
+curMemoryArea.ontoggle_setter = function ontoggle(val) { this._ontoggle = val; }; mframe.safefunction(curMemoryArea.ontoggle_setter);
+Object.defineProperty(curMemoryArea.ontoggle_setter, "name", {value: "set ontoggle",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ontoggle", {get: curMemoryArea.ontoggle_getter,set: curMemoryArea.ontoggle_setter,enumerable: true,configurable: true,});
+curMemoryArea.ontoggle_smart_getter = function ontoggle() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ontoggle;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ontoggle !== undefined ? this._ontoggle : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ontoggle_smart_getter);
+HTMLElement.prototype.__defineGetter__("ontoggle", curMemoryArea.ontoggle_smart_getter);
+
+// onvolumechange
+curMemoryArea.onvolumechange_getter = function onvolumechange() { return this._onvolumechange; }; mframe.safefunction(curMemoryArea.onvolumechange_getter);
+Object.defineProperty(curMemoryArea.onvolumechange_getter, "name", {value: "get onvolumechange",configurable: true,});
+// onvolumechange
+curMemoryArea.onvolumechange_setter = function onvolumechange(val) { this._onvolumechange = val; }; mframe.safefunction(curMemoryArea.onvolumechange_setter);
+Object.defineProperty(curMemoryArea.onvolumechange_setter, "name", {value: "set onvolumechange",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onvolumechange", {get: curMemoryArea.onvolumechange_getter,set: curMemoryArea.onvolumechange_setter,enumerable: true,configurable: true,});
+curMemoryArea.onvolumechange_smart_getter = function onvolumechange() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onvolumechange;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onvolumechange !== undefined ? this._onvolumechange : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onvolumechange_smart_getter);
+HTMLElement.prototype.__defineGetter__("onvolumechange", curMemoryArea.onvolumechange_smart_getter);
+
+// onwaiting
+curMemoryArea.onwaiting_getter = function onwaiting() { return this._onwaiting; }; mframe.safefunction(curMemoryArea.onwaiting_getter);
+Object.defineProperty(curMemoryArea.onwaiting_getter, "name", {value: "get onwaiting",configurable: true,});
+// onwaiting
+curMemoryArea.onwaiting_setter = function onwaiting(val) { this._onwaiting = val; }; mframe.safefunction(curMemoryArea.onwaiting_setter);
+Object.defineProperty(curMemoryArea.onwaiting_setter, "name", {value: "set onwaiting",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onwaiting", {get: curMemoryArea.onwaiting_getter,set: curMemoryArea.onwaiting_setter,enumerable: true,configurable: true,});
+curMemoryArea.onwaiting_smart_getter = function onwaiting() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onwaiting;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onwaiting !== undefined ? this._onwaiting : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onwaiting_smart_getter);
+HTMLElement.prototype.__defineGetter__("onwaiting", curMemoryArea.onwaiting_smart_getter);
+
+// onwebkitanimationend
+curMemoryArea.onwebkitanimationend_getter = function onwebkitanimationend() { return this._onwebkitanimationend; }; mframe.safefunction(curMemoryArea.onwebkitanimationend_getter);
+Object.defineProperty(curMemoryArea.onwebkitanimationend_getter, "name", {value: "get onwebkitanimationend",configurable: true,});
+// onwebkitanimationend
+curMemoryArea.onwebkitanimationend_setter = function onwebkitanimationend(val) { this._onwebkitanimationend = val; }; mframe.safefunction(curMemoryArea.onwebkitanimationend_setter);
+Object.defineProperty(curMemoryArea.onwebkitanimationend_setter, "name", {value: "set onwebkitanimationend",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onwebkitanimationend", {get: curMemoryArea.onwebkitanimationend_getter,set: curMemoryArea.onwebkitanimationend_setter,enumerable: true,configurable: true,});
+curMemoryArea.onwebkitanimationend_smart_getter = function onwebkitanimationend() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onwebkitanimationend;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onwebkitanimationend !== undefined ? this._onwebkitanimationend : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onwebkitanimationend_smart_getter);
+HTMLElement.prototype.__defineGetter__("onwebkitanimationend", curMemoryArea.onwebkitanimationend_smart_getter);
+
+// onwebkitanimationiteration
+curMemoryArea.onwebkitanimationiteration_getter = function onwebkitanimationiteration() { return this._onwebkitanimationiteration; }; mframe.safefunction(curMemoryArea.onwebkitanimationiteration_getter);
+Object.defineProperty(curMemoryArea.onwebkitanimationiteration_getter, "name", {value: "get onwebkitanimationiteration",configurable: true,});
+// onwebkitanimationiteration
+curMemoryArea.onwebkitanimationiteration_setter = function onwebkitanimationiteration(val) { this._onwebkitanimationiteration = val; }; mframe.safefunction(curMemoryArea.onwebkitanimationiteration_setter);
+Object.defineProperty(curMemoryArea.onwebkitanimationiteration_setter, "name", {value: "set onwebkitanimationiteration",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onwebkitanimationiteration", {get: curMemoryArea.onwebkitanimationiteration_getter,set: curMemoryArea.onwebkitanimationiteration_setter,enumerable: true,configurable: true,});
+curMemoryArea.onwebkitanimationiteration_smart_getter = function onwebkitanimationiteration() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onwebkitanimationiteration;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onwebkitanimationiteration !== undefined ? this._onwebkitanimationiteration : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onwebkitanimationiteration_smart_getter);
+HTMLElement.prototype.__defineGetter__("onwebkitanimationiteration", curMemoryArea.onwebkitanimationiteration_smart_getter);
+
+// onwebkitanimationstart
+curMemoryArea.onwebkitanimationstart_getter = function onwebkitanimationstart() { return this._onwebkitanimationstart; }; mframe.safefunction(curMemoryArea.onwebkitanimationstart_getter);
+Object.defineProperty(curMemoryArea.onwebkitanimationstart_getter, "name", {value: "get onwebkitanimationstart",configurable: true,});
+// onwebkitanimationstart
+curMemoryArea.onwebkitanimationstart_setter = function onwebkitanimationstart(val) { this._onwebkitanimationstart = val; }; mframe.safefunction(curMemoryArea.onwebkitanimationstart_setter);
+Object.defineProperty(curMemoryArea.onwebkitanimationstart_setter, "name", {value: "set onwebkitanimationstart",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onwebkitanimationstart", {get: curMemoryArea.onwebkitanimationstart_getter,set: curMemoryArea.onwebkitanimationstart_setter,enumerable: true,configurable: true,});
+curMemoryArea.onwebkitanimationstart_smart_getter = function onwebkitanimationstart() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onwebkitanimationstart;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onwebkitanimationstart !== undefined ? this._onwebkitanimationstart : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onwebkitanimationstart_smart_getter);
+HTMLElement.prototype.__defineGetter__("onwebkitanimationstart", curMemoryArea.onwebkitanimationstart_smart_getter);
+
+// onwebkittransitionend
+curMemoryArea.onwebkittransitionend_getter = function onwebkittransitionend() { return this._onwebkittransitionend; }; mframe.safefunction(curMemoryArea.onwebkittransitionend_getter);
+Object.defineProperty(curMemoryArea.onwebkittransitionend_getter, "name", {value: "get onwebkittransitionend",configurable: true,});
+// onwebkittransitionend
+curMemoryArea.onwebkittransitionend_setter = function onwebkittransitionend(val) { this._onwebkittransitionend = val; }; mframe.safefunction(curMemoryArea.onwebkittransitionend_setter);
+Object.defineProperty(curMemoryArea.onwebkittransitionend_setter, "name", {value: "set onwebkittransitionend",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onwebkittransitionend", {get: curMemoryArea.onwebkittransitionend_getter,set: curMemoryArea.onwebkittransitionend_setter,enumerable: true,configurable: true,});
+curMemoryArea.onwebkittransitionend_smart_getter = function onwebkittransitionend() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onwebkittransitionend;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onwebkittransitionend !== undefined ? this._onwebkittransitionend : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onwebkittransitionend_smart_getter);
+HTMLElement.prototype.__defineGetter__("onwebkittransitionend", curMemoryArea.onwebkittransitionend_smart_getter);
+
+// onwheel
+curMemoryArea.onwheel_getter = function onwheel() { return this._onwheel; }; mframe.safefunction(curMemoryArea.onwheel_getter);
+Object.defineProperty(curMemoryArea.onwheel_getter, "name", {value: "get onwheel",configurable: true,});
+// onwheel
+curMemoryArea.onwheel_setter = function onwheel(val) { this._onwheel = val; }; mframe.safefunction(curMemoryArea.onwheel_setter);
+Object.defineProperty(curMemoryArea.onwheel_setter, "name", {value: "set onwheel",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onwheel", {get: curMemoryArea.onwheel_getter,set: curMemoryArea.onwheel_setter,enumerable: true,configurable: true,});
+curMemoryArea.onwheel_smart_getter = function onwheel() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onwheel;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onwheel !== undefined ? this._onwheel : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onwheel_smart_getter);
+HTMLElement.prototype.__defineGetter__("onwheel", curMemoryArea.onwheel_smart_getter);
+
+// onauxclick
+curMemoryArea.onauxclick_getter = function onauxclick() { return this._onauxclick; }; mframe.safefunction(curMemoryArea.onauxclick_getter);
+Object.defineProperty(curMemoryArea.onauxclick_getter, "name", {value: "get onauxclick",configurable: true,});
+// onauxclick
+curMemoryArea.onauxclick_setter = function onauxclick(val) { this._onauxclick = val; }; mframe.safefunction(curMemoryArea.onauxclick_setter);
+Object.defineProperty(curMemoryArea.onauxclick_setter, "name", {value: "set onauxclick",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onauxclick", {get: curMemoryArea.onauxclick_getter,set: curMemoryArea.onauxclick_setter,enumerable: true,configurable: true,});
+curMemoryArea.onauxclick_smart_getter = function onauxclick() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onauxclick;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onauxclick !== undefined ? this._onauxclick : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onauxclick_smart_getter);
+HTMLElement.prototype.__defineGetter__("onauxclick", curMemoryArea.onauxclick_smart_getter);
+
+// ongotpointercapture
+curMemoryArea.ongotpointercapture_getter = function ongotpointercapture() { return this._ongotpointercapture; }; mframe.safefunction(curMemoryArea.ongotpointercapture_getter);
+Object.defineProperty(curMemoryArea.ongotpointercapture_getter, "name", {value: "get ongotpointercapture",configurable: true,});
+// ongotpointercapture
+curMemoryArea.ongotpointercapture_setter = function ongotpointercapture(val) { this._ongotpointercapture = val; }; mframe.safefunction(curMemoryArea.ongotpointercapture_setter);
+Object.defineProperty(curMemoryArea.ongotpointercapture_setter, "name", {value: "set ongotpointercapture",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ongotpointercapture", {get: curMemoryArea.ongotpointercapture_getter,set: curMemoryArea.ongotpointercapture_setter,enumerable: true,configurable: true,});
+curMemoryArea.ongotpointercapture_smart_getter = function ongotpointercapture() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ongotpointercapture;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ongotpointercapture !== undefined ? this._ongotpointercapture : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ongotpointercapture_smart_getter);
+HTMLElement.prototype.__defineGetter__("ongotpointercapture", curMemoryArea.ongotpointercapture_smart_getter);
+
+// onlostpointercapture
+curMemoryArea.onlostpointercapture_getter = function onlostpointercapture() { return this._onlostpointercapture; }; mframe.safefunction(curMemoryArea.onlostpointercapture_getter);
+Object.defineProperty(curMemoryArea.onlostpointercapture_getter, "name", {value: "get onlostpointercapture",configurable: true,});
+// onlostpointercapture
+curMemoryArea.onlostpointercapture_setter = function onlostpointercapture(val) { this._onlostpointercapture = val; }; mframe.safefunction(curMemoryArea.onlostpointercapture_setter);
+Object.defineProperty(curMemoryArea.onlostpointercapture_setter, "name", {value: "set onlostpointercapture",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onlostpointercapture", {get: curMemoryArea.onlostpointercapture_getter,set: curMemoryArea.onlostpointercapture_setter,enumerable: true,configurable: true,});
+curMemoryArea.onlostpointercapture_smart_getter = function onlostpointercapture() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onlostpointercapture;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onlostpointercapture !== undefined ? this._onlostpointercapture : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onlostpointercapture_smart_getter);
+HTMLElement.prototype.__defineGetter__("onlostpointercapture", curMemoryArea.onlostpointercapture_smart_getter);
+
+// onpointerdown
+curMemoryArea.onpointerdown_getter = function onpointerdown() { return this._onpointerdown; }; mframe.safefunction(curMemoryArea.onpointerdown_getter);
+Object.defineProperty(curMemoryArea.onpointerdown_getter, "name", {value: "get onpointerdown",configurable: true,});
+// onpointerdown
+curMemoryArea.onpointerdown_setter = function onpointerdown(val) { this._onpointerdown = val; }; mframe.safefunction(curMemoryArea.onpointerdown_setter);
+Object.defineProperty(curMemoryArea.onpointerdown_setter, "name", {value: "set onpointerdown",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onpointerdown", {get: curMemoryArea.onpointerdown_getter,set: curMemoryArea.onpointerdown_setter,enumerable: true,configurable: true,});
+curMemoryArea.onpointerdown_smart_getter = function onpointerdown() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onpointerdown;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onpointerdown !== undefined ? this._onpointerdown : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onpointerdown_smart_getter);
+HTMLElement.prototype.__defineGetter__("onpointerdown", curMemoryArea.onpointerdown_smart_getter);
+
+// onpointermove
+curMemoryArea.onpointermove_getter = function onpointermove() { return this._onpointermove; }; mframe.safefunction(curMemoryArea.onpointermove_getter);
+Object.defineProperty(curMemoryArea.onpointermove_getter, "name", {value: "get onpointermove",configurable: true,});
+// onpointermove
+curMemoryArea.onpointermove_setter = function onpointermove(val) { this._onpointermove = val; }; mframe.safefunction(curMemoryArea.onpointermove_setter);
+Object.defineProperty(curMemoryArea.onpointermove_setter, "name", {value: "set onpointermove",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onpointermove", {get: curMemoryArea.onpointermove_getter,set: curMemoryArea.onpointermove_setter,enumerable: true,configurable: true,});
+curMemoryArea.onpointermove_smart_getter = function onpointermove() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onpointermove;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onpointermove !== undefined ? this._onpointermove : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onpointermove_smart_getter);
+HTMLElement.prototype.__defineGetter__("onpointermove", curMemoryArea.onpointermove_smart_getter);
+
+// onpointerrawupdate
+curMemoryArea.onpointerrawupdate_getter = function onpointerrawupdate() { return this._onpointerrawupdate; }; mframe.safefunction(curMemoryArea.onpointerrawupdate_getter);
+Object.defineProperty(curMemoryArea.onpointerrawupdate_getter, "name", {value: "get onpointerrawupdate",configurable: true,});
+// onpointerrawupdate
+curMemoryArea.onpointerrawupdate_setter = function onpointerrawupdate(val) { this._onpointerrawupdate = val; }; mframe.safefunction(curMemoryArea.onpointerrawupdate_setter);
+Object.defineProperty(curMemoryArea.onpointerrawupdate_setter, "name", {value: "set onpointerrawupdate",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onpointerrawupdate", {get: curMemoryArea.onpointerrawupdate_getter,set: curMemoryArea.onpointerrawupdate_setter,enumerable: true,configurable: true,});
+curMemoryArea.onpointerrawupdate_smart_getter = function onpointerrawupdate() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onpointerrawupdate;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onpointerrawupdate !== undefined ? this._onpointerrawupdate : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onpointerrawupdate_smart_getter);
+HTMLElement.prototype.__defineGetter__("onpointerrawupdate", curMemoryArea.onpointerrawupdate_smart_getter);
+
+// onpointerup
+curMemoryArea.onpointerup_getter = function onpointerup() { return this._onpointerup; }; mframe.safefunction(curMemoryArea.onpointerup_getter);
+Object.defineProperty(curMemoryArea.onpointerup_getter, "name", {value: "get onpointerup",configurable: true,});
+// onpointerup
+curMemoryArea.onpointerup_setter = function onpointerup(val) { this._onpointerup = val; }; mframe.safefunction(curMemoryArea.onpointerup_setter);
+Object.defineProperty(curMemoryArea.onpointerup_setter, "name", {value: "set onpointerup",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onpointerup", {get: curMemoryArea.onpointerup_getter,set: curMemoryArea.onpointerup_setter,enumerable: true,configurable: true,});
+curMemoryArea.onpointerup_smart_getter = function onpointerup() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onpointerup;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onpointerup !== undefined ? this._onpointerup : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onpointerup_smart_getter);
+HTMLElement.prototype.__defineGetter__("onpointerup", curMemoryArea.onpointerup_smart_getter);
+
+// onpointercancel
+curMemoryArea.onpointercancel_getter = function onpointercancel() { return this._onpointercancel; }; mframe.safefunction(curMemoryArea.onpointercancel_getter);
+Object.defineProperty(curMemoryArea.onpointercancel_getter, "name", {value: "get onpointercancel",configurable: true,});
+// onpointercancel
+curMemoryArea.onpointercancel_setter = function onpointercancel(val) { this._onpointercancel = val; }; mframe.safefunction(curMemoryArea.onpointercancel_setter);
+Object.defineProperty(curMemoryArea.onpointercancel_setter, "name", {value: "set onpointercancel",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onpointercancel", {get: curMemoryArea.onpointercancel_getter,set: curMemoryArea.onpointercancel_setter,enumerable: true,configurable: true,});
+curMemoryArea.onpointercancel_smart_getter = function onpointercancel() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onpointercancel;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onpointercancel !== undefined ? this._onpointercancel : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onpointercancel_smart_getter);
+HTMLElement.prototype.__defineGetter__("onpointercancel", curMemoryArea.onpointercancel_smart_getter);
+
+// onpointerover
+curMemoryArea.onpointerover_getter = function onpointerover() { return this._onpointerover; }; mframe.safefunction(curMemoryArea.onpointerover_getter);
+Object.defineProperty(curMemoryArea.onpointerover_getter, "name", {value: "get onpointerover",configurable: true,});
+// onpointerover
+curMemoryArea.onpointerover_setter = function onpointerover(val) { this._onpointerover = val; }; mframe.safefunction(curMemoryArea.onpointerover_setter);
+Object.defineProperty(curMemoryArea.onpointerover_setter, "name", {value: "set onpointerover",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onpointerover", {get: curMemoryArea.onpointerover_getter,set: curMemoryArea.onpointerover_setter,enumerable: true,configurable: true,});
+curMemoryArea.onpointerover_smart_getter = function onpointerover() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onpointerover;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onpointerover !== undefined ? this._onpointerover : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onpointerover_smart_getter);
+HTMLElement.prototype.__defineGetter__("onpointerover", curMemoryArea.onpointerover_smart_getter);
+
+// onpointerout
+curMemoryArea.onpointerout_getter = function onpointerout() { return this._onpointerout; }; mframe.safefunction(curMemoryArea.onpointerout_getter);
+Object.defineProperty(curMemoryArea.onpointerout_getter, "name", {value: "get onpointerout",configurable: true,});
+// onpointerout
+curMemoryArea.onpointerout_setter = function onpointerout(val) { this._onpointerout = val; }; mframe.safefunction(curMemoryArea.onpointerout_setter);
+Object.defineProperty(curMemoryArea.onpointerout_setter, "name", {value: "set onpointerout",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onpointerout", {get: curMemoryArea.onpointerout_getter,set: curMemoryArea.onpointerout_setter,enumerable: true,configurable: true,});
+curMemoryArea.onpointerout_smart_getter = function onpointerout() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onpointerout;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onpointerout !== undefined ? this._onpointerout : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onpointerout_smart_getter);
+HTMLElement.prototype.__defineGetter__("onpointerout", curMemoryArea.onpointerout_smart_getter);
+
+// onpointerenter
+curMemoryArea.onpointerenter_getter = function onpointerenter() { return this._onpointerenter; }; mframe.safefunction(curMemoryArea.onpointerenter_getter);
+Object.defineProperty(curMemoryArea.onpointerenter_getter, "name", {value: "get onpointerenter",configurable: true,});
+// onpointerenter
+curMemoryArea.onpointerenter_setter = function onpointerenter(val) { this._onpointerenter = val; }; mframe.safefunction(curMemoryArea.onpointerenter_setter);
+Object.defineProperty(curMemoryArea.onpointerenter_setter, "name", {value: "set onpointerenter",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onpointerenter", {get: curMemoryArea.onpointerenter_getter,set: curMemoryArea.onpointerenter_setter,enumerable: true,configurable: true,});
+curMemoryArea.onpointerenter_smart_getter = function onpointerenter() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onpointerenter;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onpointerenter !== undefined ? this._onpointerenter : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onpointerenter_smart_getter);
+HTMLElement.prototype.__defineGetter__("onpointerenter", curMemoryArea.onpointerenter_smart_getter);
+
+// onpointerleave
+curMemoryArea.onpointerleave_getter = function onpointerleave() { return this._onpointerleave; }; mframe.safefunction(curMemoryArea.onpointerleave_getter);
+Object.defineProperty(curMemoryArea.onpointerleave_getter, "name", {value: "get onpointerleave",configurable: true,});
+// onpointerleave
+curMemoryArea.onpointerleave_setter = function onpointerleave(val) { this._onpointerleave = val; }; mframe.safefunction(curMemoryArea.onpointerleave_setter);
+Object.defineProperty(curMemoryArea.onpointerleave_setter, "name", {value: "set onpointerleave",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onpointerleave", {get: curMemoryArea.onpointerleave_getter,set: curMemoryArea.onpointerleave_setter,enumerable: true,configurable: true,});
+curMemoryArea.onpointerleave_smart_getter = function onpointerleave() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onpointerleave;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onpointerleave !== undefined ? this._onpointerleave : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onpointerleave_smart_getter);
+HTMLElement.prototype.__defineGetter__("onpointerleave", curMemoryArea.onpointerleave_smart_getter);
+
+// onselectstart
+curMemoryArea.onselectstart_getter = function onselectstart() { return this._onselectstart; }; mframe.safefunction(curMemoryArea.onselectstart_getter);
+Object.defineProperty(curMemoryArea.onselectstart_getter, "name", {value: "get onselectstart",configurable: true,});
+// onselectstart
+curMemoryArea.onselectstart_setter = function onselectstart(val) { this._onselectstart = val; }; mframe.safefunction(curMemoryArea.onselectstart_setter);
+Object.defineProperty(curMemoryArea.onselectstart_setter, "name", {value: "set onselectstart",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onselectstart", {get: curMemoryArea.onselectstart_getter,set: curMemoryArea.onselectstart_setter,enumerable: true,configurable: true,});
+curMemoryArea.onselectstart_smart_getter = function onselectstart() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onselectstart;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onselectstart !== undefined ? this._onselectstart : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onselectstart_smart_getter);
+HTMLElement.prototype.__defineGetter__("onselectstart", curMemoryArea.onselectstart_smart_getter);
+
+// onselectionchange
+curMemoryArea.onselectionchange_getter = function onselectionchange() { return this._onselectionchange; }; mframe.safefunction(curMemoryArea.onselectionchange_getter);
+Object.defineProperty(curMemoryArea.onselectionchange_getter, "name", {value: "get onselectionchange",configurable: true,});
+// onselectionchange
+curMemoryArea.onselectionchange_setter = function onselectionchange(val) { this._onselectionchange = val; }; mframe.safefunction(curMemoryArea.onselectionchange_setter);
+Object.defineProperty(curMemoryArea.onselectionchange_setter, "name", {value: "set onselectionchange",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onselectionchange", {get: curMemoryArea.onselectionchange_getter,set: curMemoryArea.onselectionchange_setter,enumerable: true,configurable: true,});
+curMemoryArea.onselectionchange_smart_getter = function onselectionchange() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onselectionchange;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onselectionchange !== undefined ? this._onselectionchange : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onselectionchange_smart_getter);
+HTMLElement.prototype.__defineGetter__("onselectionchange", curMemoryArea.onselectionchange_smart_getter);
+
+// onanimationend
+curMemoryArea.onanimationend_getter = function onanimationend() { return this._onanimationend; }; mframe.safefunction(curMemoryArea.onanimationend_getter);
+Object.defineProperty(curMemoryArea.onanimationend_getter, "name", {value: "get onanimationend",configurable: true,});
+// onanimationend
+curMemoryArea.onanimationend_setter = function onanimationend(val) { this._onanimationend = val; }; mframe.safefunction(curMemoryArea.onanimationend_setter);
+Object.defineProperty(curMemoryArea.onanimationend_setter, "name", {value: "set onanimationend",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onanimationend", {get: curMemoryArea.onanimationend_getter,set: curMemoryArea.onanimationend_setter,enumerable: true,configurable: true,});
+curMemoryArea.onanimationend_smart_getter = function onanimationend() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onanimationend;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onanimationend !== undefined ? this._onanimationend : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onanimationend_smart_getter);
+HTMLElement.prototype.__defineGetter__("onanimationend", curMemoryArea.onanimationend_smart_getter);
+
+// onanimationiteration
+curMemoryArea.onanimationiteration_getter = function onanimationiteration() { return this._onanimationiteration; }; mframe.safefunction(curMemoryArea.onanimationiteration_getter);
+Object.defineProperty(curMemoryArea.onanimationiteration_getter, "name", {value: "get onanimationiteration",configurable: true,});
+// onanimationiteration
+curMemoryArea.onanimationiteration_setter = function onanimationiteration(val) { this._onanimationiteration = val; }; mframe.safefunction(curMemoryArea.onanimationiteration_setter);
+Object.defineProperty(curMemoryArea.onanimationiteration_setter, "name", {value: "set onanimationiteration",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onanimationiteration", {get: curMemoryArea.onanimationiteration_getter,set: curMemoryArea.onanimationiteration_setter,enumerable: true,configurable: true,});
+curMemoryArea.onanimationiteration_smart_getter = function onanimationiteration() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onanimationiteration;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onanimationiteration !== undefined ? this._onanimationiteration : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onanimationiteration_smart_getter);
+HTMLElement.prototype.__defineGetter__("onanimationiteration", curMemoryArea.onanimationiteration_smart_getter);
+
+// onanimationstart
+curMemoryArea.onanimationstart_getter = function onanimationstart() { return this._onanimationstart; }; mframe.safefunction(curMemoryArea.onanimationstart_getter);
+Object.defineProperty(curMemoryArea.onanimationstart_getter, "name", {value: "get onanimationstart",configurable: true,});
+// onanimationstart
+curMemoryArea.onanimationstart_setter = function onanimationstart(val) { this._onanimationstart = val; }; mframe.safefunction(curMemoryArea.onanimationstart_setter);
+Object.defineProperty(curMemoryArea.onanimationstart_setter, "name", {value: "set onanimationstart",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onanimationstart", {get: curMemoryArea.onanimationstart_getter,set: curMemoryArea.onanimationstart_setter,enumerable: true,configurable: true,});
+curMemoryArea.onanimationstart_smart_getter = function onanimationstart() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onanimationstart;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onanimationstart !== undefined ? this._onanimationstart : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onanimationstart_smart_getter);
+HTMLElement.prototype.__defineGetter__("onanimationstart", curMemoryArea.onanimationstart_smart_getter);
+
+// ontransitionrun
+curMemoryArea.ontransitionrun_getter = function ontransitionrun() { return this._ontransitionrun; }; mframe.safefunction(curMemoryArea.ontransitionrun_getter);
+Object.defineProperty(curMemoryArea.ontransitionrun_getter, "name", {value: "get ontransitionrun",configurable: true,});
+// ontransitionrun
+curMemoryArea.ontransitionrun_setter = function ontransitionrun(val) { this._ontransitionrun = val; }; mframe.safefunction(curMemoryArea.ontransitionrun_setter);
+Object.defineProperty(curMemoryArea.ontransitionrun_setter, "name", {value: "set ontransitionrun",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ontransitionrun", {get: curMemoryArea.ontransitionrun_getter,set: curMemoryArea.ontransitionrun_setter,enumerable: true,configurable: true,});
+curMemoryArea.ontransitionrun_smart_getter = function ontransitionrun() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ontransitionrun;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ontransitionrun !== undefined ? this._ontransitionrun : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ontransitionrun_smart_getter);
+HTMLElement.prototype.__defineGetter__("ontransitionrun", curMemoryArea.ontransitionrun_smart_getter);
+
+// ontransitionstart
+curMemoryArea.ontransitionstart_getter = function ontransitionstart() { return this._ontransitionstart; }; mframe.safefunction(curMemoryArea.ontransitionstart_getter);
+Object.defineProperty(curMemoryArea.ontransitionstart_getter, "name", {value: "get ontransitionstart",configurable: true,});
+// ontransitionstart
+curMemoryArea.ontransitionstart_setter = function ontransitionstart(val) { this._ontransitionstart = val; }; mframe.safefunction(curMemoryArea.ontransitionstart_setter);
+Object.defineProperty(curMemoryArea.ontransitionstart_setter, "name", {value: "set ontransitionstart",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ontransitionstart", {get: curMemoryArea.ontransitionstart_getter,set: curMemoryArea.ontransitionstart_setter,enumerable: true,configurable: true,});
+curMemoryArea.ontransitionstart_smart_getter = function ontransitionstart() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ontransitionstart;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ontransitionstart !== undefined ? this._ontransitionstart : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ontransitionstart_smart_getter);
+HTMLElement.prototype.__defineGetter__("ontransitionstart", curMemoryArea.ontransitionstart_smart_getter);
+
+// ontransitionend
+curMemoryArea.ontransitionend_getter = function ontransitionend() { return this._ontransitionend; }; mframe.safefunction(curMemoryArea.ontransitionend_getter);
+Object.defineProperty(curMemoryArea.ontransitionend_getter, "name", {value: "get ontransitionend",configurable: true,});
+// ontransitionend
+curMemoryArea.ontransitionend_setter = function ontransitionend(val) { this._ontransitionend = val; }; mframe.safefunction(curMemoryArea.ontransitionend_setter);
+Object.defineProperty(curMemoryArea.ontransitionend_setter, "name", {value: "set ontransitionend",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ontransitionend", {get: curMemoryArea.ontransitionend_getter,set: curMemoryArea.ontransitionend_setter,enumerable: true,configurable: true,});
+curMemoryArea.ontransitionend_smart_getter = function ontransitionend() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ontransitionend;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ontransitionend !== undefined ? this._ontransitionend : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ontransitionend_smart_getter);
+HTMLElement.prototype.__defineGetter__("ontransitionend", curMemoryArea.ontransitionend_smart_getter);
+
+// ontransitioncancel
+curMemoryArea.ontransitioncancel_getter = function ontransitioncancel() { return this._ontransitioncancel; }; mframe.safefunction(curMemoryArea.ontransitioncancel_getter);
+Object.defineProperty(curMemoryArea.ontransitioncancel_getter, "name", {value: "get ontransitioncancel",configurable: true,});
+// ontransitioncancel
+curMemoryArea.ontransitioncancel_setter = function ontransitioncancel(val) { this._ontransitioncancel = val; }; mframe.safefunction(curMemoryArea.ontransitioncancel_setter);
+Object.defineProperty(curMemoryArea.ontransitioncancel_setter, "name", {value: "set ontransitioncancel",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "ontransitioncancel", {get: curMemoryArea.ontransitioncancel_getter,set: curMemoryArea.ontransitioncancel_setter,enumerable: true,configurable: true,});
+curMemoryArea.ontransitioncancel_smart_getter = function ontransitioncancel() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.ontransitioncancel;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._ontransitioncancel !== undefined ? this._ontransitioncancel : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.ontransitioncancel_smart_getter);
+HTMLElement.prototype.__defineGetter__("ontransitioncancel", curMemoryArea.ontransitioncancel_smart_getter);
+
+// oncopy
+curMemoryArea.oncopy_getter = function oncopy() { return this._oncopy; }; mframe.safefunction(curMemoryArea.oncopy_getter);
+Object.defineProperty(curMemoryArea.oncopy_getter, "name", {value: "get oncopy",configurable: true,});
+// oncopy
+curMemoryArea.oncopy_setter = function oncopy(val) { this._oncopy = val; }; mframe.safefunction(curMemoryArea.oncopy_setter);
+Object.defineProperty(curMemoryArea.oncopy_setter, "name", {value: "set oncopy",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "oncopy", {get: curMemoryArea.oncopy_getter,set: curMemoryArea.oncopy_setter,enumerable: true,configurable: true,});
+curMemoryArea.oncopy_smart_getter = function oncopy() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.oncopy;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._oncopy !== undefined ? this._oncopy : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.oncopy_smart_getter);
+HTMLElement.prototype.__defineGetter__("oncopy", curMemoryArea.oncopy_smart_getter);
+
+// oncut
+curMemoryArea.oncut_getter = function oncut() { return this._oncut; }; mframe.safefunction(curMemoryArea.oncut_getter);
+Object.defineProperty(curMemoryArea.oncut_getter, "name", {value: "get oncut",configurable: true,});
+// oncut
+curMemoryArea.oncut_setter = function oncut(val) { this._oncut = val; }; mframe.safefunction(curMemoryArea.oncut_setter);
+Object.defineProperty(curMemoryArea.oncut_setter, "name", {value: "set oncut",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "oncut", {get: curMemoryArea.oncut_getter,set: curMemoryArea.oncut_setter,enumerable: true,configurable: true,});
+curMemoryArea.oncut_smart_getter = function oncut() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.oncut;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._oncut !== undefined ? this._oncut : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.oncut_smart_getter);
+HTMLElement.prototype.__defineGetter__("oncut", curMemoryArea.oncut_smart_getter);
+
+// onpaste
+curMemoryArea.onpaste_getter = function onpaste() { return this._onpaste; }; mframe.safefunction(curMemoryArea.onpaste_getter);
+Object.defineProperty(curMemoryArea.onpaste_getter, "name", {value: "get onpaste",configurable: true,});
+// onpaste
+curMemoryArea.onpaste_setter = function onpaste(val) { this._onpaste = val; }; mframe.safefunction(curMemoryArea.onpaste_setter);
+Object.defineProperty(curMemoryArea.onpaste_setter, "name", {value: "set onpaste",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onpaste", {get: curMemoryArea.onpaste_getter,set: curMemoryArea.onpaste_setter,enumerable: true,configurable: true,});
+curMemoryArea.onpaste_smart_getter = function onpaste() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onpaste;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onpaste !== undefined ? this._onpaste : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onpaste_smart_getter);
+HTMLElement.prototype.__defineGetter__("onpaste", curMemoryArea.onpaste_smart_getter);
+
+// dataset
+curMemoryArea.dataset_getter = function dataset() { return this._dataset; }; mframe.safefunction(curMemoryArea.dataset_getter);
+Object.defineProperty(curMemoryArea.dataset_getter, "name", {value: "get dataset",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "dataset", {get: curMemoryArea.dataset_getter,enumerable: true,configurable: true,});
+curMemoryArea.dataset_smart_getter = function dataset() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.dataset;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._dataset !== undefined ? this._dataset : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.dataset_smart_getter);
+HTMLElement.prototype.__defineGetter__("dataset", curMemoryArea.dataset_smart_getter);
+
+// nonce
+curMemoryArea.nonce_getter = function nonce() { return this._nonce; }; mframe.safefunction(curMemoryArea.nonce_getter);
+Object.defineProperty(curMemoryArea.nonce_getter, "name", {value: "get nonce",configurable: true,});
+// nonce
+curMemoryArea.nonce_setter = function nonce(val) { this._nonce = val; }; mframe.safefunction(curMemoryArea.nonce_setter);
+Object.defineProperty(curMemoryArea.nonce_setter, "name", {value: "set nonce",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "nonce", {get: curMemoryArea.nonce_getter,set: curMemoryArea.nonce_setter,enumerable: true,configurable: true,});
+curMemoryArea.nonce_smart_getter = function nonce() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.nonce;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._nonce !== undefined ? this._nonce : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.nonce_smart_getter);
+HTMLElement.prototype.__defineGetter__("nonce", curMemoryArea.nonce_smart_getter);
+
+// autofocus
+curMemoryArea.autofocus_getter = function autofocus() { return this._autofocus; }; mframe.safefunction(curMemoryArea.autofocus_getter);
+Object.defineProperty(curMemoryArea.autofocus_getter, "name", {value: "get autofocus",configurable: true,});
+// autofocus
+curMemoryArea.autofocus_setter = function autofocus(val) { this._autofocus = val; }; mframe.safefunction(curMemoryArea.autofocus_setter);
+Object.defineProperty(curMemoryArea.autofocus_setter, "name", {value: "set autofocus",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "autofocus", {get: curMemoryArea.autofocus_getter,set: curMemoryArea.autofocus_setter,enumerable: true,configurable: true,});
+curMemoryArea.autofocus_smart_getter = function autofocus() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.autofocus;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._autofocus !== undefined ? this._autofocus : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.autofocus_smart_getter);
+HTMLElement.prototype.__defineGetter__("autofocus", curMemoryArea.autofocus_smart_getter);
+
+// tabIndex
+curMemoryArea.tabIndex_getter = function tabIndex() { return this._tabIndex; }; mframe.safefunction(curMemoryArea.tabIndex_getter);
+Object.defineProperty(curMemoryArea.tabIndex_getter, "name", {value: "get tabIndex",configurable: true,});
+// tabIndex
+curMemoryArea.tabIndex_setter = function tabIndex(val) { this._tabIndex = val; }; mframe.safefunction(curMemoryArea.tabIndex_setter);
+Object.defineProperty(curMemoryArea.tabIndex_setter, "name", {value: "set tabIndex",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "tabIndex", {get: curMemoryArea.tabIndex_getter,set: curMemoryArea.tabIndex_setter,enumerable: true,configurable: true,});
+curMemoryArea.tabIndex_smart_getter = function tabIndex() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.tabIndex;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._tabIndex !== undefined ? this._tabIndex : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.tabIndex_smart_getter);
+HTMLElement.prototype.__defineGetter__("tabIndex", curMemoryArea.tabIndex_smart_getter);
+
+// style
+curMemoryArea.style_getter = function style() { return this._style; }; mframe.safefunction(curMemoryArea.style_getter);
+Object.defineProperty(curMemoryArea.style_getter, "name", {value: "get style",configurable: true,});
+// style
+curMemoryArea.style_setter = function style(val) { this._style = val; }; mframe.safefunction(curMemoryArea.style_setter);
+Object.defineProperty(curMemoryArea.style_setter, "name", {value: "set style",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "style", {get: curMemoryArea.style_getter,set: curMemoryArea.style_setter,enumerable: true,configurable: true,});
+curMemoryArea.style_smart_getter = function style() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.style;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._style !== undefined ? this._style : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.style_smart_getter);
+HTMLElement.prototype.__defineGetter__("style", curMemoryArea.style_smart_getter);
+
+// attributeStyleMap
+curMemoryArea.attributeStyleMap_getter = function attributeStyleMap() { return this._attributeStyleMap; }; mframe.safefunction(curMemoryArea.attributeStyleMap_getter);
+Object.defineProperty(curMemoryArea.attributeStyleMap_getter, "name", {value: "get attributeStyleMap",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "attributeStyleMap", {get: curMemoryArea.attributeStyleMap_getter,enumerable: true,configurable: true,});
+curMemoryArea.attributeStyleMap_smart_getter = function attributeStyleMap() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.attributeStyleMap;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._attributeStyleMap !== undefined ? this._attributeStyleMap : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.attributeStyleMap_smart_getter);
+HTMLElement.prototype.__defineGetter__("attributeStyleMap", curMemoryArea.attributeStyleMap_smart_getter);
+
+// oncommand
+curMemoryArea.oncommand_getter = function oncommand() { return this._oncommand; }; mframe.safefunction(curMemoryArea.oncommand_getter);
+Object.defineProperty(curMemoryArea.oncommand_getter, "name", {value: "get oncommand",configurable: true,});
+// oncommand
+curMemoryArea.oncommand_setter = function oncommand(val) { this._oncommand = val; }; mframe.safefunction(curMemoryArea.oncommand_setter);
+Object.defineProperty(curMemoryArea.oncommand_setter, "name", {value: "set oncommand",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "oncommand", {get: curMemoryArea.oncommand_getter,set: curMemoryArea.oncommand_setter,enumerable: true,configurable: true,});
+curMemoryArea.oncommand_smart_getter = function oncommand() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.oncommand;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._oncommand !== undefined ? this._oncommand : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.oncommand_smart_getter);
+HTMLElement.prototype.__defineGetter__("oncommand", curMemoryArea.oncommand_smart_getter);
+
+// onscrollend
+curMemoryArea.onscrollend_getter = function onscrollend() { return this._onscrollend; }; mframe.safefunction(curMemoryArea.onscrollend_getter);
+Object.defineProperty(curMemoryArea.onscrollend_getter, "name", {value: "get onscrollend",configurable: true,});
+// onscrollend
+curMemoryArea.onscrollend_setter = function onscrollend(val) { this._onscrollend = val; }; mframe.safefunction(curMemoryArea.onscrollend_setter);
+Object.defineProperty(curMemoryArea.onscrollend_setter, "name", {value: "set onscrollend",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onscrollend", {get: curMemoryArea.onscrollend_getter,set: curMemoryArea.onscrollend_setter,enumerable: true,configurable: true,});
+curMemoryArea.onscrollend_smart_getter = function onscrollend() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onscrollend;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onscrollend !== undefined ? this._onscrollend : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onscrollend_smart_getter);
+HTMLElement.prototype.__defineGetter__("onscrollend", curMemoryArea.onscrollend_smart_getter);
+
+// onscrollsnapchange
+curMemoryArea.onscrollsnapchange_getter = function onscrollsnapchange() { return this._onscrollsnapchange; }; mframe.safefunction(curMemoryArea.onscrollsnapchange_getter);
+Object.defineProperty(curMemoryArea.onscrollsnapchange_getter, "name", {value: "get onscrollsnapchange",configurable: true,});
+// onscrollsnapchange
+curMemoryArea.onscrollsnapchange_setter = function onscrollsnapchange(val) { this._onscrollsnapchange = val; }; mframe.safefunction(curMemoryArea.onscrollsnapchange_setter);
+Object.defineProperty(curMemoryArea.onscrollsnapchange_setter, "name", {value: "set onscrollsnapchange",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onscrollsnapchange", {get: curMemoryArea.onscrollsnapchange_getter,set: curMemoryArea.onscrollsnapchange_setter,enumerable: true,configurable: true,});
+curMemoryArea.onscrollsnapchange_smart_getter = function onscrollsnapchange() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onscrollsnapchange;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onscrollsnapchange !== undefined ? this._onscrollsnapchange : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onscrollsnapchange_smart_getter);
+HTMLElement.prototype.__defineGetter__("onscrollsnapchange", curMemoryArea.onscrollsnapchange_smart_getter);
+
+// onscrollsnapchanging
+curMemoryArea.onscrollsnapchanging_getter = function onscrollsnapchanging() { return this._onscrollsnapchanging; }; mframe.safefunction(curMemoryArea.onscrollsnapchanging_getter);
+Object.defineProperty(curMemoryArea.onscrollsnapchanging_getter, "name", {value: "get onscrollsnapchanging",configurable: true,});
+// onscrollsnapchanging
+curMemoryArea.onscrollsnapchanging_setter = function onscrollsnapchanging(val) { this._onscrollsnapchanging = val; }; mframe.safefunction(curMemoryArea.onscrollsnapchanging_setter);
+Object.defineProperty(curMemoryArea.onscrollsnapchanging_setter, "name", {value: "set onscrollsnapchanging",configurable: true,});
+Object.defineProperty(HTMLElement.prototype, "onscrollsnapchanging", {get: curMemoryArea.onscrollsnapchanging_getter,set: curMemoryArea.onscrollsnapchanging_setter,enumerable: true,configurable: true,});
+curMemoryArea.onscrollsnapchanging_smart_getter = function onscrollsnapchanging() {
+    if(mframe.memory.jsdom.document) {return this.jsdomMemory.onscrollsnapchanging;}
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._onscrollsnapchanging !== undefined ? this._onscrollsnapchanging : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.onscrollsnapchanging_smart_getter);
+HTMLElement.prototype.__defineGetter__("onscrollsnapchanging", curMemoryArea.onscrollsnapchanging_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+HTMLElement.prototype["attachInternals"] = function attachInternals() { debugger; }; mframe.safefunction(HTMLElement.prototype["attachInternals"]);
+HTMLElement.prototype["blur"] = function blur() { debugger; }; mframe.safefunction(HTMLElement.prototype["blur"]);
+HTMLElement.prototype["click"] = function click() { debugger; }; mframe.safefunction(HTMLElement.prototype["click"]);
+HTMLElement.prototype["focus"] = function focus() { debugger; }; mframe.safefunction(HTMLElement.prototype["focus"]);
+HTMLElement.prototype["hidePopover"] = function hidePopover() { debugger; }; mframe.safefunction(HTMLElement.prototype["hidePopover"]);
+HTMLElement.prototype["showPopover"] = function showPopover() { debugger; }; mframe.safefunction(HTMLElement.prototype["showPopover"]);
+HTMLElement.prototype["togglePopover"] = function togglePopover() { debugger; }; mframe.safefunction(HTMLElement.prototype["togglePopover"]);
+//==============↑↑Function END↑↑====================
+
+//////////////////////////////////
+
+HTMLElement.prototype.__proto__ = Element.prototype;
+/**代理 */
+HTMLElement = mframe.proxy(HTMLElement)
+var Event = function () {
+    throw new TypeError('Illegal constructor')
+}; mframe.safefunction(Event);
+
+Object.defineProperties(Event.prototype, {
+    [Symbol.toStringTag]: {
+        value: "Event",
+        configurable: true,
+    }
+});
+/////////////////////////////////////////////
+// 如果调用, 通过this.jsdomMemory去调用
+
+/////////////////////////////////////////////
+
+mframe.memory.event = function() {
+    event = {}
+    event.__proto__=Event.prototype
+    return event;
+}
+Event = mframe.proxy(Event)
+var TextHTMLTemplateElement = function () {
+    throw new TypeError('Illegal constructor')
+}; mframe.safefunction(TextHTMLTemplateElement);
+
+Object.defineProperties(TextHTMLTemplateElement.prototype, {
+    [Symbol.toStringTag]: {
+        value: "TextHTMLTemplateElement",
+        configurable: true,
+    }
+});
+
+///////////////////////////////////////////////////
+
+///////////////////////////////////////////////////
+
+
+TextHTMLTemplateElement.__proto__ = HTMLElement;
+TextHTMLTemplateElement.prototype.__proto__ = HTMLElement.prototype;
+
+
+mframe.memory.htmlelements['template'] = function () {
+    var template = new (function () { });
+    template.__proto__ = TextHTMLTemplateElement.prototype;
+    return template;
+}
+var HTMLAnchorElement = function () {
+    throw new TypeError('Illegal constructor')
+}; mframe.safefunction(HTMLAnchorElement);
+
+Object.defineProperties(HTMLAnchorElement.prototype, {
+    [Symbol.toStringTag]: {
+        value: "HTMLAnchorElement",
+        configurable: true,
+    }
+});
+
+///////////////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.HTMLAnchorElement = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+// target
+curMemoryArea.target_getter = function target() { debugger; }; mframe.safefunction(curMemoryArea.target_getter);
+Object.defineProperty(curMemoryArea.target_getter, "name", {value: "get target",configurable: true,});
+// target
+curMemoryArea.target_setter = function target(val) {
+    this._target = val; 
+    this.jsdomMemory.target = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'target', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.target_setter);
+Object.defineProperty(curMemoryArea.target_setter, "name", {value: "set target",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "target", {get: curMemoryArea.target_getter,set: curMemoryArea.target_setter,enumerable: true,configurable: true,});
+curMemoryArea.target_smart_getter = function target() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._target !== undefined ? this._target : this.jsdomMemory.target; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'target', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.target_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("target", curMemoryArea.target_smart_getter);
+
+// download
+curMemoryArea.download_getter = function download() { debugger; }; mframe.safefunction(curMemoryArea.download_getter);
+Object.defineProperty(curMemoryArea.download_getter, "name", {value: "get download",configurable: true,});
+// download
+curMemoryArea.download_setter = function download(val) {
+    this._download = val; 
+    this.jsdomMemory.download = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'download', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.download_setter);
+Object.defineProperty(curMemoryArea.download_setter, "name", {value: "set download",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "download", {get: curMemoryArea.download_getter,set: curMemoryArea.download_setter,enumerable: true,configurable: true,});
+curMemoryArea.download_smart_getter = function download() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._download !== undefined ? this._download : this.jsdomMemory.download; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'download', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.download_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("download", curMemoryArea.download_smart_getter);
+
+// ping
+curMemoryArea.ping_getter = function ping() { debugger; }; mframe.safefunction(curMemoryArea.ping_getter);
+Object.defineProperty(curMemoryArea.ping_getter, "name", {value: "get ping",configurable: true,});
+// ping
+curMemoryArea.ping_setter = function ping(val) {
+    this._ping = val; 
+    this.jsdomMemory.ping = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'ping', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.ping_setter);
+Object.defineProperty(curMemoryArea.ping_setter, "name", {value: "set ping",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "ping", {get: curMemoryArea.ping_getter,set: curMemoryArea.ping_setter,enumerable: true,configurable: true,});
+curMemoryArea.ping_smart_getter = function ping() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._ping !== undefined ? this._ping : this.jsdomMemory.ping; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'ping', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.ping_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("ping", curMemoryArea.ping_smart_getter);
+
+// rel
+curMemoryArea.rel_getter = function rel() { debugger; }; mframe.safefunction(curMemoryArea.rel_getter);
+Object.defineProperty(curMemoryArea.rel_getter, "name", {value: "get rel",configurable: true,});
+// rel
+curMemoryArea.rel_setter = function rel(val) {
+    this._rel = val; 
+    this.jsdomMemory.rel = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'rel', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.rel_setter);
+Object.defineProperty(curMemoryArea.rel_setter, "name", {value: "set rel",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "rel", {get: curMemoryArea.rel_getter,set: curMemoryArea.rel_setter,enumerable: true,configurable: true,});
+curMemoryArea.rel_smart_getter = function rel() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._rel !== undefined ? this._rel : this.jsdomMemory.rel; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'rel', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.rel_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("rel", curMemoryArea.rel_smart_getter);
+
+// relList
+curMemoryArea.relList_getter = function relList() { debugger; }; mframe.safefunction(curMemoryArea.relList_getter);
+Object.defineProperty(curMemoryArea.relList_getter, "name", {value: "get relList",configurable: true,});
+// relList
+curMemoryArea.relList_setter = function relList(val) {
+    this._relList = val; 
+    this.jsdomMemory.relList = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'relList', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.relList_setter);
+Object.defineProperty(curMemoryArea.relList_setter, "name", {value: "set relList",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "relList", {get: curMemoryArea.relList_getter,set: curMemoryArea.relList_setter,enumerable: true,configurable: true,});
+curMemoryArea.relList_smart_getter = function relList() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._relList !== undefined ? this._relList : this.jsdomMemory.relList; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'relList', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.relList_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("relList", curMemoryArea.relList_smart_getter);
+
+// hreflang
+curMemoryArea.hreflang_getter = function hreflang() { debugger; }; mframe.safefunction(curMemoryArea.hreflang_getter);
+Object.defineProperty(curMemoryArea.hreflang_getter, "name", {value: "get hreflang",configurable: true,});
+// hreflang
+curMemoryArea.hreflang_setter = function hreflang(val) {
+    this._hreflang = val; 
+    this.jsdomMemory.hreflang = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'hreflang', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.hreflang_setter);
+Object.defineProperty(curMemoryArea.hreflang_setter, "name", {value: "set hreflang",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "hreflang", {get: curMemoryArea.hreflang_getter,set: curMemoryArea.hreflang_setter,enumerable: true,configurable: true,});
+curMemoryArea.hreflang_smart_getter = function hreflang() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._hreflang !== undefined ? this._hreflang : this.jsdomMemory.hreflang; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'hreflang', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.hreflang_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("hreflang", curMemoryArea.hreflang_smart_getter);
+
+// type
+curMemoryArea.type_getter = function type() { debugger; }; mframe.safefunction(curMemoryArea.type_getter);
+Object.defineProperty(curMemoryArea.type_getter, "name", {value: "get type",configurable: true,});
+// type
+curMemoryArea.type_setter = function type(val) {
+    this._type = val; 
+    this.jsdomMemory.type = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'type', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.type_setter);
+Object.defineProperty(curMemoryArea.type_setter, "name", {value: "set type",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "type", {get: curMemoryArea.type_getter,set: curMemoryArea.type_setter,enumerable: true,configurable: true,});
+curMemoryArea.type_smart_getter = function type() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._type !== undefined ? this._type : this.jsdomMemory.type; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'type', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.type_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("type", curMemoryArea.type_smart_getter);
+
+// referrerPolicy
+curMemoryArea.referrerPolicy_getter = function referrerPolicy() { debugger; }; mframe.safefunction(curMemoryArea.referrerPolicy_getter);
+Object.defineProperty(curMemoryArea.referrerPolicy_getter, "name", {value: "get referrerPolicy",configurable: true,});
+// referrerPolicy
+curMemoryArea.referrerPolicy_setter = function referrerPolicy(val) {
+    this._referrerPolicy = val; 
+    this.jsdomMemory.referrerPolicy = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'referrerPolicy', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.referrerPolicy_setter);
+Object.defineProperty(curMemoryArea.referrerPolicy_setter, "name", {value: "set referrerPolicy",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "referrerPolicy", {get: curMemoryArea.referrerPolicy_getter,set: curMemoryArea.referrerPolicy_setter,enumerable: true,configurable: true,});
+curMemoryArea.referrerPolicy_smart_getter = function referrerPolicy() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._referrerPolicy !== undefined ? this._referrerPolicy : this.jsdomMemory.referrerPolicy; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'referrerPolicy', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.referrerPolicy_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("referrerPolicy", curMemoryArea.referrerPolicy_smart_getter);
+
+// text
+curMemoryArea.text_getter = function text() { debugger; }; mframe.safefunction(curMemoryArea.text_getter);
+Object.defineProperty(curMemoryArea.text_getter, "name", {value: "get text",configurable: true,});
+// text
+curMemoryArea.text_setter = function text(val) {
+    this._text = val; 
+    this.jsdomMemory.text = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'text', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.text_setter);
+Object.defineProperty(curMemoryArea.text_setter, "name", {value: "set text",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "text", {get: curMemoryArea.text_getter,set: curMemoryArea.text_setter,enumerable: true,configurable: true,});
+curMemoryArea.text_smart_getter = function text() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._text !== undefined ? this._text : this.jsdomMemory.text; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'text', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.text_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("text", curMemoryArea.text_smart_getter);
+
+// coords
+curMemoryArea.coords_getter = function coords() { debugger; }; mframe.safefunction(curMemoryArea.coords_getter);
+Object.defineProperty(curMemoryArea.coords_getter, "name", {value: "get coords",configurable: true,});
+// coords
+curMemoryArea.coords_setter = function coords(val) {
+    this._coords = val; 
+    this.jsdomMemory.coords = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'coords', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.coords_setter);
+Object.defineProperty(curMemoryArea.coords_setter, "name", {value: "set coords",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "coords", {get: curMemoryArea.coords_getter,set: curMemoryArea.coords_setter,enumerable: true,configurable: true,});
+curMemoryArea.coords_smart_getter = function coords() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._coords !== undefined ? this._coords : this.jsdomMemory.coords; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'coords', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.coords_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("coords", curMemoryArea.coords_smart_getter);
+
+// charset
+curMemoryArea.charset_getter = function charset() { debugger; }; mframe.safefunction(curMemoryArea.charset_getter);
+Object.defineProperty(curMemoryArea.charset_getter, "name", {value: "get charset",configurable: true,});
+// charset
+curMemoryArea.charset_setter = function charset(val) {
+    this._charset = val; 
+    this.jsdomMemory.charset = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'charset', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.charset_setter);
+Object.defineProperty(curMemoryArea.charset_setter, "name", {value: "set charset",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "charset", {get: curMemoryArea.charset_getter,set: curMemoryArea.charset_setter,enumerable: true,configurable: true,});
+curMemoryArea.charset_smart_getter = function charset() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._charset !== undefined ? this._charset : this.jsdomMemory.charset; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'charset', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.charset_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("charset", curMemoryArea.charset_smart_getter);
+
+// name
+curMemoryArea.name_getter = function name() { debugger; }; mframe.safefunction(curMemoryArea.name_getter);
+Object.defineProperty(curMemoryArea.name_getter, "name", {value: "get name",configurable: true,});
+// name
+curMemoryArea.name_setter = function name(val) {
+    this._name = val; 
+    this.jsdomMemory.name = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'name', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.name_setter);
+Object.defineProperty(curMemoryArea.name_setter, "name", {value: "set name",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "name", {get: curMemoryArea.name_getter,set: curMemoryArea.name_setter,enumerable: true,configurable: true,});
+curMemoryArea.name_smart_getter = function name() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._name !== undefined ? this._name : this.jsdomMemory.name; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'name', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.name_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("name", curMemoryArea.name_smart_getter);
+
+// rev
+curMemoryArea.rev_getter = function rev() { debugger; }; mframe.safefunction(curMemoryArea.rev_getter);
+Object.defineProperty(curMemoryArea.rev_getter, "name", {value: "get rev",configurable: true,});
+// rev
+curMemoryArea.rev_setter = function rev(val) {
+    this._rev = val; 
+    this.jsdomMemory.rev = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'rev', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.rev_setter);
+Object.defineProperty(curMemoryArea.rev_setter, "name", {value: "set rev",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "rev", {get: curMemoryArea.rev_getter,set: curMemoryArea.rev_setter,enumerable: true,configurable: true,});
+curMemoryArea.rev_smart_getter = function rev() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._rev !== undefined ? this._rev : this.jsdomMemory.rev; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'rev', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.rev_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("rev", curMemoryArea.rev_smart_getter);
+
+// shape
+curMemoryArea.shape_getter = function shape() { debugger; }; mframe.safefunction(curMemoryArea.shape_getter);
+Object.defineProperty(curMemoryArea.shape_getter, "name", {value: "get shape",configurable: true,});
+// shape
+curMemoryArea.shape_setter = function shape(val) {
+    this._shape = val; 
+    this.jsdomMemory.shape = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'shape', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.shape_setter);
+Object.defineProperty(curMemoryArea.shape_setter, "name", {value: "set shape",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "shape", {get: curMemoryArea.shape_getter,set: curMemoryArea.shape_setter,enumerable: true,configurable: true,});
+curMemoryArea.shape_smart_getter = function shape() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._shape !== undefined ? this._shape : this.jsdomMemory.shape; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'shape', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.shape_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("shape", curMemoryArea.shape_smart_getter);
+
+// origin
+curMemoryArea.origin_getter = function origin() { debugger; }; mframe.safefunction(curMemoryArea.origin_getter);
+Object.defineProperty(curMemoryArea.origin_getter, "name", {value: "get origin",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "origin", {get: curMemoryArea.origin_getter,enumerable: true,configurable: true,});
+curMemoryArea.origin_smart_getter = function origin() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._origin !== undefined ? this._origin : this.jsdomMemory.origin; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'origin', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.origin_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("origin", curMemoryArea.origin_smart_getter);
+
+// protocol
+curMemoryArea.protocol_getter = function protocol() { debugger; }; mframe.safefunction(curMemoryArea.protocol_getter);
+Object.defineProperty(curMemoryArea.protocol_getter, "name", {value: "get protocol",configurable: true,});
+// protocol
+curMemoryArea.protocol_setter = function protocol(val) {
+    this._protocol = val; 
+    this.jsdomMemory.protocol = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'protocol', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.protocol_setter);
+Object.defineProperty(curMemoryArea.protocol_setter, "name", {value: "set protocol",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "protocol", {get: curMemoryArea.protocol_getter,set: curMemoryArea.protocol_setter,enumerable: true,configurable: true,});
+curMemoryArea.protocol_smart_getter = function protocol() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._protocol !== undefined ? this._protocol : this.jsdomMemory.protocol; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'protocol', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.protocol_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("protocol", curMemoryArea.protocol_smart_getter);
+
+// username
+curMemoryArea.username_getter = function username() { debugger; }; mframe.safefunction(curMemoryArea.username_getter);
+Object.defineProperty(curMemoryArea.username_getter, "name", {value: "get username",configurable: true,});
+// username
+curMemoryArea.username_setter = function username(val) {
+    this._username = val; 
+    this.jsdomMemory.username = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'username', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.username_setter);
+Object.defineProperty(curMemoryArea.username_setter, "name", {value: "set username",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "username", {get: curMemoryArea.username_getter,set: curMemoryArea.username_setter,enumerable: true,configurable: true,});
+curMemoryArea.username_smart_getter = function username() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._username !== undefined ? this._username : this.jsdomMemory.username; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'username', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.username_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("username", curMemoryArea.username_smart_getter);
+
+// password
+curMemoryArea.password_getter = function password() { debugger; }; mframe.safefunction(curMemoryArea.password_getter);
+Object.defineProperty(curMemoryArea.password_getter, "name", {value: "get password",configurable: true,});
+// password
+curMemoryArea.password_setter = function password(val) {
+    this._password = val; 
+    this.jsdomMemory.password = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'password', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.password_setter);
+Object.defineProperty(curMemoryArea.password_setter, "name", {value: "set password",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "password", {get: curMemoryArea.password_getter,set: curMemoryArea.password_setter,enumerable: true,configurable: true,});
+curMemoryArea.password_smart_getter = function password() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._password !== undefined ? this._password : this.jsdomMemory.password; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'password', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.password_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("password", curMemoryArea.password_smart_getter);
+
+// host
+curMemoryArea.host_getter = function host() { debugger; }; mframe.safefunction(curMemoryArea.host_getter);
+Object.defineProperty(curMemoryArea.host_getter, "name", {value: "get host",configurable: true,});
+// host
+curMemoryArea.host_setter = function host(val) {
+    this._host = val; 
+    this.jsdomMemory.host = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'host', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.host_setter);
+Object.defineProperty(curMemoryArea.host_setter, "name", {value: "set host",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "host", {get: curMemoryArea.host_getter,set: curMemoryArea.host_setter,enumerable: true,configurable: true,});
+curMemoryArea.host_smart_getter = function host() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._host !== undefined ? this._host : this.jsdomMemory.host; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'host', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.host_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("host", curMemoryArea.host_smart_getter);
+
+// hostname
+curMemoryArea.hostname_getter = function hostname() { debugger; }; mframe.safefunction(curMemoryArea.hostname_getter);
+Object.defineProperty(curMemoryArea.hostname_getter, "name", {value: "get hostname",configurable: true,});
+// hostname
+curMemoryArea.hostname_setter = function hostname(val) {
+    this._hostname = val; 
+    this.jsdomMemory.hostname = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'hostname', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.hostname_setter);
+Object.defineProperty(curMemoryArea.hostname_setter, "name", {value: "set hostname",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "hostname", {get: curMemoryArea.hostname_getter,set: curMemoryArea.hostname_setter,enumerable: true,configurable: true,});
+curMemoryArea.hostname_smart_getter = function hostname() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._hostname !== undefined ? this._hostname : this.jsdomMemory.hostname; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'hostname', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.hostname_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("hostname", curMemoryArea.hostname_smart_getter);
+
+// port
+curMemoryArea.port_getter = function port() { debugger; }; mframe.safefunction(curMemoryArea.port_getter);
+Object.defineProperty(curMemoryArea.port_getter, "name", {value: "get port",configurable: true,});
+// port
+curMemoryArea.port_setter = function port(val) {
+    this._port = val; 
+    this.jsdomMemory.port = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'port', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.port_setter);
+Object.defineProperty(curMemoryArea.port_setter, "name", {value: "set port",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "port", {get: curMemoryArea.port_getter,set: curMemoryArea.port_setter,enumerable: true,configurable: true,});
+curMemoryArea.port_smart_getter = function port() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._port !== undefined ? this._port : this.jsdomMemory.port; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'port', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.port_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("port", curMemoryArea.port_smart_getter);
+
+// pathname
+curMemoryArea.pathname_getter = function pathname() { debugger; }; mframe.safefunction(curMemoryArea.pathname_getter);
+Object.defineProperty(curMemoryArea.pathname_getter, "name", {value: "get pathname",configurable: true,});
+// pathname
+curMemoryArea.pathname_setter = function pathname(val) {
+    this._pathname = val; 
+    this.jsdomMemory.pathname = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'pathname', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.pathname_setter);
+Object.defineProperty(curMemoryArea.pathname_setter, "name", {value: "set pathname",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "pathname", {get: curMemoryArea.pathname_getter,set: curMemoryArea.pathname_setter,enumerable: true,configurable: true,});
+curMemoryArea.pathname_smart_getter = function pathname() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._pathname !== undefined ? this._pathname : this.jsdomMemory.pathname; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'pathname', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.pathname_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("pathname", curMemoryArea.pathname_smart_getter);
+
+// search
+curMemoryArea.search_getter = function search() { debugger; }; mframe.safefunction(curMemoryArea.search_getter);
+Object.defineProperty(curMemoryArea.search_getter, "name", {value: "get search",configurable: true,});
+// search
+curMemoryArea.search_setter = function search(val) {
+    this._search = val; 
+    this.jsdomMemory.search = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'search', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.search_setter);
+Object.defineProperty(curMemoryArea.search_setter, "name", {value: "set search",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "search", {get: curMemoryArea.search_getter,set: curMemoryArea.search_setter,enumerable: true,configurable: true,});
+curMemoryArea.search_smart_getter = function search() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._search !== undefined ? this._search : this.jsdomMemory.search; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'search', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.search_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("search", curMemoryArea.search_smart_getter);
+
+// hash
+curMemoryArea.hash_getter = function hash() { debugger; }; mframe.safefunction(curMemoryArea.hash_getter);
+Object.defineProperty(curMemoryArea.hash_getter, "name", {value: "get hash",configurable: true,});
+// hash
+curMemoryArea.hash_setter = function hash(val) {
+    this._hash = val; 
+    this.jsdomMemory.hash = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'hash', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.hash_setter);
+Object.defineProperty(curMemoryArea.hash_setter, "name", {value: "set hash",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "hash", {get: curMemoryArea.hash_getter,set: curMemoryArea.hash_setter,enumerable: true,configurable: true,});
+curMemoryArea.hash_smart_getter = function hash() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._hash !== undefined ? this._hash : this.jsdomMemory.hash; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'hash', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.hash_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("hash", curMemoryArea.hash_smart_getter);
+
+// href
+curMemoryArea.href_getter = function href() { debugger; }; mframe.safefunction(curMemoryArea.href_getter);
+Object.defineProperty(curMemoryArea.href_getter, "name", {value: "get href",configurable: true,});
+// href
+curMemoryArea.href_setter = function href(val) {
+    this._href = val; 
+    this.jsdomMemory.href = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'href', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.href_setter);
+Object.defineProperty(curMemoryArea.href_setter, "name", {value: "set href",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "href", {get: curMemoryArea.href_getter,set: curMemoryArea.href_setter,enumerable: true,configurable: true,});
+curMemoryArea.href_smart_getter = function href() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._href !== undefined ? this._href : this.jsdomMemory.href; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'href', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.href_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("href", curMemoryArea.href_smart_getter);
+
+// hrefTranslate
+curMemoryArea.hrefTranslate_getter = function hrefTranslate() { debugger; }; mframe.safefunction(curMemoryArea.hrefTranslate_getter);
+Object.defineProperty(curMemoryArea.hrefTranslate_getter, "name", {value: "get hrefTranslate",configurable: true,});
+// hrefTranslate
+curMemoryArea.hrefTranslate_setter = function hrefTranslate(val) {
+    this._hrefTranslate = val; 
+    this.jsdomMemory.hrefTranslate = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'hrefTranslate', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.hrefTranslate_setter);
+Object.defineProperty(curMemoryArea.hrefTranslate_setter, "name", {value: "set hrefTranslate",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "hrefTranslate", {get: curMemoryArea.hrefTranslate_getter,set: curMemoryArea.hrefTranslate_setter,enumerable: true,configurable: true,});
+curMemoryArea.hrefTranslate_smart_getter = function hrefTranslate() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._hrefTranslate !== undefined ? this._hrefTranslate : this.jsdomMemory.hrefTranslate; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'hrefTranslate', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.hrefTranslate_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("hrefTranslate", curMemoryArea.hrefTranslate_smart_getter);
+
+// attributionSrc
+curMemoryArea.attributionSrc_getter = function attributionSrc() { debugger; }; mframe.safefunction(curMemoryArea.attributionSrc_getter);
+Object.defineProperty(curMemoryArea.attributionSrc_getter, "name", {value: "get attributionSrc",configurable: true,});
+// attributionSrc
+curMemoryArea.attributionSrc_setter = function attributionSrc(val) {
+    this._attributionSrc = val; 
+    this.jsdomMemory.attributionSrc = val; 
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'attributionSrc', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.attributionSrc_setter);
+Object.defineProperty(curMemoryArea.attributionSrc_setter, "name", {value: "set attributionSrc",configurable: true,});
+Object.defineProperty(HTMLAnchorElement.prototype, "attributionSrc", {get: curMemoryArea.attributionSrc_getter,set: curMemoryArea.attributionSrc_setter,enumerable: true,configurable: true,});
+curMemoryArea.attributionSrc_smart_getter = function attributionSrc() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._attributionSrc !== undefined ? this._attributionSrc : this.jsdomMemory.attributionSrc; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLAnchorElement', propertyName: 'attributionSrc', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.attributionSrc_smart_getter);
+HTMLAnchorElement.prototype.__defineGetter__("attributionSrc", curMemoryArea.attributionSrc_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+HTMLAnchorElement.prototype["toString"] = function toString() {
+    var res = this.href;
+    mframe.log({ flag: 'function', className: 'HTMLAnchorElement', methodName: 'toString', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(HTMLAnchorElement.prototype["toString"]);
+//==============↑↑Function END↑↑====================
+
+
+///////////////////////////////////////////////////////////
+
+HTMLAnchorElement.__proto__ = HTMLElement;
+HTMLAnchorElement.prototype.__proto__ = HTMLElement.prototype;
+
+mframe.memory.htmlelements['a'] = function () {
+    var a = new (function () { });
+    a.__proto__ = HTMLAnchorElement.prototype;
+
+    return a;
+}
+var HTMLMetaElement = function () {
+    throw new TypeError('Illegal constructor')
+}; mframe.safefunction(HTMLMetaElement);
+
+Object.defineProperties(HTMLMetaElement.prototype, {
+    [Symbol.toStringTag]: {
+        value: "HTMLMetaElement",
+        configurable: true,
+    }
+});
+//////////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.HTMLMetaElement = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+// name
+curMemoryArea.name_getter = function name() { debugger; }; mframe.safefunction(curMemoryArea.name_getter);
+Object.defineProperty(curMemoryArea.name_getter, "name", {value: "get name",configurable: true,});
+// name
+curMemoryArea.name_setter = function name(val) {
+    this._name = val; 
+    this.jsdomMemory.name = val; 
+    mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'name', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.name_setter);
+Object.defineProperty(curMemoryArea.name_setter, "name", {value: "set name",configurable: true,});
+Object.defineProperty(HTMLMetaElement.prototype, "name", {get: curMemoryArea.name_getter,set: curMemoryArea.name_setter,enumerable: true,configurable: true,});
+curMemoryArea.name_smart_getter = function name() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._name || this.jsdomMemory.name || ""||"";
+    mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'name', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.name_smart_getter);
+HTMLMetaElement.prototype.__defineGetter__("name", curMemoryArea.name_smart_getter);
+
+// httpEquiv
+curMemoryArea.httpEquiv_getter = function httpEquiv() { debugger; }; mframe.safefunction(curMemoryArea.httpEquiv_getter);
+Object.defineProperty(curMemoryArea.httpEquiv_getter, "name", {value: "get httpEquiv",configurable: true,});
+// httpEquiv
+curMemoryArea.httpEquiv_setter = function httpEquiv(val) {
+    this._httpEquiv = val; 
+    this.jsdomMemory.httpEquiv = val; 
+    mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'httpEquiv', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.httpEquiv_setter);
+Object.defineProperty(curMemoryArea.httpEquiv_setter, "name", {value: "set httpEquiv",configurable: true,});
+Object.defineProperty(HTMLMetaElement.prototype, "httpEquiv", {get: curMemoryArea.httpEquiv_getter,set: curMemoryArea.httpEquiv_setter,enumerable: true,configurable: true,});
+curMemoryArea.httpEquiv_smart_getter = function httpEquiv() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._httpEquiv || this.jsdomMemory.httpEquiv||"";
+    mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'httpEquiv', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.httpEquiv_smart_getter);
+HTMLMetaElement.prototype.__defineGetter__("httpEquiv", curMemoryArea.httpEquiv_smart_getter);
+
+// content
+curMemoryArea.content_getter = function content() { debugger; }; mframe.safefunction(curMemoryArea.content_getter);
+Object.defineProperty(curMemoryArea.content_getter, "name", {value: "get content",configurable: true,});
+// content
+curMemoryArea.content_setter = function content(val) {
+    this._content = val; 
+    this.jsdomMemory.content = val; 
+    mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'content', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.content_setter);
+Object.defineProperty(curMemoryArea.content_setter, "name", {value: "set content",configurable: true,});
+Object.defineProperty(HTMLMetaElement.prototype, "content", {get: curMemoryArea.content_getter,set: curMemoryArea.content_setter,enumerable: true,configurable: true,});
+curMemoryArea.content_smart_getter = function content() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._content || this._content|| this.jsdomMemory.content||"";
+    mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'content', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.content_smart_getter);
+HTMLMetaElement.prototype.__defineGetter__("content", curMemoryArea.content_smart_getter);
+
+// media
+curMemoryArea.media_getter = function media() { debugger; }; mframe.safefunction(curMemoryArea.media_getter);
+Object.defineProperty(curMemoryArea.media_getter, "name", {value: "get media",configurable: true,});
+// media
+curMemoryArea.media_setter = function media(val) {
+    this._media = val; 
+    this.jsdomMemory.media = val; 
+    mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'media', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.media_setter);
+Object.defineProperty(curMemoryArea.media_setter, "name", {value: "set media",configurable: true,});
+Object.defineProperty(HTMLMetaElement.prototype, "media", {get: curMemoryArea.media_getter,set: curMemoryArea.media_setter,enumerable: true,configurable: true,});
+curMemoryArea.media_smart_getter = function media() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._media || this.jsdomMemory.media|| "";
+    mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'media', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.media_smart_getter);
+HTMLMetaElement.prototype.__defineGetter__("media", curMemoryArea.media_smart_getter);
+
+// scheme
+curMemoryArea.scheme_getter = function scheme() { debugger; }; mframe.safefunction(curMemoryArea.scheme_getter);
+Object.defineProperty(curMemoryArea.scheme_getter, "name", {value: "get scheme",configurable: true,});
+// scheme
+curMemoryArea.scheme_setter = function scheme(val) {
+    this._scheme = val; 
+    this.jsdomMemory.scheme = val; 
+    mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'scheme', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.scheme_setter);
+Object.defineProperty(curMemoryArea.scheme_setter, "name", {value: "set scheme",configurable: true,});
+Object.defineProperty(HTMLMetaElement.prototype, "scheme", {get: curMemoryArea.scheme_getter,set: curMemoryArea.scheme_setter,enumerable: true,configurable: true,});
+curMemoryArea.scheme_smart_getter = function scheme() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._scheme || this._scheme|| this.jsdomMemory.scheme||"";
+    mframe.log({ flag: 'property', className: 'HTMLMetaElement', propertyName: 'scheme', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.scheme_smart_getter);
+HTMLMetaElement.prototype.__defineGetter__("scheme", curMemoryArea.scheme_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+//==============↑↑Function END↑↑====================
+//////////////////////////////////////////////////////
+
+HTMLMetaElement.__proto__ = HTMLElement;
+HTMLMetaElement.prototype.__proto__ = HTMLElement.prototype;
+
+mframe.memory.htmlelements['meta'] = function () {
+    var meta = new (function () { }); // new一个假的,通过换原型,换为HTMLMetaElement去实现
+    meta.__proto__ = HTMLMetaElement.prototype;
+    //////////{HTMLMetaElement特有的 属性/方法}//////////////
+
+    //////////////////////////////////////////////////////
+    return meta;
+}
+var HTMLDivElement = function () {
+    throw new TypeError('Illegal constructor')
+}; mframe.safefunction(HTMLDivElement);
+
+Object.defineProperties(HTMLDivElement.prototype, {
+    [Symbol.toStringTag]: {
+        value: "HTMLDivElement",
+        configurable: true,
+    }
+});
+
+///////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.HTMLDivElement = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+// align
+curMemoryArea.align_getter = function align() { debugger; }; mframe.safefunction(curMemoryArea.align_getter);
+Object.defineProperty(curMemoryArea.align_getter, "name", {value: "get align",configurable: true,});
+// align
+curMemoryArea.align_setter = function align(val) {
+    this._align = val; 
+    this.jsdomMemory.align = val; 
+    mframe.log({ flag: 'property', className: 'HTMLDivElement', propertyName: 'align', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.align_setter);
+Object.defineProperty(curMemoryArea.align_setter, "name", {value: "set align",configurable: true,});
+Object.defineProperty(HTMLDivElement.prototype, "align", {get: curMemoryArea.align_getter,set: curMemoryArea.align_setter,enumerable: true,configurable: true,});
+curMemoryArea.align_smart_getter = function align() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._align !== undefined ? this._align : this.jsdomMemory.align; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLDivElement', propertyName: 'align', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.align_smart_getter);
+HTMLDivElement.prototype.__defineGetter__("align", curMemoryArea.align_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+//==============↑↑Function END↑↑====================
+///////////////////////////////////////////////////
+
+
+HTMLDivElement.__proto__ = HTMLElement;
+HTMLDivElement.prototype.__proto__ = HTMLElement.prototype;
+
+// 如果调用 mframe.memory.htmlelements['div'], 就返回 HTMLDivElement
+mframe.memory.htmlelements['div'] = function () {
+    var div = new (function () { }); // new一个假的,通过换原型,换为HTMLDivElement去实现
+    div.__proto__ = HTMLDivElement.prototype;
+    return div;
+}
+var HTMLScriptElement = function () {
+    debugger;
+    throw new TypeError('HTMLScriptElement 不允许被new')
+}; mframe.safefunction(HTMLScriptElement);
+
+Object.defineProperties(HTMLScriptElement.prototype, {
+    [Symbol.toStringTag]: {
+        value: "HTMLScriptElement",
+        configurable: true,
+    }
+});
+
+///////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.HTMLScriptElement = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+// src
+curMemoryArea.src_getter = function src() { debugger; }; mframe.safefunction(curMemoryArea.src_getter);
+Object.defineProperty(curMemoryArea.src_getter, "name", {value: "get src",configurable: true,});
+// src
+curMemoryArea.src_setter = function src(val) {
+    this._src = val; 
+    this.jsdomMemory.src = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'src', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.src_setter);
+Object.defineProperty(curMemoryArea.src_setter, "name", {value: "set src",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "src", {get: curMemoryArea.src_getter,set: curMemoryArea.src_setter,enumerable: true,configurable: true,});
+curMemoryArea.src_smart_getter = function src() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._src !== undefined ? this._src : this.jsdomMemory.src; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'src', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.src_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("src", curMemoryArea.src_smart_getter);
+
+// type
+curMemoryArea.type_getter = function type() { debugger; }; mframe.safefunction(curMemoryArea.type_getter);
+Object.defineProperty(curMemoryArea.type_getter, "name", {value: "get type",configurable: true,});
+// type
+curMemoryArea.type_setter = function type(val) {
+    this._type = val; 
+    this.jsdomMemory.type = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'type', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.type_setter);
+Object.defineProperty(curMemoryArea.type_setter, "name", {value: "set type",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "type", {get: curMemoryArea.type_getter,set: curMemoryArea.type_setter,enumerable: true,configurable: true,});
+curMemoryArea.type_smart_getter = function type() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._type !== undefined ? this._type : this.jsdomMemory.type; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'type', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.type_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("type", curMemoryArea.type_smart_getter);
+
+// noModule
+curMemoryArea.noModule_getter = function noModule() { debugger; }; mframe.safefunction(curMemoryArea.noModule_getter);
+Object.defineProperty(curMemoryArea.noModule_getter, "name", {value: "get noModule",configurable: true,});
+// noModule
+curMemoryArea.noModule_setter = function noModule(val) {
+    this._noModule = val; 
+    this.jsdomMemory.noModule = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'noModule', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.noModule_setter);
+Object.defineProperty(curMemoryArea.noModule_setter, "name", {value: "set noModule",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "noModule", {get: curMemoryArea.noModule_getter,set: curMemoryArea.noModule_setter,enumerable: true,configurable: true,});
+curMemoryArea.noModule_smart_getter = function noModule() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._noModule !== undefined ? this._noModule : this.jsdomMemory.noModule; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'noModule', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.noModule_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("noModule", curMemoryArea.noModule_smart_getter);
+
+// charset
+curMemoryArea.charset_getter = function charset() { debugger; }; mframe.safefunction(curMemoryArea.charset_getter);
+Object.defineProperty(curMemoryArea.charset_getter, "name", {value: "get charset",configurable: true,});
+// charset
+curMemoryArea.charset_setter = function charset(val) {
+    this._charset = val; 
+    this.jsdomMemory.charset = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'charset', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.charset_setter);
+Object.defineProperty(curMemoryArea.charset_setter, "name", {value: "set charset",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "charset", {get: curMemoryArea.charset_getter,set: curMemoryArea.charset_setter,enumerable: true,configurable: true,});
+curMemoryArea.charset_smart_getter = function charset() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._charset !== undefined ? this._charset : this.jsdomMemory.charset; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'charset', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.charset_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("charset", curMemoryArea.charset_smart_getter);
+
+// async
+curMemoryArea.async_getter = function async() { debugger; }; mframe.safefunction(curMemoryArea.async_getter);
+Object.defineProperty(curMemoryArea.async_getter, "name", {value: "get async",configurable: true,});
+// async
+curMemoryArea.async_setter = function async(val) {
+    this._async = val; 
+    this.jsdomMemory.async = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'async', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.async_setter);
+Object.defineProperty(curMemoryArea.async_setter, "name", {value: "set async",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "async", {get: curMemoryArea.async_getter,set: curMemoryArea.async_setter,enumerable: true,configurable: true,});
+curMemoryArea.async_smart_getter = function async() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._async !== undefined ? this._async : this.jsdomMemory.async; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'async', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.async_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("async", curMemoryArea.async_smart_getter);
+
+// defer
+curMemoryArea.defer_getter = function defer() { debugger; }; mframe.safefunction(curMemoryArea.defer_getter);
+Object.defineProperty(curMemoryArea.defer_getter, "name", {value: "get defer",configurable: true,});
+// defer
+curMemoryArea.defer_setter = function defer(val) {
+    this._defer = val; 
+    this.jsdomMemory.defer = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'defer', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.defer_setter);
+Object.defineProperty(curMemoryArea.defer_setter, "name", {value: "set defer",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "defer", {get: curMemoryArea.defer_getter,set: curMemoryArea.defer_setter,enumerable: true,configurable: true,});
+curMemoryArea.defer_smart_getter = function defer() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._defer !== undefined ? this._defer : this.jsdomMemory.defer; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'defer', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.defer_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("defer", curMemoryArea.defer_smart_getter);
+
+// crossOrigin
+curMemoryArea.crossOrigin_getter = function crossOrigin() { debugger; }; mframe.safefunction(curMemoryArea.crossOrigin_getter);
+Object.defineProperty(curMemoryArea.crossOrigin_getter, "name", {value: "get crossOrigin",configurable: true,});
+// crossOrigin
+curMemoryArea.crossOrigin_setter = function crossOrigin(val) {
+    this._crossOrigin = val; 
+    this.jsdomMemory.crossOrigin = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'crossOrigin', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.crossOrigin_setter);
+Object.defineProperty(curMemoryArea.crossOrigin_setter, "name", {value: "set crossOrigin",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "crossOrigin", {get: curMemoryArea.crossOrigin_getter,set: curMemoryArea.crossOrigin_setter,enumerable: true,configurable: true,});
+curMemoryArea.crossOrigin_smart_getter = function crossOrigin() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._crossOrigin !== undefined ? this._crossOrigin : this.jsdomMemory.crossOrigin; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'crossOrigin', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.crossOrigin_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("crossOrigin", curMemoryArea.crossOrigin_smart_getter);
+
+// text
+curMemoryArea.text_getter = function text() { debugger; }; mframe.safefunction(curMemoryArea.text_getter);
+Object.defineProperty(curMemoryArea.text_getter, "name", {value: "get text",configurable: true,});
+// text
+curMemoryArea.text_setter = function text(val) {
+    this._text = val; 
+    this.jsdomMemory.text = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'text', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.text_setter);
+Object.defineProperty(curMemoryArea.text_setter, "name", {value: "set text",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "text", {get: curMemoryArea.text_getter,set: curMemoryArea.text_setter,enumerable: true,configurable: true,});
+curMemoryArea.text_smart_getter = function text() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._text !== undefined ? this._text : this.jsdomMemory.text; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'text', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.text_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("text", curMemoryArea.text_smart_getter);
+
+// referrerPolicy
+curMemoryArea.referrerPolicy_getter = function referrerPolicy() { debugger; }; mframe.safefunction(curMemoryArea.referrerPolicy_getter);
+Object.defineProperty(curMemoryArea.referrerPolicy_getter, "name", {value: "get referrerPolicy",configurable: true,});
+// referrerPolicy
+curMemoryArea.referrerPolicy_setter = function referrerPolicy(val) {
+    this._referrerPolicy = val; 
+    this.jsdomMemory.referrerPolicy = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'referrerPolicy', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.referrerPolicy_setter);
+Object.defineProperty(curMemoryArea.referrerPolicy_setter, "name", {value: "set referrerPolicy",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "referrerPolicy", {get: curMemoryArea.referrerPolicy_getter,set: curMemoryArea.referrerPolicy_setter,enumerable: true,configurable: true,});
+curMemoryArea.referrerPolicy_smart_getter = function referrerPolicy() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._referrerPolicy !== undefined ? this._referrerPolicy : this.jsdomMemory.referrerPolicy; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'referrerPolicy', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.referrerPolicy_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("referrerPolicy", curMemoryArea.referrerPolicy_smart_getter);
+
+// fetchPriority
+curMemoryArea.fetchPriority_getter = function fetchPriority() { debugger; }; mframe.safefunction(curMemoryArea.fetchPriority_getter);
+Object.defineProperty(curMemoryArea.fetchPriority_getter, "name", {value: "get fetchPriority",configurable: true,});
+// fetchPriority
+curMemoryArea.fetchPriority_setter = function fetchPriority(val) {
+    this._fetchPriority = val; 
+    this.jsdomMemory.fetchPriority = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'fetchPriority', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.fetchPriority_setter);
+Object.defineProperty(curMemoryArea.fetchPriority_setter, "name", {value: "set fetchPriority",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "fetchPriority", {get: curMemoryArea.fetchPriority_getter,set: curMemoryArea.fetchPriority_setter,enumerable: true,configurable: true,});
+curMemoryArea.fetchPriority_smart_getter = function fetchPriority() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._fetchPriority !== undefined ? this._fetchPriority : this.jsdomMemory.fetchPriority; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'fetchPriority', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.fetchPriority_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("fetchPriority", curMemoryArea.fetchPriority_smart_getter);
+
+// event
+curMemoryArea.event_getter = function event() { debugger; }; mframe.safefunction(curMemoryArea.event_getter);
+Object.defineProperty(curMemoryArea.event_getter, "name", {value: "get event",configurable: true,});
+// event
+curMemoryArea.event_setter = function event(val) {
+    this._event = val; 
+    this.jsdomMemory.event = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'event', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.event_setter);
+Object.defineProperty(curMemoryArea.event_setter, "name", {value: "set event",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "event", {get: curMemoryArea.event_getter,set: curMemoryArea.event_setter,enumerable: true,configurable: true,});
+curMemoryArea.event_smart_getter = function event() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._event !== undefined ? this._event : this.jsdomMemory.event; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'event', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.event_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("event", curMemoryArea.event_smart_getter);
+
+// htmlFor
+curMemoryArea.htmlFor_getter = function htmlFor() { debugger; }; mframe.safefunction(curMemoryArea.htmlFor_getter);
+Object.defineProperty(curMemoryArea.htmlFor_getter, "name", {value: "get htmlFor",configurable: true,});
+// htmlFor
+curMemoryArea.htmlFor_setter = function htmlFor(val) {
+    this._htmlFor = val; 
+    this.jsdomMemory.htmlFor = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'htmlFor', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.htmlFor_setter);
+Object.defineProperty(curMemoryArea.htmlFor_setter, "name", {value: "set htmlFor",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "htmlFor", {get: curMemoryArea.htmlFor_getter,set: curMemoryArea.htmlFor_setter,enumerable: true,configurable: true,});
+curMemoryArea.htmlFor_smart_getter = function htmlFor() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._htmlFor !== undefined ? this._htmlFor : this.jsdomMemory.htmlFor; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'htmlFor', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.htmlFor_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("htmlFor", curMemoryArea.htmlFor_smart_getter);
+
+// integrity
+curMemoryArea.integrity_getter = function integrity() { debugger; }; mframe.safefunction(curMemoryArea.integrity_getter);
+Object.defineProperty(curMemoryArea.integrity_getter, "name", {value: "get integrity",configurable: true,});
+// integrity
+curMemoryArea.integrity_setter = function integrity(val) {
+    this._integrity = val; 
+    this.jsdomMemory.integrity = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'integrity', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.integrity_setter);
+Object.defineProperty(curMemoryArea.integrity_setter, "name", {value: "set integrity",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "integrity", {get: curMemoryArea.integrity_getter,set: curMemoryArea.integrity_setter,enumerable: true,configurable: true,});
+curMemoryArea.integrity_smart_getter = function integrity() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._integrity !== undefined ? this._integrity : this.jsdomMemory.integrity; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'integrity', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.integrity_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("integrity", curMemoryArea.integrity_smart_getter);
+
+// blocking
+curMemoryArea.blocking_getter = function blocking() { debugger; }; mframe.safefunction(curMemoryArea.blocking_getter);
+Object.defineProperty(curMemoryArea.blocking_getter, "name", {value: "get blocking",configurable: true,});
+// blocking
+curMemoryArea.blocking_setter = function blocking(val) {
+    this._blocking = val; 
+    this.jsdomMemory.blocking = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'blocking', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.blocking_setter);
+Object.defineProperty(curMemoryArea.blocking_setter, "name", {value: "set blocking",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "blocking", {get: curMemoryArea.blocking_getter,set: curMemoryArea.blocking_setter,enumerable: true,configurable: true,});
+curMemoryArea.blocking_smart_getter = function blocking() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._blocking !== undefined ? this._blocking : this.jsdomMemory.blocking; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'blocking', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.blocking_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("blocking", curMemoryArea.blocking_smart_getter);
+
+// attributionSrc
+curMemoryArea.attributionSrc_getter = function attributionSrc() { debugger; }; mframe.safefunction(curMemoryArea.attributionSrc_getter);
+Object.defineProperty(curMemoryArea.attributionSrc_getter, "name", {value: "get attributionSrc",configurable: true,});
+// attributionSrc
+curMemoryArea.attributionSrc_setter = function attributionSrc(val) {
+    this._attributionSrc = val; 
+    this.jsdomMemory.attributionSrc = val; 
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'attributionSrc', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.attributionSrc_setter);
+Object.defineProperty(curMemoryArea.attributionSrc_setter, "name", {value: "set attributionSrc",configurable: true,});
+Object.defineProperty(HTMLScriptElement.prototype, "attributionSrc", {get: curMemoryArea.attributionSrc_getter,set: curMemoryArea.attributionSrc_setter,enumerable: true,configurable: true,});
+curMemoryArea.attributionSrc_smart_getter = function attributionSrc() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._attributionSrc !== undefined ? this._attributionSrc : this.jsdomMemory.attributionSrc; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLScriptElement', propertyName: 'attributionSrc', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.attributionSrc_smart_getter);
+HTMLScriptElement.prototype.__defineGetter__("attributionSrc", curMemoryArea.attributionSrc_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+//==============↑↑Function END↑↑====================
+
+
+///////////////////////////////////////////////////
+
+HTMLScriptElement.prototype.__proto__ = HTMLElement.prototype;
+
+mframe.memory.htmlelements['script'] = function () {
+    var script = new (function () { });
+    script.__proto__ = HTMLScriptElement.prototype;
+
+    //////////{HTMLScriptElement 特有的 属性/方法}//////////////
+    // 无,都是从父类继承的
+    /////////////////////////////////////////////////////
+    return script;
+}
+var HTMLCanvasElement = function () {
+    debugger;
+    throw new TypeError('Illegal constructor')
+}; mframe.safefunction(HTMLCanvasElement);
+
+Object.defineProperties(HTMLCanvasElement.prototype, {
+    [Symbol.toStringTag]: {
+        value: "HTMLCanvasElement",
+        configurable: true,
+    }
+});
+
+///////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.HTMLCanvasElement = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+// width
+curMemoryArea.width_getter = function width() { debugger; }; mframe.safefunction(curMemoryArea.width_getter);
+Object.defineProperty(curMemoryArea.width_getter, "name", {value: "get width",configurable: true,});
+// width
+curMemoryArea.width_setter = function width(val) {
+    this._width = val; 
+    this.jsdomMemory.width = val; 
+    mframe.log({ flag: 'property', className: 'HTMLCanvasElement', propertyName: 'width', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.width_setter);
+Object.defineProperty(curMemoryArea.width_setter, "name", {value: "set width",configurable: true,});
+Object.defineProperty(HTMLCanvasElement.prototype, "width", {get: curMemoryArea.width_getter,set: curMemoryArea.width_setter,enumerable: true,configurable: true,});
+curMemoryArea.width_smart_getter = function width() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._width !== undefined ? this._width : this.jsdomMemory.width; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLCanvasElement', propertyName: 'width', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.width_smart_getter);
+HTMLCanvasElement.prototype.__defineGetter__("width", curMemoryArea.width_smart_getter);
+
+// height
+curMemoryArea.height_getter = function height() { debugger; }; mframe.safefunction(curMemoryArea.height_getter);
+Object.defineProperty(curMemoryArea.height_getter, "name", {value: "get height",configurable: true,});
+// height
+curMemoryArea.height_setter = function height(val) {
+    this._height = val; 
+    this.jsdomMemory.height = val; 
+    mframe.log({ flag: 'property', className: 'HTMLCanvasElement', propertyName: 'height', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.height_setter);
+Object.defineProperty(curMemoryArea.height_setter, "name", {value: "set height",configurable: true,});
+Object.defineProperty(HTMLCanvasElement.prototype, "height", {get: curMemoryArea.height_getter,set: curMemoryArea.height_setter,enumerable: true,configurable: true,});
+curMemoryArea.height_smart_getter = function height() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._height !== undefined ? this._height : this.jsdomMemory.height; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'HTMLCanvasElement', propertyName: 'height', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.height_smart_getter);
+HTMLCanvasElement.prototype.__defineGetter__("height", curMemoryArea.height_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+HTMLCanvasElement.prototype["captureStream"] = function captureStream() {
+    var res = this.jsdomMemory["captureStream"](...arguments);
+    mframe.log({ flag: 'function', className: 'HTMLCanvasElement', methodName: 'captureStream', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(HTMLCanvasElement.prototype["captureStream"]);
+HTMLCanvasElement.prototype["getContext"] = function getContext() {
+    var res = this.jsdomMemory["getContext"](...arguments);
+    mframe.log({ flag: 'function', className: 'HTMLCanvasElement', methodName: 'getContext', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(HTMLCanvasElement.prototype["getContext"]);
+HTMLCanvasElement.prototype["toBlob"] = function toBlob() {
+    var res = this.jsdomMemory["toBlob"](...arguments);
+    mframe.log({ flag: 'function', className: 'HTMLCanvasElement', methodName: 'toBlob', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(HTMLCanvasElement.prototype["toBlob"]);
+HTMLCanvasElement.prototype["toDataURL"] = function toDataURL() {
+    var res = this.jsdomMemory["toDataURL"](...arguments);
+    mframe.log({ flag: 'function', className: 'HTMLCanvasElement', methodName: 'toDataURL', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(HTMLCanvasElement.prototype["toDataURL"]);
+HTMLCanvasElement.prototype["transferControlToOffscreen"] = function transferControlToOffscreen() {
+    var res = this.jsdomMemory["transferControlToOffscreen"](...arguments);
+    mframe.log({ flag: 'function', className: 'HTMLCanvasElement', methodName: 'transferControlToOffscreen', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(HTMLCanvasElement.prototype["transferControlToOffscreen"]);
+//==============↑↑Function END↑↑====================
+///////////////////////////////////////////////////
+HTMLCanvasElement.prototype.__proto__ = HTMLElement.prototype;
+
+mframe.memory.htmlelements['canvas'] = function () {
+    var canvas = new (function () { });
+    canvas.__proto__ = HTMLCanvasElement.prototype;
+
+    //////////{HTMLCanvasElement 特有的 属性/方法}//////////////
+
+    /////////////////////////////////////////////////////
+    return canvas;
+}
+var HTMLHeadElement = function () {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(HTMLHeadElement);
+
+Object.defineProperties(HTMLHeadElement.prototype, {
+    [Symbol.toStringTag]: {
+        value: "HTMLHeadElement",
+        configurable: true,
+    }
+});
+
+///////////////////////////////////////////////////
+
+///////////////////////////////////////////////////
+HTMLHeadElement.__proto__ = HTMLElement;
+HTMLHeadElement.prototype.__proto__ = HTMLElement.prototype;
+
+
+mframe.memory.htmlelements['head'] = function () {
+    var head = {};
+    head.__proto__ = HTMLHeadElement.prototype;
+
+    //////////{HTMLHeadElement 特有的 属性/方法}//////////////
+
+    /////////////////////////////////////////////////////
+    return head;
+}
+var HTMLBodyElement = function () {
+    throw new TypeError('Illegal constructor')
+}; mframe.safefunction(HTMLBodyElement);
+
+Object.defineProperties(HTMLBodyElement.prototype, {
+    [Symbol.toStringTag]: {
+        value: "HTMLBodyElement",
+        configurable: true,
+    }
+});
+
+///////////////////////////////////////////////////
+
+///////////////////////////////////////////////////
+HTMLBodyElement.__proto__ = HTMLElement;
+HTMLBodyElement.prototype.__proto__ = HTMLElement.prototype;
+
+mframe.memory.htmlelements['body'] = function () {
+    var body = new (function () { });
+    body.__proto__ = HTMLBodyElement.prototype;
+
+    return body;
+}
+var HTMLHtmlElement = function HTMLHtmlElement() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(HTMLHtmlElement)
+
+Object.defineProperties(HTMLHtmlElement.prototype, {
+    [Symbol.toStringTag]: {
+        value: "HTMLHtmlElement",
+        configurable: true,
+    }
+})
+
+
+//////////////////////////////////
+var curMemoryArea = mframe.memory.HTMLHtmlElement = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+// version
+curMemoryArea.version_getter = function version() { return this._version; }; mframe.safefunction(curMemoryArea.version_getter);
+Object.defineProperty(curMemoryArea.version_getter, "name", { value: "get version", configurable: true, });
+// version
+curMemoryArea.version_setter = function version(val) { 
+    this.jsdomMemory.version = val; 
+    mframe.log({ flag: 'property', className: 'HTMLHtmlElement', propertyName: 'version', method: 'set', val: val });
+}; mframe.safefunction(curMemoryArea.version_setter);
+Object.defineProperty(curMemoryArea.version_setter, "name", { value: "set version", configurable: true, });
+Object.defineProperty(HTMLHtmlElement.prototype, "version", { get: curMemoryArea.version_getter, set: curMemoryArea.version_setter, enumerable: true, configurable: true, });
+curMemoryArea.version_smart_getter = function version() {
+    var res = this.jsdomMemory.version;
+    mframe.log({ flag: 'property', className: 'HTMLHtmlElement', propertyName: 'version', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.version_smart_getter);
+HTMLHtmlElement.prototype.__defineGetter__("version", curMemoryArea.version_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+//==============↑↑Function END↑↑====================
+//////////////////////////////////
+
+HTMLHtmlElement.__proto__ = HTMLElement;
+HTMLHtmlElement.prototype.__proto__ = HTMLElement.prototype;
+
+mframe.memory.htmlelements['html'] = function () {
+    var html = new (function () { }); // new一个假的,通过换原型,换为HTMLMetaElement去实现
+    html.__proto__ = HTMLHtmlElement.prototype;
+    return html;
+}
+
+var HTMLDocument = function () {
+    throw new TypeError('Illegal constructor')
+}; mframe.safefunction(HTMLDocument);
+
+Object.defineProperties(HTMLDocument.prototype, {
+    [Symbol.toStringTag]: {
+        value: "HTMLDocument",
+        configurable: true,
+    }
+});
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+
+
+
+// 如果调用 mframe.memory.htmlelements['document'], 就返回 HTMLDocument
+mframe.memory.htmlelements['document'] = function () {
+    var document = new (function () { }); // new一个假的,通过换原型,换为HTMLDocument去实现
+    HTMLDocument.prototype.__proto__ = Document.prototype;
+    document.__proto__ = HTMLDocument.prototype;
+
+    //////////{HTMLDocument特有的 属性/方法}//////////////
+    //////////////////////////////////////////////////////
+    return document;
+}
+var Text = function () { }; mframe.safefunction(Text);
+
+Object.defineProperties(Text.prototype, {
+    [Symbol.toStringTag]: {
+        value: "Text",
+        configurable: true,
+    }
+});
+/////////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.Text = {};
+
+//============== Constant START ==================
+Object.defineProperty(Text, "arguments", { configurable: false, enumerable: false, value: null, writable: false, });
+Object.defineProperty(Text, "caller", { configurable: false, enumerable: false, value: null, writable: false, });
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+// wholeText
+curMemoryArea.wholeText_getter = function wholeText() { debugger; }; mframe.safefunction(curMemoryArea.wholeText_getter);
+Object.defineProperty(curMemoryArea.wholeText_getter, "name", { value: "get wholeText", configurable: true, });
+Object.defineProperty(Text.prototype, "wholeText", { get: curMemoryArea.wholeText_getter, enumerable: true, configurable: true, });
+curMemoryArea.wholeText_smart_getter = function wholeText() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._wholeText !== undefined ? this._wholeText : this.jsdomMemory.wholeText; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'Text', propertyName: 'wholeText', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.wholeText_smart_getter);
+Text.prototype.__defineGetter__("wholeText", curMemoryArea.wholeText_smart_getter);
+
+// assignedSlot
+curMemoryArea.assignedSlot_getter = function assignedSlot() { debugger; }; mframe.safefunction(curMemoryArea.assignedSlot_getter);
+Object.defineProperty(curMemoryArea.assignedSlot_getter, "name", { value: "get assignedSlot", configurable: true, });
+Object.defineProperty(Text.prototype, "assignedSlot", { get: curMemoryArea.assignedSlot_getter, enumerable: true, configurable: true, });
+curMemoryArea.assignedSlot_smart_getter = function assignedSlot() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this._assignedSlot !== undefined ? this._assignedSlot : this.jsdomMemory.assignedSlot; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'Text', propertyName: 'assignedSlot', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.assignedSlot_smart_getter);
+Text.prototype.__defineGetter__("assignedSlot", curMemoryArea.assignedSlot_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+Text.prototype["splitText"] = function splitText() {
+    var res = this.jsdomMemory["splitText"](...arguments);
+    mframe.log({ flag: 'function', className: 'Text', methodName: 'splitText', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Text.prototype["splitText"]);
+//==============↑↑Function END↑↑====================
+
+/////////////////////////////////////////////////////
+Text.prototype.__proto__ = Node.prototype;
+
+/**
+ * 改方法通过 Document.prototype["createTextNode"] 进行调用!!!
+ * @param {string} text 
+ * @returns 
+ */
+mframe.memory.htmlelements['text'] = function (text) {
+    var text = new (function () { }); 
+    text._wholeText = text;
+
+    text.__proto__ = Text.prototype;
+    return text;
+}
+DOMImplementation = mframe.memory.config.nodeEnv ? global : this;
+var DOMImplementation = function DOMImplementation() {
+    throw new TypeError('Illegal constructor');
+}; mframe.safefunction(DOMImplementation)
+Object.defineProperties(DOMImplementation.prototype, {
+    [Symbol.toStringTag]: {
+        value: "DOMImplementation",
+        configurable: true,
+    }
+})
+//////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.DOMImplementation = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+// DOMImplementation.prototype["createDocument"] = function createDocument() {
+//     var res = undefined;
+//     mframe.log({ flag: 'function', className: 'DOMImplementation', methodName: 'createDocument', inputVal: arguments, res: res });
+//     return res;
+// }; mframe.safefunction(DOMImplementation.prototype["createDocument"]);
+
+// DOMImplementation.prototype["createDocumentType"] = function createDocumentType() {
+//     var res = undefined;
+//     mframe.log({ flag: 'function', className: 'DOMImplementation', methodName: 'createDocumentType', inputVal: arguments, res: res });
+//     return res;
+// }; mframe.safefunction(DOMImplementation.prototype["createDocumentType"]);
+
+// DOMImplementation.prototype["createHTMLDocument"] = function createHTMLDocument() {
+//     var res = undefined;
+//     mframe.log({ flag: 'function', className: 'DOMImplementation', methodName: 'createHTMLDocument', inputVal: arguments, res: res });
+//     return res;
+// }; mframe.safefunction(DOMImplementation.prototype["createHTMLDocument"]);
+
+DOMImplementation.prototype["hasFeature"] = function hasFeature() {
+    var res = this.jsdomMemory.hasFeature;
+    mframe.log({ flag: 'function', className: 'DOMImplementation', methodName: 'hasFeature', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(DOMImplementation.prototype["hasFeature"]);
+//==============↑↑Function END↑↑====================
+//////////////////////////////////////////////////
+mframe.memory.domImplementation = {};
+mframe.memory.domImplementation.__proto__ = DOMImplementation.prototype;
+mframe.memory.domImplementation = mframe.proxy(mframe.memory.domImplementation);
+
+
+var Document = function () { }; mframe.safefunction(Document);
+
+Object.defineProperties(Document.prototype, {
+    [Symbol.toStringTag]: {
+        value: "Document",
+        configurable: true,
+    }
+});
+
+Document.prototype.__proto__ = Node.prototype
+document = mframe.memory.htmlelements['document'](); // 小document
+///////////////////////////////////////////////////
+var curMemoryArea = mframe.memory.Document = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+
+//%%%%%%% Attribute START %%%%%%%%%%
+// body
+curMemoryArea.body_getter = function body() { debugger; }; mframe.safefunction(curMemoryArea.body_getter);
+Object.defineProperty(curMemoryArea.body_getter, "name", { value: "get body", configurable: true, });
+// body
+curMemoryArea.body_setter = function body(val) {
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'body', method: 'set', val: val });
+    return mframe.memory.jsdom.document.body = val;
+}; mframe.safefunction(curMemoryArea.body_setter);
+Object.defineProperty(curMemoryArea.body_setter, "name", { value: "set body", configurable: true, });
+Object.defineProperty(Document.prototype, "body", { get: curMemoryArea.body_getter, set: curMemoryArea.body_setter, enumerable: true, configurable: true, });
+curMemoryArea.body_smart_getter = function body() {
+    if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error(); // 如果是实例访问,返回undefined
+    // 确保单例
+    if (mframe.memory.body) {
+        var res = mframe.memory.body
+    } else {
+        mframe.memory.body = mframe.memory.htmlelements['body'](); // 不能调用createElement的,会返回代理的
+        mframe.memory.body.jsdomMemory = mframe.jsdomProxy(mframe.memory.jsdom.document.body);
+        var res = mframe.memory.body;
+    }
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'body', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.body_smart_getter);
+Document.prototype.__defineGetter__("body", curMemoryArea.body_smart_getter);
+
+// head
+curMemoryArea.head_getter = function head() { debugger; }; mframe.safefunction(curMemoryArea.head_getter);
+Object.defineProperty(curMemoryArea.head_getter, "name", { value: "get head", configurable: true, });
+Object.defineProperty(Document.prototype, "head", { get: curMemoryArea.head_getter, enumerable: true, configurable: true, });
+curMemoryArea.head_smart_getter = function head() {
+    if (this.constructor && this === this.constructor.prototype) return undefined; // 如果是实例访问,返回undefined
+    // 确保单例
+    if (mframe.memory.head) {
+        var res = mframe.memory.head
+    }
+    else {
+        mframe.memory.head = mframe.memory.htmlelements['head'](); // 不能调用createElement的,会返回代理的
+        mframe.memory.head.jsdomMemory = mframe.jsdomProxy(mframe.memory.jsdom.document.head);
+        var res = mframe.proxy(mframe.memory.head);
+    }
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'head', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.head_smart_getter);
+Document.prototype.__defineGetter__("head", curMemoryArea.head_smart_getter);
+
+// all
+curMemoryArea.all_getter = function all() { debugger; }; mframe.safefunction(curMemoryArea.all_getter);
+Object.defineProperty(curMemoryArea.all_getter, "name", { value: "get all", configurable: true, });
+Object.defineProperty(Document.prototype, "all", { get: curMemoryArea.all_getter, enumerable: true, configurable: true, });
+curMemoryArea.all_smart_getter = function all() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+
+    // 这个方法返回是tageName为name的所有标签, 是返回数组, so我们要代理这个数组中的所有对象
+    var elements = mframe.memory.jsdom.document.getElementsByTagName("*"); // jsdom没有all,用这个替代;基本等价
+    var res = mframe.memory.htmlelements['collection'](elements);
+    mframe.log({ flag: 'function', className: 'Document', methodName: 'getElementsByTagName', inputVal: arguments, res: res });
+    return mframe.proxy(res); // TODO 不能偷懒这里的AllCollect还是要补, 里面有length
+
+
+    res = this._all !== undefined ? this._all : ''; // 返回实例属性或默认值
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'all', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.all_smart_getter);
+Document.prototype.__defineGetter__("all", curMemoryArea.all_smart_getter);
+
+//cookie
+curMemoryArea.cookie_getter = function cookie() { debugger; }; mframe.safefunction(curMemoryArea.cookie_getter);
+Object.defineProperty(curMemoryArea.cookie_getter, "name", { value: "get cookie", configurable: true, });
+// cookie
+curMemoryArea.cookie_setter = function cookie(val) {
+    curMemoryArea.cookie = val;
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'cookie', method: 'set', val: curMemoryArea.cookie });
+    return curMemoryArea.cookie;
+}; mframe.safefunction(curMemoryArea.cookie_setter);
+Object.defineProperty(curMemoryArea.cookie_setter, "name", { value: "set cookie", configurable: true, });
+Object.defineProperty(Document.prototype, "cookie", { get: curMemoryArea.cookie_getter, set: curMemoryArea.cookie_setter, enumerable: true, configurable: true, });
+curMemoryArea.cookie_smart_getter = function cookie() {
+    if (this.constructor && this === this.constructor.prototype) throw mframe.memory.get_invocation_error();
+    var res = curMemoryArea.cookie || "";
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'cookie', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.cookie_smart_getter);
+Document.prototype.__defineGetter__("cookie", curMemoryArea.cookie_smart_getter);
+
+// visibilityState
+curMemoryArea.visibilityState_getter = function visibilityState() { return this._visibilityState; }; mframe.safefunction(curMemoryArea.visibilityState_getter);
+Object.defineProperty(curMemoryArea.visibilityState_getter, "name", { value: "get visibilityState", configurable: true, });
+Object.defineProperty(Document.prototype, "visibilityState", { get: curMemoryArea.visibilityState_getter, enumerable: true, configurable: true, });
+curMemoryArea.visibilityState_smart_getter = function visibilityState() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+
+    var res = 'hidden';
+    // var res = 'prerender';
+    // var res = 'visible';
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'visibilityState', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.visibilityState_smart_getter);
+Document.prototype.__defineGetter__("visibilityState", curMemoryArea.visibilityState_smart_getter);
+
+// documentElement
+curMemoryArea.documentElement_getter = function documentElement() { return this._documentElement; }; mframe.safefunction(curMemoryArea.documentElement_getter);
+Object.defineProperty(curMemoryArea.documentElement_getter, "name", { value: "get documentElement", configurable: true, });
+Object.defineProperty(Document.prototype, "documentElement", { get: curMemoryArea.documentElement_getter, enumerable: true, configurable: true, });
+curMemoryArea.documentElement_smart_getter = function documentElement() {
+    var res = document.createElement("html");
+    res.jsdomMemory = mframe.memory.jsdom.document.documentElement;
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'documentElement', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.documentElement_smart_getter);
+Document.prototype.__defineGetter__("documentElement", curMemoryArea.documentElement_smart_getter);
+
+/** currentScript
+ * 需要返回当前正在执行的js代码 或 null (肯定不能null,会检测的)
+ * @returns 返回<script>标签
+ * TODO 这玩意应当写活(用户传递,每个网站不同), 但config无法配置, 只能让用户直接改这里
+ */
+curMemoryArea.currentScript_getter = function currentScript() { return this._currentScript; }; mframe.safefunction(curMemoryArea.currentScript_getter);
+Object.defineProperty(curMemoryArea.currentScript_getter, "name", { value: "get currentScript", configurable: true, });
+Object.defineProperty(Document.prototype, "currentScript", { get: curMemoryArea.currentScript_getter, enumerable: true, configurable: true, });
+curMemoryArea.currentScript_smart_getter = function currentScript() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    const scriptElement = document.createElement("script")
+    scriptElement.setAttribute("data-n-head", "ssr");
+    scriptElement.setAttribute("src", "https://g.alicdn.com/frontend-lib/frontend-lib/2.3.68/jquery_240910.min.js");
+    var res = scriptElement;
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'currentScript', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.currentScript_smart_getter);
+Document.prototype.__defineGetter__("currentScript", curMemoryArea.currentScript_smart_getter);
+
+/** readyState
+ * 获取文档的加载状态。
+ * @name readyState
+ * @type {string}
+ * @returns {string} 文档的加载状态，可为以下值之一：
+ *   - "loading"：文档仍在加载中。
+ *   - "interactive"：文档已解析完成，但子资源（如图片、样式表等）仍在加载。
+ *   - "complete"：文档及其所有子资源均已加载完成，即将触发 `load` 事件。
+ */
+curMemoryArea.readyState_getter = function readyState() { return this._readyState; }; mframe.safefunction(curMemoryArea.readyState_getter);
+Object.defineProperty(curMemoryArea.readyState_getter, "name", { value: "get readyState", configurable: true, });
+Object.defineProperty(Document.prototype, "readyState", { get: curMemoryArea.readyState_getter, enumerable: true, configurable: true, });
+curMemoryArea.readyState_smart_getter = function readyState() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = mframe.memory.jsdom.document.readyState; // loading
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'readyState', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.readyState_smart_getter);
+Document.prototype.__defineGetter__("readyState", curMemoryArea.readyState_smart_getter);
+
+// hidden
+curMemoryArea.hidden_getter = function hidden() { return this._hidden; }; mframe.safefunction(curMemoryArea.hidden_getter);
+Object.defineProperty(curMemoryArea.hidden_getter, "name", { value: "get hidden", configurable: true, });
+Object.defineProperty(Document.prototype, "hidden", { get: curMemoryArea.hidden_getter, enumerable: true, configurable: true, });
+curMemoryArea.hidden_smart_getter = function hidden() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    var res = false;
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'hidden', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.hidden_smart_getter);
+Document.prototype.__defineGetter__("hidden", curMemoryArea.hidden_smart_getter);
+
+// wasDiscarded
+curMemoryArea.wasDiscarded_getter = function wasDiscarded() { return this._wasDiscarded; }; mframe.safefunction(curMemoryArea.wasDiscarded_getter);
+Object.defineProperty(curMemoryArea.wasDiscarded_getter, "name", { value: "get wasDiscarded", configurable: true, });
+Object.defineProperty(Document.prototype, "wasDiscarded", { get: curMemoryArea.wasDiscarded_getter, enumerable: true, configurable: true, });
+curMemoryArea.wasDiscarded_smart_getter = function wasDiscarded() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    var res = false;
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'wasDiscarded', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.wasDiscarded_smart_getter);
+Document.prototype.__defineGetter__("wasDiscarded", curMemoryArea.wasDiscarded_smart_getter);
+
+
+// implementation
+curMemoryArea.implementation_getter = function implementation() { debugger; }; mframe.safefunction(curMemoryArea.implementation_getter);
+Object.defineProperty(curMemoryArea.implementation_getter, "name", { value: "get implementation", configurable: true, });
+Object.defineProperty(Document.prototype, "implementation", { get: curMemoryArea.implementation_getter, enumerable: true, configurable: true, });
+curMemoryArea.implementation_smart_getter = function implementation() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+
+    res = mframe.memory.domImplementation; // 环境中唯一的DOMImplementation的实例
+    res.jsdomMemory = mframe.memory.jsdom.document.implementation;
+    mframe.log({ flag: 'property', className: 'Document', propertyName: 'implementation', method: 'get', val: res });
+    return res;
+}; mframe.safefunction(curMemoryArea.implementation_smart_getter);
+Document.prototype.__defineGetter__("implementation", curMemoryArea.implementation_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%%%%%%
+
+//============== Function START ====================
+// createElement
+Document.prototype["createElement"] = function createElement(tagName) {
+    // STEP1:清洗标签名称
+    var tagName = tagName.toLowerCase() + ""; // +""是因为null需要解析为"null"
+    // STEP2:创建我们的自定义元素
+    var htmlElement;
+    if (mframe.memory.htmlelements[tagName] == undefined) {
+        console.log(`\x1b[31m==>createElement缺少==>${tagName}\x1b[0m`);
+        debugger;
+        htmlElement = {}; // 创建一个基础元素
+        htmlElement.__proto__ = HTMLElement.prototype;
+    } else {
+        htmlElement = mframe.memory.htmlelements[tagName](); // 如果有直接创建
+    }
+    // STEP3:jsdomMemory域存储jsdom创建的元素
+    if (mframe.memory.jsdom.document) {
+        // 使用JSDOM创建真实DOM元素
+        var jsdomXXXElement = mframe.memory.jsdom.document.createElement(...arguments);
+        htmlElement.jsdomMemory = mframe.jsdomProxy(jsdomXXXElement)
+    }
+    mframe.log({ flag: 'function', className: 'Document', methodName: 'createElement', inputVal: arguments, res: htmlElement });
+    return mframe.proxy(htmlElement);
+}; mframe.safefunction(Document.prototype["createElement"]);
+
+
+Document.prototype["getElementById"] = function getElementById() {
+    var res = mframe.memory.jsdom.document.getElementById(...arguments);
+    mframe.log({ flag: 'function', className: 'Document', methodName: 'getElementById', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Document.prototype["getElementById"]);
+
+Document.prototype["getElementsByTagName"] = function getElementsByTagName() {
+    // 这个方法返回是tageName为name的所有标签, 是返回数组, so我们要代理这个数组中的所有对象
+    var elements = mframe.memory.jsdom.document.getElementsByTagName(...arguments);
+    var res = mframe.memory.htmlelements['collection'](elements);
+    mframe.log({ flag: 'function', className: 'Document', methodName: 'getElementsByTagName', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Document.prototype["getElementsByTagName"]);
+
+Document.prototype["createExpression"] = function createExpression() {
+    var res = mframe.memory.jsdom.document.createExpression(...arguments);
+    mframe.log({ flag: 'function', className: 'Document', methodName: 'createExpression', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Document.prototype["createExpression"]);
+
+Document.prototype["querySelectorAll"] = function querySelectorAll() {
+    var res = mframe.memory.jsdom.document["querySelectorAll"](...arguments);
+    mframe.log({ flag: 'function', className: 'Document', methodName: 'querySelectorAll', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Document.prototype["querySelectorAll"]);
+
+Document.prototype["createTextNode"] = function createTextNode() {
+    var res = mframe.memory.htmlelements['text'](...arguments);
+    res.jsdomMemory = mframe.memory.jsdom.document.createTextNode(...arguments)
+    mframe.log({ flag: 'function', className: 'Document', methodName: 'createTextNode', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Document.prototype["createTextNode"]);
+
+Document.prototype["querySelector"] = function querySelector() {
+    var res = mframe.memory.jsdom.document.querySelector(...arguments);
+    
+
+    mframe.log({ flag: 'function', className: 'Document', methodName: 'querySelector', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Document.prototype["querySelector"]);
+
+Document.prototype["createEvent"] = function createEvent() {
+    var res = mframe.memory.event();
+    res.jsdomMemory =mframe.proxy( mframe.memory.jsdom.document['createEvent'](...arguments));
+    res = mframe.proxy(res);
+    mframe.log({ flag: 'function', className: 'Document', methodName: 'createEvent', inputVal: arguments, res: res });
+    return res;
+}; mframe.safefunction(Document.prototype["createEvent"]);
+//==============↑↑Function END↑↑====================
+///////////////////////////////////////////////////
+document.location = location;
+
+///////////////////////////////////////////////////
+
+document = mframe.proxy(document) // 代理
+
+
+var curMemoryArea = mframe.memory.HTMLCollection = {};
+var HTMLCollection = function () {
+    throw new TypeError('Illegal constructor')
+}; mframe.safefunction(HTMLCollection);
+
+// 迭代器
+mframe.memory.HTMLCollection.iterator = function values() {
+    return {
+        next: function () {
+            if (this.index_ == undefined) {
+                this.index_ = 0;
+            }
+            var tmp = this.self_[this.index_];
+            this.index_ += 1;
+            return { value: tmp, done: tmp == undefined };
+        },
+        self_: this
+    }
+}; mframe.safefunction(mframe.memory.HTMLCollection.iterator);
+
+Object.defineProperties(HTMLCollection.prototype, {
+    [Symbol.toStringTag]: {
+        value: "HTMLCollection",
+        configurable: true,
+    },
+    [Symbol.iterator]: {
+        value: mframe.memory.HTMLCollection.iterator,
+        configurable: true
+    },
+});
+////////////////////////////////////////////////////////// 2025年4月11日 更新
+var curMemoryArea = mframe.memory.HTMLCollection = {};
+
+//============== Constant START ==================
+//==============↑↑Constant END↑↑==================
+
+//%%%%%%% Attribute START %%%%%
+// length
+curMemoryArea.length_getter = function length() { return this._length; }; mframe.safefunction(curMemoryArea.length_getter);
+Object.defineProperty(curMemoryArea.length_getter, "name", { value: "get length", configurable: true, });
+Object.defineProperty(HTMLCollection.prototype, "length", { get: curMemoryArea.length_getter, enumerable: true, configurable: true, });
+curMemoryArea.length_smart_getter = function length() {
+    if (mframe.memory.jsdom.document) { return this.jsdomMemory.length; }
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    return this._length !== undefined ? this._length : ''; // 返回实例属性或默认值
+}; mframe.safefunction(curMemoryArea.length_smart_getter);
+HTMLCollection.prototype.__defineGetter__("length", curMemoryArea.length_smart_getter);
+
+//%%%%%%%↑↑Attribute END↑↑%%%%%
+
+//============== Function START ====================
+HTMLCollection.prototype["item"] = function item() { debugger; }; mframe.safefunction(HTMLCollection.prototype["item"]);
+HTMLCollection.prototype["namedItem"] = function namedItem() { debugger; }; mframe.safefunction(HTMLCollection.prototype["namedItem"]);
+//==============↑↑Function END↑↑====================
+//////////////////////////////////////////////////////////
+
+/**
+ * 创建并返回一个代理后的HTMLCollection数组，其中每个DOM元素都通过mframe.proxy进行了代理。
+ * @param {jsdom.HTMLCollection} initCollection 通过jsdom.document.getElementByXXX()获取的HTMLCollection。
+ * @returns {Array} 返回代理后的DOM元素数组。
+ * @description
+ * 注意一：initCollection中的对象都是jsdom的对象，没有原型链。因此需要通过document.createElement(i.tagName)创建后再放入collection中。
+ * 注意二：需要同时更新原型存在的属性和原型不存在的属性，例如 `<script type="text/javascript" r='m'>` 中的 `type`（原型有的属性）和 `r`（原型没有的属性）。
+ * @example
+ * var elements = mframe.memory.jsdom.document.getElementsByTagName(name); // elements是jsdom的HTMLCollection
+ * return mframe.memory.htmlelements['collection'](elements);              // 展示如何调用
+ * @private
+ * 不能在document.createElement时调用，因为这不是页面的任何一个标签，只能算是DOM的中间件。
+ */
+mframe.memory.htmlelements['collection'] = function (initCollection) {
+    // 暂时关闭输出打印,避免影响判断(下面要用set进行数据转移)
+    mframe.console.mute();
+    // 创建HTMLCollection实例
+    var collection = new (function () { });
+    // 代理数组中的元素+将数组中原jsdom的数据,变为我们有原型链仿照的数据
+    for (let i = 0; i < initCollection.length; i++) {
+        // 创建 具有原型链的数据
+        collection[i] = document.createElement(initCollection[i].tagName);
+        // 1.原型没有的属性也要有
+        for (var attr of initCollection[i].attributes) {
+            collection[i][attr.name] = attr.value;
+            collection[i].setAttribute(attr.name, attr.value); // 都要设置, !!!! 巨坑,找了2天
+        }
+        // 2.原型有的属性要有
+        for (var name of Object.getOwnPropertyNames(collection[i].__proto__)) {
+            if (name === "constructor" || typeof initCollection[i][name] === 'function' || name === '__proto__')
+                continue;
+            collection[i].setAttribute(name, initCollection[i][name]); // TODO 其实如果是DOM元素,都需要这一行,后面踩坑再说吧 2025年4月11日23:46:54
+            collection[i][name] = initCollection[i][name];
+        }
+        // 覆写原来的jsdom域
+        collection[i].jsdomMemory = initCollection[i];
+    }
+    collection['length'] = initCollection.length;
+    // HTMLCollection原型链继承
+    collection.__proto__ = HTMLCollection.prototype;
+    mframe.console.unmute(); // 恢复原始console对象
+    // 二次代理
+    for (let i = 0; i < collection.length; i++) {
+        collection[i] = mframe.proxy(collection[i]);
+    }
+
+    return mframe.proxy(collection);
+}
+// 2.防止console.log被篡改
+const consoleGuard=(()=>{const virginConsole=Object.create(Object.getPrototypeOf(console));Object.assign(virginConsole,console);let isMuted=false;const mute=()=>isMuted=true;const unmute=()=>isMuted=false;const handler={get(target,prop){if(isMuted&&['log','warn','error'].includes(prop)){return()=>{}}return Reflect.get(target,prop)},set(target,prop,value){if(prop==='log'){return true}return Reflect.set(target,prop,value)}};return{proxy:new Proxy(console,handler),controller:{mute,unmute}}})();mframe.console=consoleGuard.controller;Object.defineProperty(global,'console',{value:consoleGuard.proxy,writable:false,configurable:false});
+// 1.用于在Node环境下代理crypto
+Object.defineProperty(window, 'crypto', { get: function () {return require('crypto');}});
+//=====================================以下为运行代码===============================
+//=====================================以下为运行代码===============================
+//=====================================以下为运行代码===============================
+//=====================================以下为运行代码===============================
+debugger;
+window.setInterval = function() {}
+window.setTimeout = function() {}
+localStorage['WQ_gather_wgl1']='{"v":"dee3cb94c529ac524a0996146a0176b8","t":1745505957131,"e":31536000}'; // TODO
+localStorage['WQ_gather_cv1']='{"v":"bb6feb71f0a492c0860d44d557d509be","t":1745505957131,"e":31536000}'; // TODO
+localStorage['WQ_dy1_tk_algo']='{"zxiapxxd32j332j4":{"586ae":{"v":"eyJ0ayI6InRrMDN3OTg3NTFiYzAxOG5ubU1KYjM5ZzhQUkFLYWJPRTRvQXl2T2JodHNTZFo2SDJOa3ZnWVZnQ0hCRnk5cjc5Sk5BUjJaSGJLWEtmaFdESXJmRlFyRHJPQXpCIiwiYWxnbyI6ImZ1bmN0aW9uIHRlc3QodGssZnAsdHMsYWksYWxnbyl7dmFyIHJkPSdxTVN4eVgweDY0THMnO3ZhciBzdHI9XCJcIi5jb25jYXQodGspLmNvbmNhdChmcCkuY29uY2F0KHRzKS5jb25jYXQoYWkpLmNvbmNhdChyZCk7cmV0dXJuIGFsZ28uTUQ1KHN0cik7fSJ9","e":86400,"t":1745502324227}},"z9pzxgwd9ppap0h1":{"73806":{"v":"eyJ0ayI6InRrMDN3YjM3OTFjNjgxOG40bHJFYWdrRWtnOTl4c01iaGMyd2JyMnNtcDdhY2swLUU0R1BaRlotX0hadzJ2SWFUSUZTUEE0c182YWpoNWlxUk9UdnNOV3BnYjNoIiwiYWxnbyI6ImZ1bmN0aW9uIHRlc3QodGssZnAsdHMsYWksYWxnbyl7dmFyIHJkPSc4TjdhWGV4cEFqMVonO3ZhciBzdHI9XCJcIi5jb25jYXQodGspLmNvbmNhdChmcCkuY29uY2F0KHRzKS5jb25jYXQoYWkpLmNvbmNhdChyZCk7cmV0dXJuIGFsZ28uTUQ1KHN0cik7fSJ9","e":86400,"t":1745502324228}}}';
+localStorage['WQ_dy1_vk']='{"5.1":{"73806":{"e":31536000,"v":"z9pzxgwd9ppap0h1","t":1743865011781},"586ae":{"e":31536000,"v":"zxiapxxd32j332j4","t":1743865011843}}}';
+document.cookie=
+'3AB9D23F7A4B3C9B=GF2ZD3YNKWD4NOS7Z6GBS3KIYGBO7KGRUUOUG3HM6ELKJ5LMR6EEYJOIUFBZH6OZ7M2A7GDQBRRWCMKPAOGAEEGEGM; __jdu=17438650117211460272176; shshshfpa=71847cb2-b188-122b-32c4-cb8ce8c8582a-1743859655; shshshfpx=71847cb2-b188-122b-32c4-cb8ce8c8582a-1743859655; __jdv=209449046|direct|-|none|-|1745502322507; __jda=209449046.17438650117211460272176.1743865012.1743865012.1745502323.2; __jdc=209449046; 3AB9D23F7A4B3CSS=jdd03GF2ZD3YNKWD4NOS7Z6GBS3KIYGBO7KGRUUOUG3HM6ELKJ5LMR6EEYJOIUFBZH6OZ7M2A7GDQBRRWCMKPAOGAEEGEGMAAAAMWNASICZIAAAAADLEO5EP4AMDAXMX; sidebarStatus=0; shshshfpb=BApXS6g0sa_NActKiQ8_8n4ANovtTDunwBgHEkXpp9xJ1MnsU7IG2; sdtoken=AAbEsBpEIOVjqTAKCQtvQu17jGoKkK9MsRAcP32uNrdhfeV8EYs-WWOh2WdJGE_PDGPoQ1-_rW31jvtL8tDAL5TWqsh2c7h07hLXBO1MY_-Sp4YNfXfirpoTxEBrhuU'
+// window.__JDWEBSIGNHELPER_$DATA__={}
+/////////////////////////////////////
+var ParamsSign=function(){'use strict';function _4z6qp(s){var o='';for(var i=0;i<s.length;){var c=s.charCodeAt(i++);if(c>63)o+=String.fromCharCode(c^27);else if(c==35)o+=s.charAt(i++);else o+=String.fromCharCode(c);}return o;}var _1wnqp=["enc",_4z6qp("Norwh"),_4z6qp("}itvLti#dZiizb"),_4z6qp("cA|PR"),_4z6qp("xzww"),_4z6qp("kitotobk~"),_4z6qp("knhs"),_4z6qp("zkkwb"),_4z6qp("otLti#dZiizb"),_4z6qp("}tivzo"),_4z6qp("bwwVp"),_4z6qp("kzih~"),_4z6qp("D~_zoz"),_4z6qp("D#dzoz"),_4z6qp("xzww"),_4z6qp("Du_zozYbo~h"),_4z6qp("hr|Ybo~h"),_4z6qp("xzww"),_4z6qp("va#dBW"),_4z6qp("JXhKi"),_4z6qp("}wtti"),_4z6qp("qikQr"),_4z6qp("xsziXt#d~Zo"),_4z6qp("knhs"),_4z6qp("xsziZo"),_4z6qp("YCNtB"),_4z6qp("qtru"),"",_4z6qp("xzww"),_4z6qp("hnyhoi"),_4z6qp("xzww"),_4z6qp("Dh~_zoz1"),"enc",_4z6qp("Norwh"),_4z6qp("}itvLti#dZiizb"),_4z6qp("xzww"),_4z6qp("kitotobk~"),_4z6qp("knhs"),_4z6qp("zkkwb"),_4z6qp("cknYz"),_4z6qp("vJuUt"),_4z6qp("HSAMX"),_4z6qp("otLti#dZiizb"),_4z6qp("hoiru|r}b1"),_4z6qp("hkwro"),"",_4z6qp("qtru"),_4z6qp("ruro"),_4z6qp("Dszhs~i"),_4z6qp("kzih~"),_4z6qp("~P~b"),_4z6qp("ywtxpHra~"),_4z6qp("hr|Ybo~h"),_4z6qp("}ruzwra~"),_4z6qp("xwzvk"),_4z6qp("xwtu~"),_4z6qp("DtP~b"),_4z6qp("DrP~b"),_4z6qp("lti#dh"),_4z6qp("i~h~o"),_4z6qp("hkwro"),"",_4z6qp("i}WJv"),_4z6qp("xzww"),"pop",_4z6qp("xsziXt#d~Zo"),_4z6qp("}itvXsziXt#d~"),_4z6qp("knhs"),_4z6qp("qtru"),_4z6qp("izu#dtv"),_4z6qp("hra~"),"num",_4z6qp("CnTUB"),_4z6qp("hkwro"),"",_4z6qp("xzww"),_4z6qp("knhs"),_4z6qp("mL#dTy"),"pop",_4z6qp("otHoiru|"),_4z6qp("qtru"),_4z6qp("xzww"),_4z6qp("i~kwzx~"),"",_4z6qp("Au]xo"),_4z6qp("izu#dtv"),_4z6qp("knhs"),_4z6qp("VNico"),"","tk",_4z6qp("vz|rx"),"05",_4z6qp("m~ihrtu"),"w",_4z6qp("kwzo}tiv"),"41",_4z6qp("~ckri~h"),"l",_4z6qp("kit#dnx~i"),_4z6qp("~cki"),_4z6qp("xrks~i"),_4z6qp("otHoiru|"),_4z6qp("hnyhoi"),_4z6qp("z#dw~i32"),_4z6qp("BbCXY"),_4z6qp("NKOuX"),_4z6qp("RqxrQ"),_4z6qp("hkwro"),"|","0","1","2","3","4","5",_4z6qp("~uxt#d~"),"","now","74",_4z6qp("hnyhoi"),_4z6qp("kzih~"),_4z6qp("kitotobk~"),_4z6qp("}ti^zxs"),_4z6qp("xzww"),"set",_4z6qp("otLti#dZiizb"),_4z6qp("otHoiru|"),_4z6qp("hnyhoi"),_4z6qp("xsziXt#d~Zo"),_4z6qp("xsziXt#d~Zo"),_4z6qp("xsziXt#d~Zo"),"1","2","3","+","x",_4z6qp("}wtti"),_4z6qp("izu#dtv"),"",_4z6qp("x_YjT"),_4z6qp("hnyhoi"),_4z6qp("kzih~"),_4z6qp("hoiru|r}b"),_4z6qp("i~kwzx~"),"\\+","g","-","\\/","g","_","=","g",_4z6qp("}wtti"),"pow",_4z6qp("h~oNruo32"),_4z6qp("h~oRuo16"),_4z6qp("uzmr|zoti"),_4z6qp("l~y#dirm~i"),"wd",_4z6qp("wzu|nz|~h"),"l",_4z6qp("kwn|ruh"),"ls",_4z6qp("|#GVCT"),_4z6qp("ovMJI"),_4z6qp("#dtxnv~uo"),_4z6qp("#d~~WX"),_4z6qp("nh~iZ|~uo"),_4z6qp("v}#Glv"),_4z6qp("xzww"),_4z6qp("xzwwKszuotv"),_4z6qp("Dkszuotv"),"wk","bu1",_4z6qp("~QCBm"),_4z6qp("s~z#d"),_4z6qp("xsrw#d^w~v~uoXtnuo"),"bu3",_4z6qp("nu#d~}ru~#d"),_4z6qp("i~w~zh~"),_4z6qp("uzv~"),_4z6qp("m~ihrtuh"),_4z6qp("ut#d~"),_4z6qp("ZAxp}"),_4z6qp("ZXotR"),_4z6qp("m~ihrtu"),_4z6qp("#d~ut"),_4z6qp("aaayU"),"get",_4z6qp("otHoiru|"),"bu4",_4z6qp("y#GLv_"),_4z6qp("jn~ibH~w~xoti"),_4z6qp("LKUp_"),_4z6qp("#G}pXV"),_4z6qp("hozxp"),"dp","bu5",_4z6qp("yt#db"),_4z6qp("y~}|Q"),"bu6",_4z6qp("i~kwzx~"),"\\s","g","","\\s","g",_4z6qp("xi~zo~^w~v~uo"),"bu7","all",_4z6qp("DDkitotDD"),_4z6qp("kitotobk~"),"bu8",_4z6qp("izu#dtv"),_4z6qp("|~oOrv~atu~T}}h~o"),_4z6qp("l~oVr"),_4z6qp("yn12"),"",_4z6qp("xtuxzo"),_4z6qp("xzww"),_4z6qp("hAvIN"),_4z6qp("hoiru|r}b"),_4z6qp("kzih~"),_4z6qp("c#d_tN"),_4z6qp("ZRhsX"),_4z6qp("lUCjw"),_4z6qp("baTlL"),_4z6qp("i~kwzx~"),"-","g","+","_","g","/",_4z6qp("vzoxs"),_4z6qp("E@123F(@c+F@123F)+"),_4z6qp("hkwro"),_4z6qp("D#d~}znwoZw|tirosv"),_4z6qp("}ti^zxs"),_4z6qp("D#d~yn|"),_4z6qp("NKOuX"),"+","x",_4z6qp("xzww"),"",_4z6qp("xtuxzo"),_4z6qp("oRHsw"),_4z6qp("D$zov"),"",_4z6qp("Dotp~u"),_4z6qp("xtuxzo"),_4z6qp("DD|~uP~b"),_4z6qp("DrhUtivzw"),"",_4z6qp("xtuxzo"),_4z6qp("D}ru|~ikiruo"),_4z6qp("DzkkR#d"),_4z6qp("DrhUtivzw"),_4z6qp("Dotp~u"),_4z6qp("D#d~}znwoOtp~u"),_4z6qp("Dm~ihrtu"),_4z6qp("qtru"),";",_4z6qp("xzww"),_4z6qp("qtru"),"&",_4z6qp("otHoiru|"),_4z6qp("D#d~yn|"),_4z6qp("xtuxzo"),"key",":",_4z6qp("mzwn~"),_4z6qp("hkwro"),"|","0","1","2","3","4","5",":","&",_4z6qp("IBRAu"),_4z6qp("qtru"),"",_4z6qp("NnpVQ"),_4z6qp("D#d~yn|"),_4z6qp("AwhCN"),_4z6qp("xtuxzo"),_4z6qp("xzww"),_4z6qp("kwPwy"),_4z6qp("otHoiru|"),"key","key",":",_4z6qp("mzwn~"),"","now",_4z6qp("LPXNo"),_4z6qp("^ZuBL"),"08",_4z6qp("DrhUtivzw"),_4z6qp("DD|~uP~b"),_4z6qp("Dotp~u"),_4z6qp("D}ru|~ikiruo"),_4z6qp("DzkkR#d"),_4z6qp("Dzw|th"),_4z6qp("otHoiru|"),_4z6qp("ZRhsX"),_4z6qp("D#d~}znwoOtp~u"),_4z6qp("D$|#dp"),_4z6qp("D$|h"),_4z6qp("D$|h#d"),_4z6qp("xzww"),_4z6qp("qtru"),",",_4z6qp("D$|hk"),_4z6qp("D#d~yn|"),"key",_4z6qp("hr|uHoi"),_4z6qp("Dhop"),_4z6qp("Dho~"),_4z6qp("s5ho"),_4z6qp("DtuHr|u"),_4z6qp("xt#d~"),_4z6qp("v~hhz|~"),_4z6qp("cRi_q"),"key",_4z6qp("hkwro"),"|","0","1","2","3","4",_4z6qp("D#d~yn|"),_4z6qp("xtuxzo"),_4z6qp("~uxt#d~"),_4z6qp("kzih~"),_4z6qp("SRBHr"),_4z6qp("D}ru|~ikiruo"),"fp",_4z6qp("rbA~]"),"bu4","now",_4z6qp("D$xkh"),_4z6qp("D$i#dh"),_4z6qp("D$xwo"),_4z6qp("D$vh"),_4z6qp("Wuj_P"),_4z6qp("D#d~yn|"),_4z6qp("xtuxzo"),"ms",_4z6qp("rxxT~")];var _3h9qp=Function.prototype.call;var _2t8qp=[94,69,95,29,0,29,1,12,2,84,25,38,69,57,12,3,91,21,0,53,12,4,92,25,15,69,21,0,17,69,51,-974,51,-6162,33,51,7139,33,22,30,49,96,5,22,30,62,9,51,-6106,51,-4149,33,51,10258,33,37,69,78,29,5,29,6,12,7,13,32,7,91,7,22,25,12,4,22,51,1763,51,1602,33,51,-3365,33,23,89,44,25,12,4,94,25,53,69,78,29,5,29,6,12,7,13,57,12,3,91,22,53,12,4,22,23,22,30,89,53,69,95,29,0,29,1,12,8,13,25,72,69,75,12,9,18,25,52,42,67,45,9,41,9,62,34,0,49,8,76,646,23,83,37,42,58,11,19,34,1,33,34,2,83,23,23,36,9,1,8,35,3,89,23,34,4,41,83,42,9,33,51,87,5,83,87,6,31,90,5,9,43,92,35,73,68,93,0,73,18,49,1,11,14,61,62,-6681,62,-3712,31,62,10404,31,27,2,62,-3033,62,3420,31,62,-379,31,69,2,15,41,0,24,2,78,21,1,77,61,54,87,96,34,2,92,0,93,2,62,-4759,62,-6678,31,62,11437,31,10,2,30,103,62,8816,62,-3841,31,62,-4975,31,1,2,51,42,11,48,2,51,54,62,9241,62,2611,31,62,-11851,31,26,60,56,9,42,77,61,54,86,31,30,2,42,72,2,62,-2428,62,-175,31,62,2603,31,33,2,30,26,59,80,31,49,2,15,21,2,7,77,61,43,66,9,79,77,21,3,7,96,31,1,2,8,2,80,13,40,12,-29,79,55,11,1,2,91,21,4,68,21,5,79,68,61,86,96,96,2,14,2,51,54,40,12,-106,15,21,6,77,91,21,7,70,8,96,43,57,90,68,11,97,30,-6974,30,504,43,30,6470,43,54,21,71,86,92,0,71,14,21,30,579,86,16,47,22,15,71,92,1,30,-9706,30,-1030,43,30,10746,43,86,81,14,65,21,71,86,92,0,71,14,21,30,642,86,16,13,74,21,54,10,51,9271,51,-3255,47,51,-6016,47,74,45,83,76,44,0,83,9,45,51,579,76,82,62,77,4,83,38,6,29,44,1,83,76,1,95,48,82,0,82,1,79,2,14,90,65,86,95,34,68,0,90,79,3,91,90,85,86,68,0,58,86,60,82,4,82,5,79,6,96,84,71,86,47,3,8,79,7,96,74,47,-8110,47,-388,2,47,8501,2,71,98,11,86,47,4261,47,8980,2,47,-13241,2,40,86,62,9,96,79,5,7,90,86,44,86,46,7,67,3,-12,68,0,45,86,8,79,8,96,74,47,8652,47,-558,2,47,-8093,2,71,42,86,62,47,60,82,4,82,5,79,6,35,8,79,9,95,96,71,79,3,96,64,47,2,98,64,47,9124,47,-5223,2,47,-3900,2,2,51,71,86,64,47,627,47,-2282,2,47,1658,2,98,42,86,64,47,4602,47,-5790,2,47,1188,2,9,3,-57,48,82,0,82,1,79,10,35,90,57,86,93,79,11,50,47,2235,47,-1570,2,47,-665,2,71,79,12,55,13,90,69,86,68,0,77,86,47,-5114,47,504,2,47,4610,2,97,86,62,52,22,86,60,82,4,82,5,79,6,39,94,34,95,34,89,90,79,3,89,16,16,47,4924,47,-3192,2,47,-1728,2,2,51,12,90,79,3,22,90,71,86,16,47,-4940,47,-3532,2,47,8476,2,2,97,86,16,89,74,67,3,-56,39,79,14,55,13,90,75,92,17,74,12,44,85,22,0,55,32,30,1,16,12,38,27,92,646,98,15,58,33,72,11,70,47,2,44,47,3,15,98,98,83,12,85,22,4,29,12,92,-9010,92,6571,99,92,2443,99,84,54,75,12,15,22,5,53,8,72,7,85,47,6,15,98,83,12,15,47,7,80,12,44,15,47,8,80,30,9,73,12,44,15,47,8,80,30,10,4,12,20,22,11,79,12,64,22,11,13,12,92,-5685,92,6785,99,92,-1100,99,97,12,62,33,23,86,81,41,92,1414134341,92,1511948462,99,92,-1376525975,99,65,18,12,60,86,81,41,92,1479577814,92,-623930390,99,92,53875062,99,65,18,12,7,12,86,84,71,77,-36,20,64,53,30,5,30,5,12,44,47,12,80,12,46,75,30,0,61,1,70,68,66,34,30,2,92,76,80,30,3,76,86,-1738,86,9972,5,86,-8234,5,86,-1930,86,-820,5,86,2755,5,43,21,66,34,30,2,92,76,80,30,3,76,86,1177,86,6345,5,86,-7517,5,80,95,66,88,0,38,66,16,40,10,30,4,51,30,5,86,5524,86,3847,5,86,-9371,5,70,18,66,55,30,6,86,-5829,86,4735,5,86,1252,5,63,82,70,36,66,91,30,7,11,70,66,10,98,86,5673,86,-4526,5,86,-1147,5,74,94,-51,89,44,91,70,30,3,91,31,80,38,30,8,61,1,70,96,56,82,83,71,76,19,23,535,65,31,71,81,7,6,23,3130,23,-1374,91,23,-1753,91,85,51,71,23,-7246,23,-6513,91,23,13769,91,80,21,0,34,72,23,2363,23,-9170,91,23,6807,91,45,46,71,58,7,6,99,85,57,71,15,19,44,60,95,1,39,95,2,65,99,91,41,21,3,15,44,23,-7276,23,-4731,91,23,12020,91,60,59,23,-2669,23,-2198,91,23,4868,91,59,95,1,39,95,2,85,91,60,91,21,4,37,5,65,10,71,9,19,1,65,21,6,1,23,-5831,23,9267,91,23,-3436,91,23,-7490,23,-8941,91,23,16440,91,89,68,71,9,19,1,65,21,6,1,23,9,85,4,71,67,0,36,71,90,38,63,21,7,41,21,8,23,3143,23,-1024,91,23,-2084,91,29,19,56,21,9,34,23,36,85,85,21,10,23,5591,23,-2258,91,23,-3297,91,65,65,71,56,22,23,-9785,23,-5190,91,23,14975,91,78,55,-49,97,19,63,65,21,6,63,47,85,36,21,11,37,5,65,25,35,87,374,87,-9468,1,87,9094,1,72,92,42,37,87,8222,87,-8903,1,87,682,1,96,55,82,28,6,76,0,28,15,22,77,99,24,94,11,28,76,1,15,22,77,17,2,99,75,92,31,92,22,15,7,4,2,-41,28,67,79,10,0,26,68,41,40,69,68,56,-5340,56,-275,20,56,5615,20,79,68,29,43,41,60,3,81,68,12,47,0,49,47,1,21,95,75,30,22,35,17,85,47,2,27,76,68,56,-910,56,-5375,20,56,6285,20,5,32,72,3,29,14,78,68,87,68,12,47,3,60,41,40,75,70,-50,31,4,51,68,56,-3847,56,-737,20,56,4584,20,11,68,29,49,49,47,1,21,85,40,90,61,63,56,-9420,56,-126,20,56,9546,20,94,67,68,13,85,53,3,20,51,68,85,53,85,85,40,90,61,56,1547,56,5708,20,56,-7254,20,61,3,84,68,14,68,90,85,40,22,70,-53,13,66,80,82,45,24,77,45,94,44,0,79,1,45,94,44,2,79,3,45,94,44,4,79,5,45,94,44,6,79,7,45,94,44,8,79,9,45,94,98,88,87,79,10,45,94,56,88,73,75,79,11,45,94,94,67,1,94,67,3,7,94,67,5,7,94,67,7,7,94,67,9,7,94,67,10,7,94,67,11,7,18,45,74,19,82,75,48,12,87,48,13,63,-9284,63,-2543,7,63,11827,7,63,7020,63,8789,7,63,-15801,7,13,79,14,45,49,48,15,49,48,16,49,48,17,94,67,1,94,67,3,13,94,67,5,7,94,67,14,7,94,67,7,7,94,67,9,13,94,67,10,7,94,67,11,13,69,26,68,48,80,14,65,92,450,3,16,0,56,1,3,71,80,92,-580,92,-7360,73,92,7940,73,47,80,77,141,75,40,9,36,134,6,2,14,3,20,4,71,5,73,6,121,7,130,42,16,8,93,3,91,56,9,5,80,12,16,10,86,43,80,56,11,64,80,62,65,92,12,3,16,12,92,2303,92,1636,73,92,-3939,73,92,-4325,92,7353,73,92,-3016,73,83,2,80,27,61,11,21,78,25,19,74,80,77,-76,77,-78,7,55,65,23,3,73,5,80,7,55,65,78,3,73,5,80,7,55,65,25,3,73,5,80,7,21,89,80,18,65,31,65,44,3,3,73,5,80,7,55,65,11,3,73,5,80,77,-126,81,16,13,7,3,76,80,77,-135,44,80,77,-139,77,7,45,0,33,33,67,-145,32,20,98,11,16,31,54,33,44,1,0,1,1,26,2,79,46,7,33,19,87,96,14,52,33,20,98,11,-3971,11,7147,71,11,-3174,71,31,24,33,44,1,0,1,1,26,2,49,69,7,33,20,98,11,8435,11,-2789,71,11,-5634,71,31,16,33,44,1,0,1,1,26,2,48,62,7,33,20,98,11,-6649,11,-4668,71,11,11355,71,31,23,33,5,26,3,49,14,33,5,26,3,48,11,-8170,11,-2742,71,11,10914,71,7,33,5,26,3,82,11,-9446,11,6299,71,11,3161,71,7,33,5,26,3,79,11,3546,11,-747,71,11,-2777,71,7,33,89,26,4,5,14,90,33,60,87,45,14,26,5,78,26,6,11,-7892,11,-7074,71,11,14966,71,11,-3233,11,8268,71,11,-5027,71,7,34,4,36,60,18,25,0,60,17,97,88,58,93,60,72,95,0,60,44,57,23,35,33,35,54,27,0,35,41,32,97,67,4,46,61,738,61,9589,62,61,-10295,62,90,70,15,57,3,13,85,0,88,32,85,1,88,61,2,85,2,88,39,15,57,2,13,85,3,88,32,85,4,88,21,15,61,8837,61,6492,62,61,-15327,62,81,45,5,61,932,61,-2173,62,61,1245,62,81,45,6,30,98,90,62,53,15,85,7,97,15,61,-6797,61,-4209,62,61,11006,62,89,15,91,59,99,64,81,45,5,26,45,8,61,532,61,-9444,62,61,8915,62,81,45,6,30,31,90,76,62,97,15,55,1,32,44,67,82,23,99,3,81,45,5,61,3090,61,3390,62,61,-6478,62,81,45,6,30,98,90,76,62,97,15,77,15,55,1,67,59,-62,99,48,61,6498,61,-9487,62,61,2998,62,67,82,27,99,58,45,9,61,-4840,61,-4961,62,61,9801,62,61,-4342,61,4483,62,61,-132,62,99,48,44,31,62,97,15,23,45,10,99,90,94,15,25,45,11,28,90,63,15,12,45,12,24,13,85,15,31,45,12,24,16,85,18,31,45,12,24,19,85,7,31,87,12,15,18,20,22,12,17,29,85,78,0,81,85,78,1,56,-6647,56,-2708,40,56,9357,40,56,1215,56,1240,40,56,-2423,40,48,58,84,24,29,81,85,78,1,56,-5450,56,-713,40,56,6165,40,56,-269,56,-5022,40,56,5323,40,48,77,9,29,65,22,56,-4547,56,-439,40,56,4994,40,87,74,29,83,22,35,87,57,29,6,1,26,67,78,2,56,-9432,56,-8627,40,56,18059,40,42,6,3,29,67,78,2,56,4,5,6,3,53,30,67,78,2,56,-3290,56,-9196,40,56,12486,40,5,6,3,29,67,78,2,56,9362,56,5986,40,56,-15344,40,42,6,3,29,68,22,35,87,38,44,3,73,60,-9425,60,9324,85,60,103,85,99,28,22,76,73,6,99,33,0,60,2483,60,-8548,85,60,6065,85,60,-8815,60,-7171,85,60,16242,85,60,-9209,60,4550,85,60,4659,85,57,35,22,60,7283,60,-4468,85,60,-2559,85,98,73,6,99,60,-1084,60,5566,85,60,-4482,85,53,55,87,39,55,3,71,94,71,44,71,62,71,37,71,61,71,36,71,68,71,20,97,71,17,90,39,0,39,1,83,4,86,7,9,79,-9446,79,7796,81,79,1650,81,40,2,71,17,95,39,3,72,14,79,3035,79,-2710,81,79,-325,81,95,39,3,64,31,83,11,79,-8642,79,-53,81,79,8695,81,7,8,79,-1771,86,81,79,1771,81,40,4,71,17,28,95,39,5,21,41,27,12,79,-5501,79,2646,81,79,2855,81,63,94,41,83,12,79,-8327,79,2794,81,79,5533,81,63,7,3,94,64,27,3,79,-1,40,6,71,79,-3414,79,-166,81,79,3580,81,38,71,58,28,79,593,46,90,26,27,15,18,39,7,90,26,27,8,58,28,79,516,46,90,26,72,12,12,79,6555,79,7983,81,79,-14537,81,50,38,71,18,45,8,58,28,79,501,46,90,39,9,23,27,8,18,39,10,90,39,9,26,72,12,12,79,3483,79,1675,81,79,-5156,81,50,38,71,95,39,11,72,36,18,45,12,79,-1,49,28,95,39,11,11,46,45,13,44,58,28,79,612,46,23,23,72,12,12,79,9918,79,-4996,81,79,-4918,81,50,38,71,95,39,11,72,40,79,-2932,79,8051,81,79,-5118,81,92,49,28,95,39,11,89,46,45,13,62,58,28,79,648,46,23,31,72,12,12,79,8208,79,-309,81,79,-7891,81,50,38,71,90,39,14,27,4,90,39,15,72,12,12,79,-1536,79,2812,81,79,-1260,81,50,38,71,90,58,28,79,325,46,14,72,12,12,79,-8751,79,5729,81,79,3054,81,50,38,71,17,12,40,16,71,17,48,40,17,71,17,18,45,18,28,69,39,19,10,23,27,12,79,2144,79,9543,81,79,-11687,81,63,37,41,83,12,79,-6435,79,8985,81,79,-2550,81,63,7,4,37,39,20,27,10,79,633,79,-949,81,79,317,81,92,40,21,71,79,-9475,79,-502,81,79,9977,81,77,71,33,22,75,85,72,19,28,22,39,23,85,72,12,58,28,79,342,46,22,39,23,39,24,41,74,71,33,22,75,85,72,15,28,22,39,25,85,72,8,28,22,39,25,39,26,85,54,71,15,27,2,43,72,12,99,79,-4066,79,-2915,81,79,6982,81,50,77,71,18,45,27,33,22,34,23,72,47,18,45,28,79,-3981,79,9250,81,79,-5269,81,63,6,39,29,23,72,29,79,7718,79,-7151,81,79,-567,81,63,6,39,29,39,30,31,72,12,99,79,-1478,79,-9096,81,79,10576,81,50,77,71,33,22,87,85,72,12,99,79,-7858,79,371,81,79,7491,81,50,77,71,79,-3480,79,3513,81,79,-33,81,63,65,31,72,103,79,2480,79,-9145,81,79,6666,81,92,18,45,31,28,57,28,65,58,28,79,417,46,23,13,23,27,33,79,5080,79,3023,81,79,-8103,81,63,61,41,27,20,28,61,39,32,13,41,27,12,79,-389,79,-1637,81,79,2026,81,63,61,41,83,12,79,-2393,79,7571,81,79,-5178,81,63,7,18,49,28,61,45,33,67,4,46,45,13,36,58,28,79,533,46,23,41,72,12,99,79,-9519,79,-8127,81,79,17654,81,50,77,71,17,99,40,34,71,79,-5259,79,6494,81,79,-1235,81,70,71,9,28,18,39,35,20,23,39,36,30,71,47,72,37,79,1694,79,668,81,79,-2361,81,92,49,28,47,46,45,13,47,58,28,79,345,46,23,31,72,12,1,79,-7247,79,8865,81,79,-1617,81,50,70,71,47,72,40,18,45,12,79,-335,79,-3104,81,79,3440,81,92,18,45,37,49,47,23,45,13,47,18,39,38,23,23,72,12,1,79,-6415,79,-6689,81,79,13106,81,50,70,71,56,73,58,28,79,495,46,80,39,39,45,33,67,32,71,88,72,39,79,9100,79,-7425,81,79,-1674,81,92,18,45,37,49,88,23,45,13,88,58,28,79,485,46,23,31,72,12,1,79,-1496,79,-3506,81,79,5006,81,50,70,71,9,28,58,28,79,641,46,20,23,39,40,72,6,1,79,8,50,70,71,17,1,40,41,71,17,28,69,39,42,93,41,27,15,18,45,43,79,2198,79,-9575,81,79,7377,81,63,68,23,83,12,79,-917,79,-1125,81,79,2042,81,63,7,4,68,39,20,27,3,79,-1,40,44,71,79,-7471,79,6078,81,79,1393,81,82,71,5,76,27,25,5,45,33,67,76,27,18,58,28,79,643,46,5,45,33,67,45,45,96,46,33,48,23,31,72,5,60,86,50,82,71,5,72,44,5,39,33,72,39,5,39,33,39,33,72,32,5,39,33,39,33,45,33,67,72,22,58,28,79,402,46,5,39,33,39,33,45,33,67,45,45,96,49,33,48,23,41,76,72,12,60,79,-5805,79,1637,81,79,4170,81,50,82,71,90,72,12,90,39,9,72,7,69,72,4,69,39,51,76,72,12,60,79,-2993,79,224,81,79,2773,81,50,82,71,17,60,40,52,71,84,71,79,7035,79,6324,81,79,-13359,81,24,71,28,69,39,53,41,27,14,79,-1486,79,64,81,79,1422,81,63,69,39,53,41,83,11,79,-6025,79,-9273,81,79,15299,81,7,103,28,69,39,53,59,41,27,12,79,-4202,79,4031,81,79,171,81,63,84,41,83,12,79,-6994,79,-1749,81,79,8743,81,63,7,5,84,33,54,14,78,39,55,41,83,53,79,-8286,79,2785,81,79,5501,81,63,69,39,53,31,83,28,28,69,39,53,51,83,11,79,-8880,79,4972,81,79,3908,81,7,9,79,8238,79,-5597,81,79,-2637,81,7,9,79,-2869,79,9067,81,79,-6195,81,7,9,79,-5314,79,-6142,81,79,11458,81,24,71,17,8,40,56,71,17,2,28,79,-6581,79,-9430,81,79,16022,81,46,40,57,71,53,73,66,45,58,67,29,71,17,91,98,41,83,11,79,-6350,79,6095,81,79,255,81,7,14,18,45,59,98,79,9002,79,4607,81,79,-13549,81,23,40,60,71,17,35,52,27,31,57,19,57,2,57,9,57,1,57,91,68,57,80,57,55,0,94,57,95,53,95,53,95,53,95,53,55,0,73,1,69,22,49,22,73,2,1,60,46,54,22,73,2,9,90,46,65,22,73,2,2,58,46,21,22,73,2,19,25,74,3,46,16,57,76,73,4,62,73,5,69,37,29,25,73,6,35,69,46,73,2,69,52,-2119,52,9304,18,52,-7169,18,52,7716,52,-4892,18,52,-2796,18,45,11,3,55,0,56,25,73,7,35,25,74,8,46,73,2,51,53,52,585,22,25,73,9,80,87,52,6835,52,3435,18,52,-10267,18,46,52,1005,52,-2313,18,52,1312,18,7,46,18,73,10,17,11,55,13,46,73,10,17,14,55,16,46,22,22,82,57,44,73,17,26,18,22,63,57,36,37,32,36,52,-5124,52,-6065,18,52,11189,18,33,73,19,55,0,22,38,57,40,20,59,57,55,0,85,57,79,73,21,61,22,57,75,53,40,22,25,73,23,51,53,52,561,22,42,18,51,53,52,591,22,46,44,18,51,53,52,498,22,18,30,18,46,57,30,81,71,70,41,10,41,35,99,68,19,8,36,88,99,59,2,39,31,0,56,74,31,1,56,3,19,9,2,10,68,32,79,-9746,79,9235,46,79,511,46,6,94,3,68,37,41,98,80,15,41,43,99,31,3,9,4,71,93,5,19,63,19,9,2,15,68,32,25,41,36,24,73,8,54,81,62,42,2,0,6,1,31,43,99,31,3,9,4,17,19,80,19,9,2,70,12,9,6,24,28,49,38,32,87,41,98,21,12,9,6,24,17,49,38,87,41,98,10,12,9,6,24,28,49,38,87,41,86,71,11,96,85,61,12,3,97,0,95,1,96,85,87,99,15,78,73,88,39,20,589,92,63,2,87,92,81,73,52,12,2,39,95,3,96,46,1,33,12,4,46,3,33,33,10,96,85,42,95,4,96,42,80,27,64,9,12,51,0,28,1,56,46,72,75,51,0,28,1,25,2,46,72,45,2,51,0,28,1,25,3,46,72,45,3,51,0,28,1,25,4,58,5,25,5,15,3,25,6,46,72,45,4,51,0,28,1,5,46,72,45,5,51,0,28,1,25,7,46,72,45,6,51,0,28,1,32,46,72,45,7,51,0,28,1,84,46,72,45,8,51,0,28,1,96,46,72,28,8,51,9,46,37,62,39,99,80,13,80,94,92,66,75,62,0,66,71,1,62,1,84,2,75,88,80,21,92,24,7,5,24,5,75,62,3,29,75,10,80,16,92,77,4,20,92,79,92,15,529,75,62,5,7,79,92,15,479,75,1,31,75,62,0,13,48,1,1,80,48,67,55,4,36,0,29,1,61,4,36,2,61,7,59,72,39,71,44,46,93,389,53,25,0,80,1,53,33,71,93,-4544,93,3117,68,93,1427,68,83,71,74,167,49,3,55,70,160,6,2,14,3,16,4,22,5,79,6,114,7,141,74,-21,19,71,95,71,74,-27,89,76,52,31,7,38,44,46,93,351,53,84,13,80,8,84,93,2,44,46,93,351,53,84,93,3,80,9,84,93,4,44,46,93,525,53,84,93,5,80,8,84,93,6,45,96,10,84,25,11,80,12,53,54,71,74,-84,45,25,13,52,59,14,45,25,15,35,44,46,93,416,53,25,16,89,44,46,93,479,53,22,2,22,25,17,95,90,22,48,71,90,24,4,46,77,46,94,53,25,17,94,16,22,8,53,25,17,19,40,22,25,11,80,9,53,54,71,74,-146,23,46,45,25,18,1,89,22,1,68,53,25,19,20,53,30,71,74,-165,74,7,31,0,27,27,87,-171,75,11,73,1,51,28,13,525,75,65,91,0,59,32,10,51,28,13,351,75,65,91,0,59,25,9,47,38,0,10,1,93,47,38,2,93,40,90,63,50,3,52,0,65,3,19,35,1,21,95,3,12,86,97,68,23,2,67,8,3,68,35,3,11,52,4,67,47,3,81,5,22,24,42,35,6,81,7,81,8,16,81,9,81,10,26,35,11,21,62,3,52,0,65,59,24,42,68,35,12,88,81,8,67,41,13,3,42,35,14,81,13,81,8,16,81,9,91,65,3,77,28,3,80,22,114,42,35,15,80,74,67,9,3,42,35,16,80,74,67,7,3,61,86,74,17,35,17,74,96,67,35,18,52,19,17,54,3,42,35,20,53,97,11,69,6,26,84,3,70,86,81,21,87,86,85,427,17,40,86,77,80,27,22,53,27,23,64,27,24,38,27,25,49,27,26,86,85,896,85,613,39,85,-1507,39,5,39,67,3,77,64,27,24,38,27,25,49,27,26,28,3,42,35,27,77,60,27,28,87,86,85,404,17,27,29,17,3,78,56,81,7,62,3,81,13,22,16,42,35,27,77,24,27,28,68,23,30,27,29,17,59,16,42,35,27,77,36,27,28,87,86,85,305,17,27,29,17,3,78,56,2,60,38,0,69,92,88,65,14,3,93,82,537,26,29,0,54,1,26,55,14,82,9640,82,-1203,8,82,-8437,8,21,14,79,122,6,20,68,98,115,5,2,12,3,37,4,52,5,71,6,113,53,93,89,7,3,93,82,580,26,29,8,10,26,36,14,25,29,9,86,29,10,10,26,26,90,66,93,82,8394,82,-4417,8,82,-3976,8,26,38,14,79,-57,56,29,11,5,52,93,82,282,82,8523,8,82,-8803,8,67,23,14,79,-76,52,89,12,81,13,14,52,56,29,14,82,-6812,82,-4616,8,82,11428,8,52,70,15,36,7,11,82,-608,82,-2799,8,82,3407,8,79,4,52,70,15,81,15,14,79,-118,79,-120,79,7,59,0,73,73,22,-126,92,93,23,82,13,52,0,71,18,82,36,52,1,96,70,15,82,59,75,99,69,3,96,30,36,52,2,71,82,36,52,3,71,6,82,36,52,4,75,92,37,5,82,45,52,5,43,38,6,60,59,19,286,70,52,7,13,52,0,71,88,40,66,8,37,65,82,45,52,9,86,74,96,3,33,30,58];function a0dbbcbh(){var YC=['qMfKifbYB21PC2uGy29UC3rYDwn0B3i','t2jQzwn0','D2vIz2XgCde','z2v0t3DUuhjVCgvYDhLoyw1LCW','jxrLC3rdywzLrhjPDMvYjq','Bg9JywXFA2v5xW','y29TCgXLDgu','DxjS','uMvNrxHW','uhjVBwLZzq','BMDQAv90ywjPza','DZe0','CMvXDwvZDcb0B2TLBIbMywLSzwqGA2v5oG','Bwv0ywrHDge','C3LTyM9SCW','DZi0','CMv2zxjZzq','CMvWBgfJzq','tMf0AxzLignYExb0BYbTB2r1BguGy291BgqGBM90igjLihvZzwqGDg8Gz2v0ihnLy3vYzsbYyw5KB20GBNvTyMvYlG','CMvK','nhWZFdf8mNWW','BM9Kzq','q2fUBM90ihnLDcbYzwfKig9UBhKGlMXLBMD0Aa','xsSK','ChvWCgv0zwvY','ngLyBgHgyq','z2rWlxnPz24TDMfS','x3n0AW','CMvXDwvZDcbWyxjHBxmGzxjYB3iU','Dgv4Dc9QyxzHC2nYAxb0','yxbWAwq','EgLHB3DHBMDZAgvUlMnVBq','C3OUAMqUy29T','v0vcr0XFzgvIDwDFCMvUzgvYzxjFAw5MBW','BwfW','Aw5PDa','ndCZodK1v1jkrMzU','mtiYnZfTvwDYCva','A2v5CW','D3v2oG','CMvMzxjLCG','jgnKy19HC2rQzMXHC3v0B3bMAhzJwKXTy2zSxW','C3rYAw5NlxrVlxn5BwjVBc1YzwDPC3rYEq','mc4XlJK','q2fUBM90igrLBgv0zsbWCM9Wzxj0Esa','CgfYC2vYzxjYB3i','Bg9HzgvYlNv0AwXZi2XVywrsywnty3jPChrpBMnL','D2vIz2XgCa','Bwv0ywrHDgflzxK','DgLTzw91Da','yxbWBgLJyxrPB24VEc13D3CTzM9YBs11CMXLBMnVzgvK','Dg9tDhjPBMDuywC','tNvSBa','twf4Aw11BsbHBgXVD2vKigLUzgv4igv4y2vLzgvK','ChjVy2vZCW','w251BgXD','mtuUnhb4icDbCMLHBcC','ChjVCgvYDhLjC0vUDw1LCMfIBgu','zejepZm3','zgvZy3jPChrPB24','DZeZ','yNuX','qebPDgvYyxrVCG','tM/PQPC','DZiW','Bg9HzcbYywmGANmGzMfPBce','C29YDa','x19Yzxf1zxn0rgvWCYWGx19WyxjZzufSz29YAxrOBsbYzxn1Bhq6','mhWXFdr8mNW1Fdm','Dw5Zy29WywjSzxm','sw5JB3jYzwn0igLUDM9JyxrPB24','r0vu','Aw5JBhvKzxm','yw5ZAge','DZiZ','Chb6Ac5Qzc5JB20','u3rYAw5NieL0zxjHDg9Y','t2jQzwn0igfSCMvHzhKGAw5PDgLHBgL6zwq','nZeXodb3ywv3z0S','ndb3sujdvMG','ue9tva','zNvUy3rPB250B1n0CMLUzYGPE1TUyxrPDMvJB2rLxx0','Ahr0Chm6lY9NAxrODwiUy29Tl3PSB2LYB2nRl2nVCMuTANmVyMXVyI92mY4ZnI4Xl0Xjq0vou0u','C3vJy2vZCW','yxr0CMLIDxrLihzLyZiGyxr0CLzLCNrLEdT2yxj5Aw5NihzLyZiGDMfYEwLUvgv4q29VCMrPBMf0ztT1BMLMB3jTihzLyZiGDw5PzM9YBu9MzNnLDdT2B2LKig1HAw4OkxT2yxj5Aw5uzxHdB29YzgLUyxrLpwf0Dhjwzxj0zxGRDw5PzM9YBu9MzNnLDdTNBf9qB3nPDgLVBJ12zwm0kgf0Dhjwzxj0zxGSmcWXktT9','y2f1C2u','lcbYzxrYEsbUzxH0ihrPBwuU','zg9JDw1LBNrfBgvTzw50','zgLHBNrVDxnOAs5JB20','rxjYB3i','DMfSDwu','v3jVBMCGBNvTyMvYig9MihjLCgv0AxrPB25Z','C3vH','mtuYnZnwzgTMzuK','x19WCM90B19F','x19Nzw5tAwDUrgvMyxvSDcWGCgfYyw1Zu3rYoG','D2LUzg93','suvFufjpve8','BwvZC2fNzq','ieL0zxjHDg9Y','x19Yzxf1zxn0rgvWCYbMCM9TignHy2HLlcbLBMqU','m3W0Fdf8mhWY','q2fUj3qGy2fSBcbTzxrOB2qGB24G','zgLZCg9Zzq','BMfTzq','CM91BMq','x19TywTLu2LNBIWGCMvZDwX0oG','B25YzwfKExn0yxrLy2HHBMDL','CgfYyw1ZigLZig5VDcbHihbSywLUig9IAMvJDa','zw51BwvYywjSzq','qxjYyxK','zMLSztO','BgfZDeLUzgv4t2y','DgHLBG','B3DUs2v5CW','y29Uy2f0','DZe3','vw5Oyw5KBgvKihbYB21PC2uGCMvQzwn0Aw9U','uMvMBgvJDa','q2fUBM90ignVBNzLCNqGysbtEw1IB2WGDMfSDwuGDg8GysbZDhjPBMC','lcb0B2TLBJO','yxn5BMneAxnWB3nL','Bg9JywXFA2v5xZm','BgvUz3rO','AwzYyw1L','B2jZzxj2ywjSzq','Dg9mB2nHBgvtDhjPBMC','ChDKDf9Pza','y29UzMLNDxjHyMXL','mNWXFdn8nxW0Fda','CgfYyw1ZigLZigvTChr5','C2nYB2XSsw50B1zPzxDjzK5LzwrLza','yNuY','tNvTyMvY','qwDNCMvNyxrLrxjYB3i','AxnszwDPC3rLCMvKu3LTyM9S','tw96AwXSys81lJaGxcGOlIO/kvWP','yxr0CLzLCNrLEa','AgfZt3DUuhjVCgvYDhK','lcbZDg9YywDLrNa6','DxnLig5VCM1HBfrVA2vU','r2vUzxjHDg9YrNvUy3rPB24','y29UC3rYDwn0','C3rYAw5NAwz5','mJC0mJq4n0PHDNHRwa','ChjVDg90ExbL','DZe1','Dw5Oyw5KBgvKCMvQzwn0Aw9U','uhjVBwLZzsbJyw4NDcbIzsbYzxnVBhzLzcbPDhnLBgy','CgLU','Bwf0y2HbBgW','DxrZCNfWB25TBgTQAwHNzMvKy2jHwLLyv1zvvfnsuvbptK1ms0PjseDgrurdqKeTxZK4nZy1ndmYmtb6ExH3DG','Dg9tDhjPBMC','igLZig5VDcbHBIbVyMPLy3q','B3aTC3LTyM9SCW','DgHYB3C','igfZigeGChjVDg90ExbL','BNvTyMvY','lcbZAwDUzwrtDhi6','x19LC01VzhvSzq','BMv4Da','Bwf0y2HLCG','ExL5Es1nts1Kza','tM8GB25LihbYB21PC2uGCMvZB2X2zwq','BM9KztPPBNrLCM5HBc8','zxHWzxjPBwvUDgfSlxDLyMDS','lcbMCdO','Bg9HzcbYywmGANmGC3vJy2vZCYe','ns4X','EwvZ','lcbJAgvJAYbZDg9YywDLigzWoG','x19Yzxf1zxn0qwXNB3jPDgHTihjLCxvLC3qGC3vJy2vZCYeSignOzwnRig1LBw9YEsbMCdO','zgvMyxvSDa','AhrTBgzPBgu','DgvZDcbLCNi','Bg9HzgvK','x19Yzxf1zxn0qwXNB3jPDgHTihn0yxj0lG','lgTLEt0','qwnJzxnZB3jZig5VDcbZDxbWB3j0zwq','nJbWEcaNtM90igeGCMvHBcbMB250jW','jgnOCM9Tzv9HC3LUy1nJCMLWDeLUzM8','kd86psHBxJTDkIKPpYG7FcqP','zw50CMLLCW','BwfPBI5ZAwDUi19Fzgv0zwn0Aw5N','DZeW','AMf2yq','mdaW','u3LTyM9SlG','zNvSzMLSBgvK','DMfSDwvZ','sLnptG','CMDIysGWlcaWlcaYmdaSidaUnsK','tM90igvUB3vNAcbHCMD1BwvUDhm','sw52ywXPzcb0Aw1LihzHBhvL','mY4ZnI4X','y2rJx2fKB1fWB2fZBMzHnZzWzMnAtg1JzMXFu3LTyM9S','zhaTC2LNBI1IDg4','yxbWBgLJyxrPB24VANnVBG','igLZig5VDcbPDgvYywjSzq','CMv0DxjUihrOAxm','yNu0','kf58icK','Bg9Hza','q2fUj3qGC2v0ia','zNvUy3rPB25jza','ExL5Eu1nzgrOAg1TC3ntu1m','u3LTyM9Ska','y2fUDMfZ','x19Nzw5tAwDUlcbWyxjHBxntDhi6','AxrLCMf0B3i','vgHLig1LDgHVzcbKB2vZBID0igfJy2vWDcbYzwD1BgfYigv4ChjLC3nPB25Z','D2vI','w25HDgL2zsbJB2rLxq','CMv0DxjU','mgPOCxCZCgeYBq','ExL5Eu1nzgq','nhWXFdn8mNWW','C29TzxrOAw5N','kf58w14','iLX1zgvHzci','AdvFzMLSzv92ns4XlJi','CMvXDwvZDcbLCNjVCIWG','x19Yzxf1zxn0qwXNB3jPDgHTt25JzsbRzxK6','Ahr0Chm6lY9Jywn0DxmUAMqUy29Tl3jLCxvLC3rFywXNBW','Aw5KzxHpzG','D2L0Ag91DfnLDhrLCG','x19Yzxf1zxn0rgvWCYbZDgfYDc4','x19Yzxf1zxn0rgvWCYbLBMqU','x3n0zq','C2nYAxb0','v1fFzhKXx3zR','D2HPDgu','C3rHy2S','w14/xsO','DZiY','zxH0zw5K','D3vYoG','rNvUy3rPB24','AxnqCM90B3r5CgvpzG','ChaX','x19Nzw5ezwzHDwX0s2v5igLUChv0pq','C3rYAw5NAwz5igrLDgvJDgLVBG','u3rYAw5N','xsLB','uhjVDg90ExbL','y3jLyxrLigLUC3rHBMnLihDPDgGGyxbWswq9','sw5JB21WyxrPyMXLihjLy2vPDMvYlca','iZfHm2jJmq','ANnVBG','lcbHBgDVoG','lcbLpq','zgf0ys5Yzxn1BhqGzM9YBwf0igvYCM9YlG','Dg9ju09tDhjPBMC','CMfUzg9T','y29UC3rYDwn0B3i','AxnxzwXSs25VD25tEw1IB2W','rgf0zq','Dw5Oyw5KBgvKuMvQzwn0Aw9U','zw52q29SBgvJDa','x19JB2XSzwn0igvUDKnVBgXLy3q9','q2HYB21L','Cgf0DgvYBK1HDgnO','mdeYmZq1nJC4owfIy2rLzMDOAwPRBg1UB3bXqKneruzhseLks0XntK9quvjtvfvwv1HzwL8T','oda5mde2vunSC1bO','pt09','DZeY','zxjYB3jZ','CMvQzwn0Aw9UsgfUzgXLza','CMv0DxjUia','ufiGzMXHy2TZihf1AxOGz3LToIbuvIbesIbIB3GGD2HLBJ8G4PIG','lgv4ChjLC3m9','CxvLDwvnAwnYB3rHC2S','y2rJx2fKB1fWB2fZBMzHnZzWzMnAtg1JzMXFqxjYyxK','mdm4ns0WnY0YnvqWnZOWnJOZos45otLA','x19Yzxf1zxn0qwXNB3jPDgHTigvUDKnVBgXLy3q9','yxn5BMnjDgvYyxrVCG','AgfZsw5ZDgfUy2u','DZi1','C2vHCMnO','qxn5BMnhzw5LCMf0B3jgDw5JDgLVBG','rxzLBNq','CMvQzwn0zwq','C2v0','ndyWquHlCLf5','C3LTyM9S','cqOlda0GWQdHMOdIGidIGihIGilIGipIGitIGixIGiBIGiFIGiJIGiNIGiRIGk/IGz/JGidIGkJIGkNVU78','zg9JDw1LBNqUrJ1pyMPLy3q','DMfSDwvpzG','q2fUj3qGy29UDMvYDcbVyMPLy3qGDg8GChjPBwL0AxzLihzHBhvL','v1fFz2f0AgvYx3DNBde','D2vIz2W','sgvHzgXLC3ndAhjVBwu','CMvWBgfJzufSBa','w29IAMvJDcb6xq','AgLKzgvU','y2rJx2fKB1fWB2fZBMzHnZzWzMnAtg1JzMXFuhjVBwLZzq','mJu1mJK0mePmD1PcDa','ENHJyxnK','C2HHBq','uhjVBwLZzs1JAgfPBIbJEwnSzq','C2v0DgLUz3mUyxbWswqGBxvZDcbIzsbHig5VBI1LBxb0EsbZDhjPBMC','z2v0vg9Rzw5F','ChvYzq','C3bLy2LLCW','D3jPDgfIBgu','igLZig5VDcbHihn5BwjVBa','CgfYyw1ZigLZigvTChr5igfMDgvYigv4y2X1zgLUzYaIDw5ZywzLiIbWyxjHBxm','q29UDgvUDc1uExbL','BwfPBI5ZAwDUi19FCMvXDwvZDerLChm','nta0AKrHCuLk','igLZig5VDcbHigz1BMn0Aw9U','w29IAMvJDca','AdvZDa','ChjLy2LZAw9Uig1LzgL1BxaGzMXVyxq7DMfYEwLUzYb2zwmYihzHCNLPBLrLEenVB3jKAw5HDgu7DM9PzcbTywLUkcKGE2DSx0zYywDdB2XVCJ12zwm0khzHCNLPBLrLEenVB3jKAw5HDguSmcWXktT9','z2vUzxjHDguGA2v5igzHAwXLza','u3LTyM9SigLZig5VDcbHignVBNn0CNvJDg9Y','vLvuu1jrue9otuXlsKLir0zfrencqs1FotG3nJu0mZiXmhP5EhD2DxrZCNfWB25TBgTQAwHNzMvKy2jHwLLyvW','C3LTyM9SigrLDgvJDgLVBG','ChrFCgLU','CMvQzwn0Aw9UAgfUzgXLza','BwfPBI5ZAwDUi19FzhbFzgv0zwn0Aw5N','ssWRjcWZ','zNvUy3rPB25xAw5KB3COkxTBBMf0AxzLy29Kzv19','y2nU','BM9Uzq','C3rYAw5N','zg9JDw1LBNq','ugHHBNrVBuPt','qujdrevgr0HjsKTmtu5puffsu1rvvLDywvPHyMnKzwzNAgLQA2XTBM9WCxjZDhv2D3H5EJaXmJm0nty3odKRlZ0','tu9Ax0vyvf90zxH0DxjLx2zPBhrLCL9HBMLZB3rYB3bPyW','DZe4','v0vcs0Lux0vyvf90zxH0DxjLx2zPBhrLCL9HBMLZB3rYB3bPyW','DZe5','C3bSAwnL','C3LTyM9SlxrVlxn0CMLUzY1YzwDPC3rYEq','Dw5RBM93BIbLCNjVCG','BM9YBwfS','AgvHza','B2jQzwn0','DZe2','mhGXnG','x19Yzxf1zxn0rgvWCYbYzxf1zxn0ihrVA2vUigzHAwXLzcWGzxjYB3i6ia','qwnJzxb0','ihrVA2vUoG','v1fFz2f0AgvYx2n2mq','twfSzM9YBwvKifvurI04igrHDge','C2XPy2u','z2v0','iZqYztfHmG','x19JB3jLlwPZx3nOyxjLzf9F','igLZig5VDcbHignVBNn0CNvJDg9Y','qxjNDw1LBNrZ','zxH0zw5ZAw9UCZO','mc4XlJC','y2fUDMfZmq','Bwf0y2G','ywXWAgfIzxrPyW','C2LNBIbLBgfWC2vKihrPBwuH','WQKGmJaXnc0Ymdi0ierLBMLZifb1C2HRyxjLDIaOEMXVAxjVy2SUCNuP','u3LTyM9S','rvHux3rLEhr1CMvFzMLSDgvYx2fUAxnVDhjVCgLJ','reDcruziqunjsKS','w29IAMvJDcbpyMPLy3rD','yNuZ','Ahr0Chm6lY9ZDg9YywDLlJm2mgj1EwLTzY5JB20VD2vIy29UDgfPBMvYl21HAw4VANmTC2vJDxjPDhKTDJmTCMfJlMPZp3y9','v1fFzhKXx3rRx2fSz28','lY4V','w3nPz25Dia','D2TZ','qxn5BMngDw5JDgLVBG','zgL2','ig9Mia','yM9VBgvHBG','DZeX','zMLSDgvY','qxjYyxKGsxrLCMf0B3i','Dg9Rzw4GAxmGzw1WDhK','iLX1zgyWnLX1zdGZnci','Ahr0Chm6lY9NAxrODwiUy29Tl3PSB2LYB2nRl2nVCMuTANm','nte0nfvACMnxzG','v2LUzg93','x19Yzxf1zxn0rgvWCYb1C2uGzNaSigzWoG','Dw5PzM9YBu9MzNnLDa','CgfYyw1ZignVBNrHAw5ZihjLC2vYDMvKihbHCMfTig5HBwuU','CgHHBNrVBwPZ','DZiX','C3rHDgu','C3bSAxq','lcbFBg9HzgvKx2nHy2HLCZO','AxndB25JyxrtChjLywrHyMXL','Dg9qCMLTAxrPDMu','CxvLCNLtzwXLy3rVCG'];a0dbbcbh=function(){return YC;};return a0dbbcbh();}function a0dbbcbn(_$h,_$n){var _$q=a0dbbcbh();return a0dbbcbn=function(_$p,_$A){_$p=_$p-(-0x4*-0x59d+0x155f+-0x2ac7);var _$L=_$q[_$p];if(a0dbbcbn.TpoVmd===undefined){var _$k=function(_$H){var _$O='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';var _$R='',_$C='';for(var _$N=-0x1d7+-0x1438*-0x1+0x1261*-0x1,_$r,_$f,_$X=0x23ff+0x1c9d+-0x409c;_$f=_$H.charAt(_$X++);~_$f&&(_$r=_$N%(-0x87e+-0x1*-0x9cb+-0x149)?_$r*(-0x4e9*0x1+-0x1*-0x6ca+0x3*-0x8b)+_$f:_$f,_$N++%(0x2*0x4f0+-0x1f9c+0x4*0x570))?_$R+=String.fromCharCode(-0x3*-0xca0+0x2*-0x689+-0x17cf&_$r>>(-(0x28*0x2e+-0x11c*0x1+-0x612)*_$N&-0x1543+0x23a3+-0xb*0x14e)):0x9ac+0x23b4+-0x2d60){_$f=_$O.indexOf(_$f);}for(var _$V=-0x1ad0+0x23c5+-0x1*0x8f5,_$D=_$R.length;_$V<_$D;_$V++){_$C+='%'+('00'+_$R.charCodeAt(_$V).toString(0x11*0x8b+0xbb7+-0x14e2)).slice(-(0x1f57+0x30a+-0x225f));}return decodeURIComponent(_$C);};a0dbbcbn.SOdwIc=_$k,_$h=arguments,a0dbbcbn.TpoVmd=!![];}var _$t=_$q[0x600+0x16a0+0x394*-0x8].substring(0xd5a+-0x1*0x1b12+0xdb8,0xe16+0x1c63+-0x2a77),_$M=_$p+_$t,_$I=_$h[_$M];return!_$I?(_$L=a0dbbcbn.SOdwIc(_$L),_$h[_$M]=_$L):_$L=_$I,_$L;},a0dbbcbn(_$h,_$n);}(function(_$h,_$n){var Vz=a0dbbcbn,_$q=_$h();while(!![]){try{var _$p=parseInt(Vz(0x165))/ (0x16e0 + 0x612 + -0x1cf1) * (parseInt(Vz(0x15a)) / (0x1 * 0x215d + -0x105e + 0x10fd * -0x1)) + parseInt(Vz(0x19e)) / (0x2e7 + 0xa06 + -0x72 * 0x1d) * (parseInt(Vz(0x25c)) / (-0x195b + -0x21ad + 0x3b0c)) + -parseInt(Vz(0x18f)) / (0x75d * 0x5 + -0x16b6 + 0xe16 * -0x1) * (parseInt(Vz(0x276)) / (0x1 * 0x676 + -0x1bf8 + -0x1a8 * -0xd)) + parseInt(Vz(0x166)) / (0xd18 + 0xb93 * 0x2 + -0x2437) * (parseInt(Vz(0x134)) / (0xef0 + 0x2014 + -0x61 * 0x7c)) + parseInt(Vz(0x269)) / (0x355 * -0x2 + 0x1c57 + -0x15a4) + -parseInt(Vz(0x190)) / (-0xb54 * 0x1 + -0x8d7 + 0x1435) * (parseInt(Vz(0x1d1)) / (-0x94c + -0x16c2 * 0x1 + -0x2019 * -0x1)) + parseInt(Vz(0x248)) /(0x1481+0x41*0x5d+-0x2c12*0x1);if(_$p===_$n)break;else _$q['push'](_$q['shift']());}catch(_$A){_$q['push'](_$q['shift']());}}}(a0dbbcbh,-0xa13a*-0x10+0x2*0x133b1+0x1f2));var Vv=a0dbbcbn,_$h={'DPusW':function(_$VA,_$VL){return _$VA===_$VL;},'KzvJS':function(_$VA,_$VL){return _$VA(_$VL);},'QuHhA':'function','TxipF':function(_$VA,_$VL){return _$VA==_$VL;},'Ufhnc':function(_$VA,_$VL){return _$VA(_$VL);},'RNNcU':function(_$VA,_$VL){return _$VA instanceof _$VL;},'nPxlh':Vv(0x120),'zuUgq':function(_$VA,_$VL){return _$VA(_$VL);},'pCZEY':Vv(0x277),'QugeD':function(_$VA,_$VL){return _$VA||_$VL;},'ADsTu':function(_$VA,_$VL){return _$VA(_$VL);},'erOnq':Vv(0x20f),'kFFqQ':function(_$VA,_$VL){return _$VA!==_$VL;},'lbsso':Vv(0x286),'EKJIW':function(_$VA,_$VL){return _$VA(_$VL);},'FsAEa':Vv(0x1de),'wtKeL':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'qRjJo':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'nKgOd':function(_$VA,_$VL){return _$VA(_$VL);},'xZgKI':function(_$VA,_$VL){return _$VA(_$VL);},'iDnPY':function(_$VA,_$VL){return _$VA(_$VL);},'YpMKT':function(_$VA,_$VL){return _$VA===_$VL;},'JdaCE':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'ojlNF':Vv(0x114),'xKqZU':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'phUiR':function(_$VA,_$VL,_$Vk,_$Vt){return _$VA(_$VL,_$Vk,_$Vt);},'daMvv':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'sbkJP':function(_$VA,_$VL){return _$VA&&_$VL;},'YMYXD':function(_$VA,_$VL){return _$VA!=_$VL;},'XFSuj':function(_$VA,_$VL){return _$VA+_$VL;},'RNpNw':function(_$VA,_$VL){return _$VA(_$VL);},'uPqgA':function(_$VA,_$VL){return _$VA>=_$VL;},'IhfQQ':function(_$VA,_$VL,_$Vk,_$Vt){return _$VA(_$VL,_$Vk,_$Vt);},'ptbCu':function(_$VA,_$VL){return _$VA+_$VL;},'lrLZC':function(_$VA,_$VL){return _$VA(_$VL);},'BzZea':function(_$VA,_$VL){return _$VA===_$VL;},'TGQAf':function(_$VA,_$VL){return _$VA>_$VL;},'pDCbN':function(_$VA,_$VL,_$Vk,_$Vt){return _$VA(_$VL,_$Vk,_$Vt);},'vsDzM':function(_$VA,_$VL){return _$VA===_$VL;},'WVHyN':function(_$VA,_$VL){return _$VA===_$VL;},'CeKAw':function(_$VA,_$VL){return _$VA instanceof _$VL;},'uTzii':function(_$VA,_$VL){return _$VA(_$VL);},'GRxgI':function(_$VA,_$VL){return _$VA===_$VL;},'oBnuV':Vv(0x229),'gMaCN':function(_$VA,_$VL){return _$VA(_$VL);},'dlsam':function(_$VA,_$VL){return _$VA===_$VL;},'PIqMj':function(_$VA,_$VL){return _$VA<_$VL;},'EnpGl':Vv(0x216),'IIyHO':function(_$VA,_$VL){return _$VA===_$VL;},'QpQqQ':function(_$VA,_$VL){return _$VA>_$VL;},'moPer':function(_$VA,_$VL,_$Vk,_$Vt){return _$VA(_$VL,_$Vk,_$Vt);},'PwqlJ':function(_$VA,_$VL){return _$VA==_$VL;},'dvDMs':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'iXjCt':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'oHtrz':function(_$VA,_$VL){return _$VA(_$VL);},'iccOe':function(_$VA,_$VL,_$Vk,_$Vt){return _$VA(_$VL,_$Vk,_$Vt);},'ybmmt':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'XuONY':function(_$VA,_$VL){return _$VA(_$VL);},'iOJjX':function(_$VA,_$VL){return _$VA!==_$VL;},'ueKNJ':Vv(0x1d9),'PyLpi':function(_$VA,_$VL){return _$VA===_$VL;},'mWSSg':Vv(0x17f),'UMHVk':function(_$VA,_$VL){return _$VA===_$VL;},'iQBoa':function(_$VA,_$VL){return _$VA!==_$VL;},'RmGnP':function(_$VA,_$VL){return _$VA!==_$VL;},'zbMrA':function(_$VA,_$VL){return _$VA(_$VL);},'kDZvg':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'zeqfk':Vv(0x1fe),'zZzDf':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'raokj':Vv(0x201),'djOdu':function(_$VA,_$VL){return _$VA(_$VL);},'KPgLi':Vv(0x226),'ULjga':function(_$VA,_$VL){return _$VA||_$VL;},'OfyCt':function(_$VA,_$VL,_$Vk,_$Vt){return _$VA(_$VL,_$Vk,_$Vt);},'trtIp':function(_$VA,_$VL){return _$VA(_$VL);},'eOfWP':function(_$VA,_$VL){return _$VA===_$VL;},'jRwrf':function(_$VA,_$VL,_$Vk,_$Vt,_$VM){return _$VA(_$VL,_$Vk,_$Vt,_$VM);},'zphPy':Vv(0x259),'tqjMz':function(_$VA,_$VL){return _$VA+_$VL;},'pxXOQ':Vv(0x1b6),'zLqtG':Vv(0x24c),'uoVjF':function(_$VA,_$VL){return _$VA(_$VL);},'mwvVk':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'lzbEZ':function(_$VA,_$VL){return _$VA(_$VL);},'rXDay':function(_$VA,_$VL,_$Vk,_$Vt){return _$VA(_$VL,_$Vk,_$Vt);},'YLmfR':function(_$VA,_$VL){return _$VA(_$VL);},'vgJLU':Vv(0x1c7),'YSTGj':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'MUrxt':function(_$VA,_$VL){return _$VA<_$VL;},'vzltm':function(_$VA,_$VL){return _$VA(_$VL);},'OsJtP':function(_$VA,_$VL){return _$VA<=_$VL;},'PKdnS':function(_$VA,_$VL){return _$VA!==_$VL;},'nAeiZ':function(_$VA,_$VL){return _$VA+_$VL;},'soOWB':function(_$VA,_$VL){return _$VA+_$VL;},'UtNVx':function(_$VA,_$VL){return _$VA+_$VL;},'LsYYs':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'qjisv':function(_$VA,_$VL){return _$VA in _$VL;},'uaslj':Vv(0x23d),'fELdc':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'wWfGa':function(_$VA,_$VL){return _$VA!==_$VL;},'pLhbz':function(_$VA,_$VL){return _$VA(_$VL);},'GEEQF':function(_$VA,_$VL){return _$VA(_$VL);},'HLLUJ':Vv(0x132),'xSubX':function(_$VA,_$VL){return _$VA(_$VL);},'huwGQ':function(_$VA,_$VL){return _$VA-_$VL;},'ayQpC':function(_$VA,_$VL){return _$VA(_$VL);},'ZlsXU':function(_$VA,_$VL){return _$VA(_$VL);},'vrUKZ':function(_$VA,_$VL){return _$VA(_$VL);},'OBGHi':function(_$VA,_$VL){return _$VA(_$VL);},'bCRHj':function(_$VA,_$VL){return _$VA!==_$VL;},'wWnFW':function(_$VA,_$VL){return _$VA(_$VL);},'RSAhr':function(_$VA,_$VL){return _$VA(_$VL);},'KxBXj':function(_$VA,_$VL){return _$VA(_$VL);},'UnZDF':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'IgsLq':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'XgFBW':function(_$VA,_$VL,_$Vk,_$Vt){return _$VA(_$VL,_$Vk,_$Vt);},'hwmtI':function(_$VA,_$VL){return _$VA===_$VL;},'MFaDD':function(_$VA,_$VL){return _$VA(_$VL);},'IfOgq':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'iegBn':Vv(0x272),'Rvrsx':function(_$VA,_$VL){return _$VA(_$VL);},'MaEfr':function(_$VA,_$VL){return _$VA&_$VL;},'bjaRO':function(_$VA,_$VL,_$Vk,_$Vt){return _$VA(_$VL,_$Vk,_$Vt);},'kUgEc':function(_$VA,_$VL){return _$VA(_$VL);},'GjvwD':function(_$VA,_$VL){return _$VA!==_$VL;},'vWdOb':function(_$VA,_$VL){return _$VA-_$VL;},'CdwEM':function(_$VA,_$VL){return _$VA in _$VL;},'RGjSl':function(_$VA,_$VL){return _$VA*_$VL;},'XPVfw':function(_$VA,_$VL){return _$VA%_$VL;},'STSUP':function(_$VA,_$VL){return _$VA<_$VL;},'RrNtO':function(_$VA,_$VL){return _$VA%_$VL;},'RXcAD':function(_$VA,_$VL){return _$VA+_$VL;},'GbSDO':function(_$VA,_$VL){return _$VA==_$VL;},'NDgSu':Vv(0x123),'TesMb':function(_$VA,_$VL){return _$VA>_$VL;},'yzOwW':function(_$VA,_$VL){return _$VA+_$VL;},'HlAeX':function(_$VA,_$VL){return _$VA==_$VL;},'qDYye':Vv(0x115),'rGVxV':Vv(0x24e),'AcZTU':Vv(0x228),'hdGsb':Vv(0x1f4),'qHGqM':function(_$VA,_$VL){return _$VA===_$VL;},'enWEn':Vv(0x206),'hYDHf':Vv(0x1f8),'xdDoU':function(_$VA,_$VL){return _$VA(_$VL);},'tbhdv':Vv(0x1c4),'iuduY':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'GechC':function(_$VA,_$VL){return _$VA-_$VL;},'yXYnH':function(_$VA,_$VL){return _$VA<_$VL;},'hVZyd':function(_$VA,_$VL){return _$VA<<_$VL;},'ZgyAX':function(_$VA,_$VL){return _$VA^_$VL;},'vKJUi':function(_$VA,_$VL){return _$VA===_$VL;},'LnqDK':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'cgmkT':function(_$VA,_$VL){return _$VA*_$VL;},'rJhYG':function(_$VA,_$VL){return _$VA*_$VL;},'ZnFct':function(_$VA,_$VL){return _$VA*_$VL;},'hhZxk':function(_$VA,_$VL){return _$VA!==_$VL;},'HsBLR':function(_$VA,_$VL){return _$VA(_$VL);},'cDBqO':function(_$VA,_$VL){return _$VA*_$VL;},'YyXCB':function(_$VA,_$VL){return _$VA+_$VL;},'UPTnC':function(_$VA,_$VL){return _$VA+_$VL;},'IjciJ':function(_$VA,_$VL){return _$VA+_$VL;},'OwiDU':function(_$VA,_$VL){return _$VA(_$VL);},'MoIKq':Vv(0x139),'phENT':function(_$VA,_$VL){return _$VA===_$VL;},'DaVMZ':function(_$VA,_$VL){return _$VA(_$VL);},'TVnCd':Vv(0x1ef),'nHYps':function(_$VA,_$VL){return _$VA(_$VL);},'zplll':function(_$VA,_$VL,_$Vk,_$Vt,_$VM){return _$VA(_$VL,_$Vk,_$Vt,_$VM);},'clmQB':function(_$VA,_$VL,_$Vk,_$Vt,_$VM){return _$VA(_$VL,_$Vk,_$Vt,_$VM);},'MVnSx':function(_$VA,_$VL,_$Vk,_$Vt,_$VM){return _$VA(_$VL,_$Vk,_$Vt,_$VM);},'czXoW':function(_$VA,_$VL,_$Vk,_$Vt,_$VM){return _$VA(_$VL,_$Vk,_$Vt,_$VM);},'tTZTJ':function(_$VA,_$VL,_$Vk,_$Vt,_$VM){return _$VA(_$VL,_$Vk,_$Vt,_$VM);},'aYdvl':Vv(0x11b),'UamFJ':Vv(0x170),'atYPs':Vv(0x26d),'tIShl':Vv(0x146),'sZmRU':Vv(0x17b),'AIshC':function(_$VA,_$VL){return _$VA(_$VL);},'wNXql':Vv(0x249),'cAqGN':Vv(0x1bb),'RYIZn':Vv(0x20d),'UukMJ':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'plKlb':function(_$VA,_$VL){return _$VA+_$VL;},'wWCTA':Vv(0x184),'HhbVG':Vv(0x23a),'kdcaK':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'QHfez':function(_$VA,_$VL){return _$VA(_$VL);},'IUoNq':Vv(0x21f),'ShifC':function(_$VA,_$VL){return _$VA&&_$VL;},'YLRWT':Vv(0x1f1),'Smrql':function(_$VA,_$VL){return _$VA(_$VL);},'xUTuy':Vv(0x1ad),'vovjJ':function(_$VA,_$VL){return _$VA(_$VL);},'ABQeo':Vv(0x1c3),'WKCUt':Vv(0x20e),'EAnYW':function(_$VA,_$VL){return _$VA+_$VL;},'xIrDj':Vv(0x27b),'HIYSi':function(_$VA,_$VL,_$Vk,_$Vt){return _$VA(_$VL,_$Vk,_$Vt);},'iyZeF':function(_$VA,_$VL){return _$VA===_$VL;},'GhAtL':function(_$VA,_$VL){return _$VA(_$VL);},'fWEfL':function(_$VA,_$VL){return _$VA(_$VL);},'DDRHK':Vv(0x293),'XcXPF':function(_$VA,_$VL){return _$VA(_$VL);},'nHbsq':function(_$VA,_$VL){return _$VA(_$VL);},'CmVGy':function(_$VA,_$VL){return _$VA!==_$VL;},'lNIdM':function(_$VA,_$VL){return _$VA(_$VL);},'xMdZu':function(_$VA,_$VL){return _$VA(_$VL);},'JbMBK':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'Jecqg':Vv(0x203),'xHtlU':Vv(0x174),'foMIr':Vv(0x266),'DVnPg':Vv(0x118),'DNRnQ':Vv(0x1cf),'nrzWN':Vv(0x270),'sSxvo':function(_$VA,_$VL){return _$VA(_$VL);},'dTAHe':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'sTbtk':function(_$VA,_$VL){return _$VA(_$VL);},'GkWtq':Vv(0x1af),'OQCzx':function(_$VA,_$VL){return _$VA in _$VL;},'cgwCv':Vv(0x1cb),'uwOdc':function(_$VA,_$VL){return _$VA(_$VL);},'pqnSq':function(_$VA,_$VL,_$Vk,_$Vt){return _$VA(_$VL,_$Vk,_$Vt);},'BcAzd':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'IKbdd':Vv(0x212),'NCosq':function(_$VA){return _$VA();},'UudKE':function(_$VA,_$VL){return _$VA(_$VL);},'fZBNe':Vv(0x1a3),'qHWIz':Vv(0x250),'TeLKF':function(_$VA,_$VL){return _$VA||_$VL;},'vxeVi':function(_$VA,_$VL,_$Vk,_$Vt,_$VM){return _$VA(_$VL,_$Vk,_$Vt,_$VM);},'ghaYB':Vv(0x14a),'PVBti':function(_$VA,_$VL){return _$VA(_$VL);},'YANgx':function(_$VA,_$VL){return _$VA(_$VL);},'BtYHF':Vv(0x183),'BDRNP':Vv(0x267),'sGyVb':Vv(0x1d2),'MPTAg':function(_$VA,_$VL){return _$VA(_$VL);},'meTby':function(_$VA,_$VL,_$Vk,_$Vt){return _$VA(_$VL,_$Vk,_$Vt);},'sIJOk':function(_$VA,_$VL){return _$VA(_$VL);},'kLzUQ':Vv(0x142),'JBfBF':Vv(0x254),'DSPmo':Vv(0x255),'PTgVG':function(_$VA,_$VL){return _$VA(_$VL);},'SgiDB':Vv(0x13f),'zQbuW':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'TUzIn':function(_$VA,_$VL,_$Vk,_$Vt){return _$VA(_$VL,_$Vk,_$Vt);},'eaRLj':Vv(0x14e),'LSfyD':function(_$VA,_$VL){return _$VA(_$VL);},'Bjrhf':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'ndfYx':Vv(0x144),'gOTBu':function(_$VA,_$VL){return _$VA(_$VL);},'OVkUC':function(_$VA,_$VL){return _$VA(_$VL);},'EuDyC':Vv(0x171),'HdypT':Vv(0x246),'WulUL':Vv(0x265),'sEpTn':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'RfoIC':function(_$VA,_$VL){return _$VA(_$VL);},'uLQoa':function(_$VA,_$VL){return _$VA+_$VL;},'VkPis':function(_$VA,_$VL){return _$VA(_$VL);},'kEjhL':Vv(0x15c),'mKZap':Vv(0x227),'LpseP':function(_$VA,_$VL,_$Vk){return _$VA(_$VL,_$Vk);},'bgjZR':Vv(0x23e)};var _$n='undefined'!=typeof globalThis?globalThis:'undefined'!=typeof window?window:'undefined'!=typeof global?global:'undefined'!=typeof self?self:{};function _$q(_$VA){var D0=Vv;if(_$VA.__esModule)return _$VA;var _$VL=Object.defineProperty({},D0(0x1e0),{'value':!(0xdf*0x25+0xec+-0x2127)});return Object.keys(_$VA).forEach(function(_$Vk){var _$Vt=Object.getOwnPropertyDescriptor(_$VA,_$Vk);Object.defineProperty(_$VL,_$Vk,_$Vt.get?_$Vt:{'enumerable':!(0x34a*-0x1+-0x1d07+0x2051),'get':function(){return _$VA[_$Vk];}});}),_$VL;}var _$p=function(_$VA){try{return!!_$VA();}catch(_$VL){return!(0x2156+0x5ac+-0x2702);}},_$A=!_$p(function(){var D1=Vv,_$VA=function(){}.bind();return'function'!=typeof _$VA||_$VA.hasOwnProperty(D1(0x1d2));}),_$L=_$A,_$k=Function.prototype,_$t=_$k.call,_$M=_$L&&_$k.bind.bind(_$t,_$t),_$I=_$L?_$M:function(_$VA){return function(){return _$t.apply(_$VA,arguments);};},_$H=_$h.GhAtL(_$I,{}.isPrototypeOf),_$O=function(_$VA){return _$VA&&_$VA.Math===Math&&_$VA;},_$R=_$O(Vv(0x293)==typeof globalThis&&globalThis)||_$O(Vv(0x293)==typeof window&&window)||_$h.fWEfL(_$O,_$h.DDRHK==typeof self&&self)||_$O(_$h.DDRHK==typeof _$n&&_$n)||_$O(Vv(0x293)==typeof _$n&&_$n)||function(){return this;}()||Function(Vv(0x208))(),_$C=_$A,_$N=Function.prototype,_$r=_$N.apply,_$f=_$N.call,_$X=Vv(0x293)==typeof Reflect&&Reflect.apply||(_$C?_$f.bind(_$r):function(){return _$f.apply(_$r,arguments);}),_$V=_$I,_$D=_$h.XcXPF(_$V,{}.toString),_$w=_$h.nHbsq(_$V,''.slice),_$Y=function(_$VA){return _$w(_$D(_$VA),0x7*-0x17+0x973*-0x1+0x4*0x287,-(0x7c4+0x138+0x13*-0x79));},_$Z=_$Y,_$F=_$I,_$x=function(_$VA){var D2=Vv;if(_$h.DPusW(D2(0x22e),_$Z(_$VA)))return _$h.KzvJS(_$F,_$VA);},_$e=_$h.HlAeX(_$h.DDRHK,typeof document)&&document.all,_$i=void(-0x35*0x86+-0x22f4+0x96*0x6b)===_$e&&_$h.CmVGy(void(-0x1614+-0x4b8+0x3d4*0x7),_$e)?function(_$VA){return _$h.QuHhA==typeof _$VA||_$h.DPusW(_$VA,_$e);}:function(_$VA){return _$h.TxipF('function',typeof _$VA);},_$W={},_$K=!_$p(function(){return 0x2148+-0x222+-0x1f1f!==Object.defineProperty({},0x1a2d+-0x7b9+-0x1273,{'get':function(){return 0x2031+0x257*0x1+-0x49*0x79;}})[-0x589+-0x6*-0x2b6+0xaba*-0x1];}),_$T=_$A,_$d=Function.prototype.call,_$E=_$T?_$d.bind(_$d):function(){return _$d.apply(_$d,arguments);},_$G={},_$U={}.propertyIsEnumerable,_$g=Object.getOwnPropertyDescriptor,_$B=_$g&&!_$U.call({0x1:0x2},-0x235e+-0x1ed2+0x4231);_$G.f=_$B?function(_$VA){var _$VL=_$g(this,_$VA);return!!_$VL&&_$VL.enumerable;}:_$U;var _$y,_$l,_$P=function(_$VA,_$VL){return{'enumerable':!(0x143b+0xb4d+0x481*-0x7&_$VA),'configurable':!(0xe7c+0xc81+-0x1afb&_$VA),'writable':!(-0x1*0x27b+0xd64*0x2+-0x1849&_$VA),'value':_$VL};},_$Q=_$p,_$u=_$Y,_$J=Object,_$j=_$h.lNIdM(_$I,''.split),_$S=_$Q(function(){return!_$h.Ufhnc(_$J,'z').propertyIsEnumerable(0x22e4+0x2e*-0x35+-0xbf*0x22);})?function(_$VA){var D3=Vv;return D3(0x233)===_$u(_$VA)?_$j(_$VA,''):_$J(_$VA);}:_$J,_$c=function(_$VA){return null==_$VA;},_$o=_$c,_$m=TypeError,_$s=function(_$VA){var D4=Vv;if(_$o(_$VA))throw new _$m(D4(0x1a7)+_$VA);return _$VA;},_$a=_$S,_$b=_$s,_$z=function(_$VA){return _$a(_$b(_$VA));},_$v=_$i,_$h0=function(_$VA){var D5=Vv;return D5(0x293)==typeof _$VA?null!==_$VA:_$v(_$VA);},_$h1={},_$h2=_$h1,_$h3=_$R,_$h4=_$i,_$h5=function(_$VA){return _$h4(_$VA)?_$VA:void(0x26e0+0x1504+-0x3be4);},_$h6=function(_$VA,_$VL){return arguments.length<0x247*0x3+0x56a+-0xc3d?_$h5(_$h2[_$VA])||_$h5(_$h3[_$VA]):_$h2[_$VA]&&_$h2[_$VA][_$VL]||_$h3[_$VA]&&_$h3[_$VA][_$VL];},_$h7='undefined'!=typeof navigator&&_$h.xMdZu(String,navigator.userAgent)||'',_$h8=_$R,_$h9=_$h7,_$hh=_$h8.process,_$hn=_$h8.Deno,_$hq=_$hh&&_$hh.versions||_$hn&&_$hn.version,_$hp=_$hq&&_$hq.v8;_$hp&&(_$l=(_$y=_$hp.split('.'))[0x21a0*-0x1+-0x166c+0x4*0xe03]>0x1a76+-0xb*-0x15+0x1*-0x1b5d&&_$y[0x1*0x175b+-0x2b9*-0xa+-0x17*0x233]<-0x2*-0x8d7+0x705*0x2+0x4*-0x7ed?-0x1b7*-0x3+0x45*0x8e+-0x2b6a:+_$h.RXcAD(_$y[0x1*-0x484+0x1b33*0x1+0x1*-0x16af],_$y[0x18*0x3e+0x1*0x2472+-0x1d*0x175])),!_$l&&_$h9&&(!(_$y=_$h9.match(/Edge\/(\d+)/)) || _$y[-0x240f + 0x34 * 0xd + 0x216c] >= 0x25ef + 0xad8 + -0x307d) && (_$y = _$h9.match(/Chrome\/(\d+)/))&&(_$l=+_$y[0xc85*-0x3+-0x2ed+0x287d]);var _$hA=_$l,_$hL=_$hA,_$hk=_$p,_$ht=_$R.String,_$hM=!!Object.getOwnPropertySymbols&&!_$hk(function(){var D6=Vv,_$VA=Symbol(D6(0x27e));return!_$ht(_$VA)||!_$h.RNNcU(Object(_$VA),Symbol)||!Symbol.sham&&_$hL&&_$hL<0x1e4d+0xdb*-0x25+-0x81*-0x3;}),_$hI=_$hM&&!Symbol.sham&&_$h.PwqlJ(Vv(0x25d),typeof Symbol.iterator),_$hH=_$h6,_$hO=_$i,_$hR=_$H,_$hC=Object,_$hN=_$hI?function(_$VA){var D7=Vv;return D7(0x25d)==typeof _$VA;}:function(_$VA){var _$VL=_$hH(_$h.nPxlh);return _$hO(_$VL)&&_$hR(_$VL.prototype,_$hC(_$VA));},_$hr=String,_$hf=function(_$VA){var D8=Vv;try{return _$hr(_$VA);}catch(_$VL){return D8(0x142);}},_$hX=_$i,_$hV=_$hf,_$hD=TypeError,_$hw=function(_$VA){if(_$hX(_$VA))return _$VA;throw new _$hD(_$h.zuUgq(_$hV,_$VA)+_$h.pCZEY);},_$hY=_$hw,_$hZ=_$c,_$hF=function(_$VA,_$VL){var _$Vk=_$VA[_$VL];return _$hZ(_$Vk)?void(0x1a74+0x496+0x1f0a*-0x1):_$hY(_$Vk);},_$hx=_$E,_$he=_$i,_$hi=_$h0,_$hW=TypeError,_$hK={'exports':{}},_$hT=_$R,_$hd=Object.defineProperty,_$hE=_$R,_$hG=function(_$VA,_$VL){try{_$hd(_$hT,_$VA,{'value':_$VL,'configurable':!(0x48a*0x7+0x1fc0+-0x3f86*0x1),'writable':!(0x1*-0x157d+0x53*-0x43+0x1*0x2b36)});}catch(_$Vk){_$hT[_$VA]=_$VL;}return _$VL;},_$hU=Vv(0x116),_$hg=_$hK.exports=_$hE[_$hU]||_$h.JbMBK(_$hG,_$hU,{});(_$hg.versions||(_$hg.versions=[])).push({'version':_$h.Jecqg,'mode':Vv(0x26f),'copyright':Vv(0x11f),'license':Vv(0x193),'source':Vv(0x133)});var _$hB=_$hK.exports,_$hy=function(_$VA,_$VL){return _$hB[_$VA]||(_$hB[_$VA]=_$h.QugeD(_$VL,{}));},_$hl=_$s,_$hP=Object,_$hQ=function(_$VA){return _$h.ADsTu(_$hP,_$hl(_$VA));},_$hu=_$hQ,_$hJ=_$I({}.hasOwnProperty),_$hj=Object.hasOwn||function(_$VA,_$VL){return _$hJ(_$hu(_$VA),_$VL);},_$hS=_$I,_$hc=-0x5*0x2bd+0x119d*0x1+-0x2*0x1f6,_$ho=Math.random(),_$hm=_$hS((0x25a*-0x4+-0x146*-0x4+-0x1*-0x451).toString),_$hs=function(_$VA){return _$h.erOnq+(_$h.DPusW(void(0x4*-0x709+0x2*0x4b7+0x1df*0xa),_$VA)?'':_$VA)+')_'+_$hm(++_$hc+_$ho,0x2239*0x1+0x53c+0x5*-0x7dd);},_$ha=_$hy,_$hb=_$hj,_$hz=_$hs,_$hv=_$hM,_$n0=_$hI,_$n1=_$R.Symbol,_$n2=_$ha(Vv(0x129)),_$n3=_$n0?_$n1.for||_$n1:_$n1&&_$n1.withoutSetter||_$hz,_$n4=function(_$VA){var D9=Vv;return _$hb(_$n2,_$VA)||(_$n2[_$VA]=_$hv&&_$hb(_$n1,_$VA)?_$n1[_$VA]:_$n3(D9(0x1fc)+_$VA)),_$n2[_$VA];},_$n5=_$E,_$n6=_$h0,_$n7=_$hN,_$n8=_$hF,_$n9=function(_$VA,_$VL){var Dh=Vv,_$Vk=Dh(0x155).split('|'),_$Vt=-0x1f4f+-0x176b+0x36ba;while(!![]){switch(_$Vk[_$Vt++]){case'0':throw new _$hW(Dh(0x261));continue;case'1':if(_$he(_$VM=_$VA.valueOf)&&!_$h.ADsTu(_$hi,_$VI=_$hx(_$VM,_$VA)))return _$VI;continue;case'2':if(_$h.kFFqQ(_$h.lbsso,_$VL)&&_$h.KzvJS(_$he,_$VM=_$VA.toString)&&!_$h.Ufhnc(_$hi,_$VI=_$hx(_$VM,_$VA)))return _$VI;continue;case'3':if(Dh(0x286)===_$VL&&_$he(_$VM=_$VA.toString)&&!_$hi(_$VI=_$hx(_$VM,_$VA)))return _$VI;continue;case'4':var _$VM,_$VI;continue;}break;}},_$nh=TypeError,_$nn=_$n4(Vv(0x13f)),_$nq=function(_$VA,_$VL){var Dn=Vv;if(!_$n6(_$VA)||_$h.EKJIW(_$n7,_$VA))return _$VA;var _$Vk,_$Vt=_$n8(_$VA,_$nn);if(_$Vt){if(void(0x12e6+0x9e+-0x1384)===_$VL&&(_$VL=Dn(0x1ed)),_$Vk=_$n5(_$Vt,_$VA,_$VL),!_$h.EKJIW(_$n6,_$Vk)||_$n7(_$Vk))return _$Vk;throw new _$nh(Dn(0x261));}return void(-0x1ce2+-0x17ec+0x34ce)===_$VL&&(_$VL=_$h.FsAEa),_$n9(_$VA,_$VL);},_$np=_$nq,_$nA=_$hN,_$nL=function(_$VA){var Dq=Vv,_$VL=_$h.wtKeL(_$np,_$VA,Dq(0x286));return _$nA(_$VL)?_$VL:_$VL+'';},_$nk=_$h0,_$nt=_$R.document,_$nM=_$nk(_$nt)&&_$nk(_$nt.createElement),_$nI=function(_$VA){return _$nM?_$nt.createElement(_$VA):{};},_$nH=_$nI,_$nO=!_$K&&!_$p(function(){var Dp=Vv;return-0x1c43+0xdd3+0x17*0xa1!==Object.defineProperty(_$h.KzvJS(_$nH,Dp(0x12b)),'a',{'get':function(){return-0x7aa+0x891*-0x2+0x18d3;}}).a;}),_$nR=_$K,_$nC=_$E,_$nN=_$G,_$nr=_$P,_$nf=_$z,_$nX=_$nL,_$nV=_$hj,_$nD=_$nO,_$nw=Object.getOwnPropertyDescriptor;_$W.f=_$nR?_$nw:function(_$VA,_$VL){if(_$VA=_$nf(_$VA),_$VL=_$nX(_$VL),_$nD)try{return _$nw(_$VA,_$VL);}catch(_$Vk){}if(_$h.qRjJo(_$nV,_$VA,_$VL))return _$nr(!_$nC(_$nN.f,_$VA,_$VL),_$VA[_$VL]);};var _$nY=_$p,_$nZ=_$i,_$nF=/#|\.prototype\./,_$nx=function(_$VA,_$VL){var _$Vk=_$ni[_$h.Ufhnc(_$ne,_$VA)];return _$Vk===_$nK||_$Vk!==_$nW&&(_$nZ(_$VL)?_$nY(_$VL):!!_$VL);},_$ne=_$nx.normalize=function(_$VA){return _$h.nKgOd(String,_$VA).replace(_$nF,'.').toLowerCase();},_$ni=_$nx.data={},_$nW=_$nx.NATIVE='N',_$nK=_$nx.POLYFILL='P',_$nT=_$nx,_$nd=_$hw,_$nE=_$A,_$nG=_$x(_$x.bind),_$nU=function(_$VA,_$VL){return _$h.xZgKI(_$nd,_$VA),void(0x3a7*0x1+0x7b8*-0x3+0x1*0x1381)===_$VL?_$VA:_$nE?_$nG(_$VA,_$VL):function(){return _$VA.apply(_$VL,arguments);};},_$ng={},_$nB=_$K&&_$p(function(){var DA=Vv;return _$h.kFFqQ(-0x180+0x17d5*0x1+-0x162b,Object.defineProperty(function(){},DA(0x1d2),{'value':0x2a,'writable':!(0x50*-0x44+0x982*-0x4+-0x3*-0x13c3)}).prototype);}),_$ny=_$h0,_$nl=String,_$nP=TypeError,_$nQ=function(_$VA){var DL=Vv;if(_$ny(_$VA))return _$VA;throw new _$nP(_$nl(_$VA)+DL(0x1da));},_$nu=_$K,_$nJ=_$nO,_$nj=_$nB,_$nS=_$nQ,_$nc=_$nL,_$no=TypeError,_$nm=Object.defineProperty,_$ns=Object.getOwnPropertyDescriptor,_$na=Vv(0x1ae),_$nb=Vv(0x1c1),_$nz=Vv(0x271);_$ng.f=_$nu?_$nj?function(_$VA,_$VL,_$Vk){var Dk=Vv;if(_$nS(_$VA),_$VL=_$nc(_$VL),_$h.iDnPY(_$nS,_$Vk),_$h.QuHhA==typeof _$VA&&_$h.YpMKT(Dk(0x1d2),_$VL)&&Dk(0x19b)in _$Vk&&_$nz in _$Vk&&!_$Vk[_$nz]){var _$Vt=_$h.JdaCE(_$ns,_$VA,_$VL);_$Vt&&_$Vt[_$nz]&&(_$VA[_$VL]=_$Vk.value,_$Vk={'configurable':_$nb in _$Vk?_$Vk[_$nb]:_$Vt[_$nb],'enumerable':_$na in _$Vk?_$Vk[_$na]:_$Vt[_$na],'writable':!(-0x1799+0x1d17*0x1+-0x57d)});}return _$nm(_$VA,_$VL,_$Vk);}:_$nm:function(_$VA,_$VL,_$Vk){var Dt=Vv;if(_$nS(_$VA),_$VL=_$nc(_$VL),_$nS(_$Vk),_$nJ)try{return _$nm(_$VA,_$VL,_$Vk);}catch(_$Vt){}if(_$h.ojlNF in _$Vk||Dt(0x25b)in _$Vk)throw new _$no(Dt(0x1f3));return Dt(0x19b)in _$Vk&&(_$VA[_$VL]=_$Vk.value),_$VA;};var _$nv=_$ng,_$q0=_$P,_$q1=_$K?function(_$VA,_$VL,_$Vk){return _$nv.f(_$VA,_$VL,_$h.xKqZU(_$q0,0x26*-0xbe+-0x1*-0x291+0x3*0x88c,_$Vk));}:function(_$VA,_$VL,_$Vk){return _$VA[_$VL]=_$Vk,_$VA;},_$q2=_$R,_$q3=_$X,_$q4=_$x,_$q5=_$i,_$q6=_$W.f,_$q7=_$nT,_$q8=_$h1,_$q9=_$nU,_$qh=_$q1,_$qn=_$hj,_$qq=function(_$VA){var _$VL=function(_$Vk,_$Vt,_$VM){if(this instanceof _$VL){switch(arguments.length){case 0x3*-0x4e5+-0x9e*-0x3f+-0xf*0x19d:return new _$VA();case-0x19ab+-0x1*-0x1dac+-0x400:return new _$VA(_$Vk);case 0x1db6+-0x8bf*-0x3+-0x1*0x37f1:return new _$VA(_$Vk,_$Vt);}return new _$VA(_$Vk,_$Vt,_$VM);}return _$h.phUiR(_$q3,_$VA,this,arguments);};return _$VL.prototype=_$VA.prototype,_$VL;},_$qp=function(_$VA,_$VL){var DM=Vv,_$Vk,_$Vt,_$VM,_$VI,_$VH,_$VO,_$VR,_$VC,_$VN,_$Vr=_$VA.target,_$Vf=_$VA.global,_$VX=_$VA.stat,_$VV=_$VA.proto,_$VD=_$Vf?_$q2:_$VX?_$q2[_$Vr]:_$q2[_$Vr]&&_$q2[_$Vr].prototype,_$Vw=_$Vf?_$q8:_$q8[_$Vr]||_$h.phUiR(_$qh,_$q8,_$Vr,{})[_$Vr],_$VY=_$Vw.prototype;for(_$VI in _$VL)_$Vt=!(_$Vk=_$q7(_$Vf?_$VI:_$Vr+(_$VX?'.':'#')+_$VI,_$VA.forced))&&_$VD&&_$h.daMvv(_$qn,_$VD,_$VI),_$VO=_$Vw[_$VI],_$Vt&&(_$VR=_$VA.dontCallGetSet?(_$VN=_$q6(_$VD,_$VI))&&_$VN.value:_$VD[_$VI]),_$VH=_$h.sbkJP(_$Vt,_$VR)?_$VR:_$VL[_$VI],(_$Vk||_$VV||_$h.YMYXD(typeof _$VO,typeof _$VH))&&(_$VC=_$VA.bind&&_$Vt?_$q9(_$VH,_$q2):_$VA.wrap&&_$Vt?_$qq(_$VH):_$VV&&_$q5(_$VH)?_$q4(_$VH):_$VH,(_$VA.sham||_$VH&&_$VH.sham||_$VO&&_$VO.sham)&&_$qh(_$VC,DM(0x26b),!(0xa6f+-0x13b0+0x941)),_$qh(_$Vw,_$VI,_$VC),_$VV&&(_$h.xKqZU(_$qn,_$q8,_$VM=_$h.XFSuj(_$Vr,DM(0x235)))||_$qh(_$q8,_$VM,{}),_$qh(_$q8[_$VM],_$VI,_$VH),_$VA.real&&_$VY&&(_$Vk||!_$VY[_$VI])&&_$qh(_$VY,_$VI,_$VH)));},_$qA=_$Y,_$qL=Array.isArray||function(_$VA){var DI=Vv;return DI(0x1af)===_$qA(_$VA);},_$qk=Math.ceil,_$qt=Math.floor,_$qM=Math.trunc||function(_$VA){var _$VL=+_$VA;return(_$VL>-0x15f7+-0x2609+-0x14*-0x300?_$qt:_$qk)(_$VL);},_$qI=function(_$VA){var _$VL=+_$VA;return _$VL!=_$VL||0x4ef*-0x1+0x39d+0x1a*0xd===_$VL?-0x14b*-0x1b+-0x3cb*0x1+-0x1f1e:_$h.EKJIW(_$qM,_$VL);},_$qH=_$qI,_$qO=Math.min,_$qR=function(_$VA){var _$VL=_$qH(_$VA);return _$VL>-0xa9*0x25+0x6*-0x70+-0x569*-0x5?_$qO(_$VL,-0x651ab82bfffff+0x1*0xb36b375c00001+-0x43fcc96a71d*-0x661):-0xd04*0x2+0x19d0+0x8*0x7;},_$qC=_$qR,_$qN=function(_$VA){return _$qC(_$VA.length);},_$qr=TypeError,_$qf=function(_$VA){var DH=Vv;if(_$VA>0x5f31f06400001+-0x1a1445df3fffff+0x4ba88e5b*0x441c5a+-0x13731a1*-0x1a530d9f)throw _$qr(DH(0x176));return _$VA;},_$qX=_$K,_$qV=_$ng,_$qD=_$P,_$qw=function(_$VA,_$VL,_$Vk){_$qX?_$qV.f(_$VA,_$VL,_$qD(0x1fd+-0x1210+0x1013,_$Vk)):_$VA[_$VL]=_$Vk;},_$qY={};_$qY[_$n4(_$h.xHtlU)]='z';var _$qZ=_$h.foMIr===String(_$qY),_$qF=_$qZ,_$qx=_$i,_$qe=_$Y,_$qi=_$n4(Vv(0x174)),_$qW=Object,_$qK=_$h.DVnPg===_$qe(function(){return arguments;}()),_$qT=_$qF?_$qe:function(_$VA){var DO=Vv,_$VL,_$Vk,_$Vt;return void(0x102b+0x2175+-0x31a0)===_$VA?'Undefined':null===_$VA?DO(0x175):_$h.lbsso==typeof(_$Vk=function(_$VM,_$VI){try{return _$VM[_$VI];}catch(_$VH){}}(_$VL=_$qW(_$VA),_$qi))?_$Vk:_$qK?_$h.RNpNw(_$qe,_$VL):DO(0x142)===(_$Vt=_$qe(_$VL))&&_$qx(_$VL.callee)?DO(0x118):_$Vt;},_$qd=_$I,_$qE=_$i,_$qG=_$hK.exports,_$qU=_$qd(Function.toString);_$qE(_$qG.inspectSource)||(_$qG.inspectSource=function(_$VA){return _$qU(_$VA);});var _$qg=_$qG.inspectSource,_$qB=_$I,_$qy=_$p,_$ql=_$i,_$qP=_$qT,_$qQ=_$qg,_$qu=function(){},_$qJ=_$h6(Vv(0x1b7),_$h.DNRnQ),_$qj=/^\s*(?:class|function)\b/,_$qS=_$qB(_$qj.exec),_$qc=!_$qj.test(_$qu),_$qo=function(_$VA){if(!_$ql(_$VA))return!(0x1f*0x82+0x1eb*-0x12+0x15*0xe5);try{return _$qJ(_$qu,[],_$VA),!(-0xd96+-0xdcd*0x1+0x9*0x30b);}catch(_$VL){return!(-0x2*-0x173+0x14f0*0x1+0x1*-0x17d5);}},_$qm=function(_$VA){var DR=Vv;if(!_$ql(_$VA))return!(-0x1*-0x107e+0x2e7+0x49*-0x44);switch(_$qP(_$VA)){case DR(0x12a):case DR(0x1ce):case DR(0x258):return!(-0xd3+0x263c+-0x2568);}try{return _$qc||!!_$qS(_$qj,_$qQ(_$VA));}catch(_$VL){return!(0x1*0x1fe7+-0x1*0x1141+0x3*-0x4e2);}};_$qm.sham=!(0xd84+0x11f5+-0x1f79);var _$qs=!_$qJ||_$qy(function(){var _$VA;return _$qo(_$qo.call)||!_$qo(Object)||!_$qo(function(){_$VA=!(0x303*0x5+0xf*-0xad+-0x6*0xd2);})||_$VA;})?_$qm:_$qo,_$qa=_$qL,_$qb=_$qs,_$qz=_$h0,_$qv=_$n4(Vv(0x270)),_$p0=Array,_$p1=function(_$VA){var _$VL;return _$qa(_$VA)&&(_$VL=_$VA.constructor,(_$qb(_$VL)&&(_$VL===_$p0||_$qa(_$VL.prototype))||_$qz(_$VL)&&null===(_$VL=_$VL[_$qv]))&&(_$VL=void(0xd6c+0x5*-0x52d+-0x3*-0x427))),void(0x6d*-0x50+-0x2*0x71+0x22f2)===_$VL?_$p0:_$VL;},_$p2=function(_$VA,_$VL){return new(_$p1(_$VA))(-0x2440+-0x47*-0x17+0x1ddf*0x1===_$VL?-0x25a1+-0x97+0x2638:_$VL);},_$p3=_$p,_$p4=_$hA,_$p5=_$n4(_$h.nrzWN),_$p6=function(_$VA){return _$h.uPqgA(_$p4,0x1e7d+-0x2055+0x1*0x20b)||!_$p3(function(){var _$VL=[];return(_$VL.constructor={})[_$p5]=function(){return{'foo':0x1};},-0x1*0xd2d+-0xfdb*0x1+0x1d09!==_$VL[_$VA](Boolean).foo;});},_$p7=_$qp,_$p8=_$p,_$p9=_$qL,_$ph=_$h0,_$pn=_$hQ,_$pq=_$qN,_$pp=_$qf,_$pA=_$qw,_$pL=_$p2,_$pk=_$p6,_$pt=_$hA,_$pM=_$n4(Vv(0x13e)),_$pI=_$pt>=-0x4*-0x54e+-0x1ec4+-0x1*-0x9bf||!_$h.sSxvo(_$p8,function(){var _$VA=[];return _$VA[_$pM]=!(0xcdd*0x3+-0x20c2+-0x1*0x5d4),_$VA.concat()[0x2122+-0x1*0x1560+0x1*-0xbc2]!==_$VA;}),_$pH=function(_$VA){if(!_$ph(_$VA))return!(-0x1b27+0x1e7c+0x8e*-0x6);var _$VL=_$VA[_$pM];return void(-0x2392+-0x15d8+0x396a)!==_$VL?!!_$VL:_$p9(_$VA);};_$p7({'target':Vv(0x1af),'proto':!(0x4b*-0x1+-0x30c+0x357),'arity':0x1,'forced':!_$pI||!_$pk(Vv(0x1b4))},{'concat':function(_$VA){var _$VL,_$Vk,_$Vt,_$VM,_$VI,_$VH=_$pn(this),_$VO=_$pL(_$VH,0xa*-0x2d4+0x20c1+0x1*-0x479),_$VR=-0x6*0x3d6+-0xc15+0x3*0xbb3;for(_$VL=-(0x1*0x238b+-0x224f*-0x1+-0x45d9),_$Vt=arguments.length;_$VL<_$Vt;_$VL++)if(_$pH(_$VI=-(-0xced+0xfe9*-0x1+-0x17*-0x141)===_$VL?_$VH:arguments[_$VL])){for(_$VM=_$pq(_$VI),_$pp(_$h.XFSuj(_$VR,_$VM)),_$Vk=0x5f7*-0x2+0x10c4+-0x4d6;_$Vk<_$VM;_$Vk++,_$VR++)_$Vk in _$VI&&_$pA(_$VO,_$VR,_$VI[_$Vk]);}else _$pp(_$VR+(0x4c2+-0x41*-0x69+0xfb5*-0x2)),_$h.IhfQQ(_$pA,_$VO,_$VR++,_$VI);return _$VO.length=_$VR,_$VO;}});var _$pO=_$R,_$pR=_$h1,_$pC=function(_$VA,_$VL){var DC=Vv,_$Vk=_$pR[_$VA+DC(0x235)],_$Vt=_$Vk&&_$Vk[_$VL];if(_$Vt)return _$Vt;var _$VM=_$pO[_$VA],_$VI=_$VM&&_$VM.prototype;return _$VI&&_$VI[_$VL];},_$pN=_$pC(Vv(0x1af),Vv(0x1b4)),_$pr=_$H,_$pf=_$pN,_$pX=Array.prototype,_$pV=function(_$VA){var _$VL=_$VA.concat;return _$h.DPusW(_$VA,_$pX)||_$pr(_$pX,_$VA)&&_$VL===_$pX.concat?_$pf:_$VL;},_$pD=_$qI,_$pw=Math.max,_$pY=Math.min,_$pZ=function(_$VA,_$VL){var _$Vk=_$pD(_$VA);return _$Vk<0x108b+0x1127+-0x21b2?_$pw(_$h.ptbCu(_$Vk,_$VL),0x6e0+0x2a*-0xb+-0x2*0x289):_$pY(_$Vk,_$VL);},_$pF=_$I([].slice),_$px=_$qp,_$pe=_$qL,_$pi=_$qs,_$pW=_$h0,_$pK=_$pZ,_$pT=_$qN,_$pd=_$z,_$pE=_$qw,_$pG=_$n4,_$pU=_$pF,_$pg=_$p6(Vv(0x113)),_$pB=_$h.vrUKZ(_$pG,Vv(0x270)),_$py=Array,_$pl=Math.max;_$px({'target':Vv(0x1af),'proto':!(0x6*-0x43+0x220f+-0x207d),'forced':!_$pg},{'slice':function(_$VA,_$VL){var _$Vk,_$Vt,_$VM,_$VI=_$h.lrLZC(_$pd,this),_$VH=_$pT(_$VI),_$VO=_$pK(_$VA,_$VH),_$VR=_$pK(_$h.BzZea(void(-0x25a1+-0x3*0x7a9+0x3c9c),_$VL)?_$VH:_$VL,_$VH);if(_$pe(_$VI)&&(_$Vk=_$VI.constructor,(_$pi(_$Vk)&&(_$Vk===_$py||_$pe(_$Vk.prototype))||_$pW(_$Vk)&&null===(_$Vk=_$Vk[_$pB]))&&(_$Vk=void(-0xa80+0x1*-0x14ed+0x649*0x5)),_$Vk===_$py||void(-0x141*0x7+-0x2610+0x6b1*0x7)===_$Vk))return _$pU(_$VI,_$VO,_$VR);for(_$Vt=new(void(-0x197d+0xf28+0xa55)===_$Vk?_$py:_$Vk)(_$h.qRjJo(_$pl,_$VR-_$VO,-0x31*-0x8d+0x3ad*0x5+0x2*-0x16af)),_$VM=0x1*0x1362+-0x5ab*0x2+0xce*-0xa;_$VO<_$VR;_$VO++,_$VM++)_$VO in _$VI&&_$pE(_$Vt,_$VM,_$VI[_$VO]);return _$Vt.length=_$VM,_$Vt;}});var _$pP=_$h.dTAHe(_$pC,Vv(0x1af),Vv(0x113)),_$pQ=_$H,_$pu=_$pP,_$pJ=Array.prototype,_$pj=function(_$VA){var _$VL=_$VA.slice;return _$VA===_$pJ||_$h.wtKeL(_$pQ,_$pJ,_$VA)&&_$h.DPusW(_$VL,_$pJ.slice)?_$pu:_$VL;},_$pS=_$z,_$pc=_$pZ,_$po=_$qN,_$pm=function(_$VA){var _$VL={'FiHBe':function(_$Vk,_$Vt){return _$Vk(_$Vt);},'NFuif':function(_$Vk,_$Vt,_$VM){return _$Vk(_$Vt,_$VM);}};return function(_$Vk,_$Vt,_$VM){var _$VI=_$VL.FiHBe(_$pS,_$Vk),_$VH=_$po(_$VI);if(-0xf93+0x2ea+0xca9*0x1===_$VH)return!_$VA&&-(-0x2*-0xd8b+-0x1*-0x17cb+-0x8*0x65c);var _$VO,_$VR=_$VL.NFuif(_$pc,_$VM,_$VH);if(_$VA&&_$Vt!=_$Vt){for(;_$VH>_$VR;)if((_$VO=_$VI[_$VR++])!=_$VO)return!(-0x430*0x1+0x171a*-0x1+0x7*0x3e6);}else{for(;_$VH>_$VR;_$VR++)if((_$VA||_$VR in _$VI)&&_$VI[_$VR]===_$Vt)return _$VA||_$VR||-0x1cb9+-0x2628+-0x1*-0x42e1;}return!_$VA&&-(0xd93+-0x367+0x13*-0x89);};},_$ps={'includes':_$pm(!(0x17*0x6a+-0x1afa+0x1174)),'indexOf':_$h.xSubX(_$pm,!(0xf76+-0x1a70+-0xafb*-0x1))},_$pa=_$p,_$pb=function(_$VA,_$VL){var _$Vk=[][_$VA];return!!_$Vk&&_$pa(function(){_$Vk.call(null,_$VL||function(){return-0x17be+0x256c*0x1+-0xdad;},-0x10*-0x3b+0x1730+-0x1adf);});},_$pz=_$qp,_$pv=_$ps.indexOf,_$A0=_$pb,_$A1=_$x([].indexOf),_$A2=!!_$A1&&_$h.yXYnH((0x73*-0x8+-0x219d*0x1+0x2*0x129b)/_$A1([-0xb*-0x4d+-0x6a9+0x35b],-0x195a+-0x1a18+-0x1*-0x3373,-(-0x628+0x69*0x33+-0xec3)),0xc83+-0x3*-0x2c+-0xd07);_$pz({'target':Vv(0x1af),'proto':!(0x68b+0x25c0+0x11*-0x29b),'forced':_$A2||!_$A0(Vv(0x221))},{'indexOf':function(_$VA){var _$VL=_$h.TGQAf(arguments.length,0xdb*-0x1d+-0x142+0x1a12*0x1)?arguments[-0xb*-0x281+0x1*-0x7d5+-0x1*0x13b5]:void(-0x5a8*0x4+0x107*0x22+-0xc4e);return _$A2?_$A1(this,_$VA,_$VL)||-0x685*-0x1+0x17*-0x4a+0x21:_$pv(this,_$VA,_$VL);}});var _$A3=_$pC(Vv(0x1af),Vv(0x221)),_$A4=_$H,_$A5=_$A3,_$A6=Array.prototype,_$A7=function(_$VA){var _$VL=_$VA.indexOf;return _$VA===_$A6||_$h.xKqZU(_$A4,_$A6,_$VA)&&_$VL===_$A6.indexOf?_$A5:_$VL;},_$A8=_$nU,_$A9=_$S,_$Ah=_$hQ,_$An=_$qN,_$Aq=_$p2,_$Ap=_$I([].push),_$AA=function(_$VA){var _$VL=0x21b8+0x10*-0x162+-0xb97===_$VA,_$Vk=-0x38*-0x6c+-0x611+-0x118d===_$VA,_$Vt=-0xf*0x95+0x5a7*-0x1+0x43*0x37===_$VA,_$VM=_$h.vsDzM(0x1fb7+-0x26a5+0x6f2*0x1,_$VA),_$VI=0x21d*0x3+0xd85+0x9eb*-0x2===_$VA,_$VH=0x96b+-0x10*0x10f+0x6*0x142===_$VA,_$VO=-0x10f9+0x2077+-0xf79===_$VA||_$VI;return function(_$VR,_$VC,_$VN,_$Vr){for(var _$Vf,_$VX,_$VV=_$Ah(_$VR),_$VD=_$A9(_$VV),_$Vw=_$An(_$VD),_$VY=_$h.daMvv(_$A8,_$VC,_$VN),_$VZ=-0x1ed3*-0x1+-0x2*0x623+-0x128d*0x1,_$VF=_$Vr||_$Aq,_$Vx=_$VL?_$VF(_$VR,_$Vw):_$Vk||_$VH?_$VF(_$VR,-0xb31+0xb57+-0x26*0x1):void(0x1b90+0x1*-0x146+-0x1a4a);_$Vw>_$VZ;_$VZ++)if((_$VO||_$VZ in _$VD)&&(_$VX=_$h.pDCbN(_$VY,_$Vf=_$VD[_$VZ],_$VZ,_$VV),_$VA)){if(_$VL)_$Vx[_$VZ]=_$VX;else{if(_$VX)switch(_$VA){case-0xa*-0x167+-0x20ce+0x12cb:return!(0xd21*-0x1+0x2629+-0x1908);case-0x1fae+0x52*-0x47+0x1*0x3671:return _$Vf;case 0x1048+0x2303+0x20d*-0x19:return _$VZ;case-0x62f*0x3+0x1b*0xec+-0x1*0x655:_$Ap(_$Vx,_$Vf);}else switch(_$VA){case-0x115*-0x1f+-0x17fb+-0x98c:return!(0x1d01+-0xd*0x175+-0xa0f);case-0x56c+0x1418*-0x1+0xd*0x1f7:_$Ap(_$Vx,_$Vf);}}}return _$VI?-(0x6ec+0xfa5+-0x10*0x169):_$Vt||_$VM?_$VM:_$Vx;};},_$AL={'forEach':_$AA(0x17ed+0x21e0+-0x39cd),'map':_$h.sTbtk(_$AA,0x295*0x5+0x41*0x71+-0x2999),'filter':_$AA(-0x16be+0x23dd*0x1+0x175*-0x9),'some':_$AA(0x1bf*0x1+0x19ee+-0x1baa),'every':_$AA(-0x8dd+-0xb5*0x7+0xdd4),'find':_$h.AIshC(_$AA,-0x179*-0x7+-0xdc3*-0x2+-0x25d0),'findIndex':_$AA(-0x5*0x1d+-0x57+0x11*0xe),'filterReject':_$AA(0x2615+-0x1*0x31d+-0x22f1*0x1)},_$Ak=_$AL.map;_$qp({'target':Vv(0x1af),'proto':!(-0x92a+0x29*-0xdf+0x1*0x2ce1),'forced':!_$p6(Vv(0x163))},{'map':function(_$VA){return _$h.IhfQQ(_$Ak,this,_$VA,arguments.length>-0xe45+-0x2*-0x94d+0x1*-0x454?arguments[-0x5*-0x30f+0xe06+-0x430*0x7]:void(-0x1d82+0x6*0x14+-0x76*-0x3f));}});var _$At=_$h.LnqDK(_$pC,Vv(0x1af),Vv(0x163)),_$AM=_$H,_$AI=_$At,_$AH=Array.prototype,_$AO=function(_$VA){var _$VL=_$VA.map;return _$h.WVHyN(_$VA,_$AH)||_$h.daMvv(_$AM,_$AH,_$VA)&&_$VL===_$AH.map?_$AI:_$VL;},_$AR=_$AL.filter;_$qp({'target':_$h.GkWtq,'proto':!(-0x4bd*0x6+0x318*0x8+-0x2*-0x1d7),'forced':!_$p6(Vv(0x12f))},{'filter':function(_$VA){return _$AR(this,_$VA,_$h.TGQAf(arguments.length,0x1091*0x1+-0x1d*-0x95+0x4c7*-0x7)?arguments[-0x1fe5+0xdc6+0x1220]:void(-0x1617+-0x50e+0x1b25));}});var _$AC=_$pC(_$h.GkWtq,Vv(0x12f)),_$AN=_$H,_$Ar=_$AC,_$Af=Array.prototype,_$AX=function(_$VA){var _$VL=_$VA.filter;return _$VA===_$Af||_$AN(_$Af,_$VA)&&_$VL===_$Af.filter?_$Ar:_$VL;},_$AV=_$hs,_$AD=_$hy(Vv(0x167)),_$Aw=function(_$VA){return _$AD[_$VA]||(_$AD[_$VA]=_$AV(_$VA));},_$AY=!_$p(function(){function _$VA(){}return _$VA.prototype.constructor=null,Object.getPrototypeOf(new _$VA())!==_$VA.prototype;}),_$AZ=_$hj,_$AF=_$i,_$Ax=_$hQ,_$Ae=_$AY,_$Ai=_$Aw(Vv(0x1a2)),_$AW=Object,_$AK=_$AW.prototype,_$AT=_$Ae?_$AW.getPrototypeOf:function(_$VA){var _$VL=_$Ax(_$VA);if(_$AZ(_$VL,_$Ai))return _$VL[_$Ai];var _$Vk=_$VL.constructor;return _$AF(_$Vk)&&_$h.CeKAw(_$VL,_$Vk)?_$Vk.prototype:_$h.RNNcU(_$VL,_$AW)?_$AK:null;},_$Ad=_$I,_$AE=_$hw,_$AG=_$h0,_$AU=function(_$VA){return _$AG(_$VA)||_$h.YpMKT(null,_$VA);},_$Ag=String,_$AB=TypeError,_$Ay=function(_$VA,_$VL,_$Vk){try{return _$Ad(_$AE(Object.getOwnPropertyDescriptor(_$VA,_$VL)[_$Vk]));}catch(_$Vt){}},_$Al=_$h0,_$AP=_$s,_$AQ=function(_$VA){var DN=Vv;if(_$AU(_$VA))return _$VA;throw new _$AB(DN(0x20c)+_$Ag(_$VA)+DN(0x1dd));},_$Au=Object.setPrototypeOf||(_$h.OQCzx(Vv(0x19f),{})?function(){var Dr=Vv,_$VA,_$VL=!(0x1ddc+0x14b1+-0x328c),_$Vk={};try{(_$VA=_$Ay(Object.prototype,Dr(0x19f),Dr(0x25b)))(_$Vk,[]),_$VL=_$Vk instanceof Array;}catch(_$Vt){}return function(_$VM,_$VI){return _$AP(_$VM),_$AQ(_$VI),_$Al(_$VM)?(_$VL?_$VA(_$VM,_$VI):_$VM.__proto__=_$VI,_$VM):_$VM;};}():void(-0x1*-0x187f+0xf55+-0x27d4)),_$AJ={},_$Aj={},_$AS=_$hj,_$Ac=_$z,_$Ao=_$ps.indexOf,_$Am=_$Aj,_$As=_$I([].push),_$Aa=function(_$VA,_$VL){var _$Vk,_$Vt=_$Ac(_$VA),_$VM=-0x1*0x1ee4+0x23a3+-0x1b*0x2d,_$VI=[];for(_$Vk in _$Vt)!_$AS(_$Am,_$Vk)&&_$AS(_$Vt,_$Vk)&&_$As(_$VI,_$Vk);for(;_$VL.length>_$VM;)_$AS(_$Vt,_$Vk=_$VL[_$VM++])&&(~_$Ao(_$VI,_$Vk)||_$As(_$VI,_$Vk));return _$VI;},_$Ab=[Vv(0x23f),_$h.cgwCv,Vv(0x22f),Vv(0x17a),Vv(0x1bf),Vv(0x1d9),Vv(0x260)],_$Az=_$Aa,_$Av=_$Ab.concat(Vv(0x1bc),Vv(0x1d2));_$AJ.f=Object.getOwnPropertyNames||function(_$VA){return _$h.JdaCE(_$Az,_$VA,_$Av);};var _$L0={};_$L0.f=Object.getOwnPropertySymbols;var _$L1=_$h6,_$L2=_$AJ,_$L3=_$L0,_$L4=_$nQ,_$L5=_$h.uwOdc(_$I,[].concat),_$L6=_$L1(Vv(0x1b7),Vv(0x1b3))||function(_$VA){var _$VL=_$L2.f(_$L4(_$VA)),_$Vk=_$L3.f;return _$Vk?_$L5(_$VL,_$Vk(_$VA)):_$VL;},_$L7=_$hj,_$L8=_$L6,_$L9=_$W,_$Lh=_$ng,_$Ln={},_$Lq=_$Aa,_$Lp=_$Ab,_$LA=Object.keys||function(_$VA){return _$Lq(_$VA,_$Lp);},_$LL=_$K,_$Lk=_$nB,_$Lt=_$ng,_$LM=_$nQ,_$LI=_$z,_$LH=_$LA;_$Ln.f=_$LL&&!_$Lk?Object.defineProperties:function(_$VA,_$VL){_$h.KzvJS(_$LM,_$VA);for(var _$Vk,_$Vt=_$LI(_$VL),_$VM=_$h.uTzii(_$LH,_$VL),_$VI=_$VM.length,_$VH=0x2055+-0x130b+0x6a5*-0x2;_$VI>_$VH;)_$Lt.f(_$VA,_$Vk=_$VM[_$VH++],_$Vt[_$Vk]);return _$VA;};var _$LO,_$LR=_$h.dTAHe(_$h6,Vv(0x287),Vv(0x198)),_$LC=_$nQ,_$LN=_$Ln,_$Lr=_$Ab,_$Lf=_$Aj,_$LX=_$LR,_$LV=_$nI,_$LD=Vv(0x1d2),_$Lw=Vv(0x226),_$LY=_$h.djOdu(_$Aw,Vv(0x1a2)),_$LZ=function(){},_$LF=function(_$VA){return _$h.ptbCu('<'+_$Lw+'>'+_$VA+'</',_$Lw)+'>';},_$Lx=function(_$VA){_$VA.write(_$LF('')),_$VA.close();var _$VL=_$VA.parentWindow.Object;return _$VA=null,_$VL;},_$Le=function(){var Df=Vv;try{_$LO=new ActiveXObject(Df(0x1ee));}catch(_$VM){}var _$VA,_$VL,_$Vk;_$Le='undefined'!=typeof document?document.domain&&_$LO?_$Lx(_$LO):(_$VL=_$h.ADsTu(_$LV,Df(0x1bd)),_$Vk=Df(0x1fa)+_$Lw+':',_$VL.style.display=Df(0x285),_$LX.appendChild(_$VL),_$VL.src=String(_$Vk),(_$VA=_$VL.contentWindow.document).open(),_$VA.write(_$LF(Df(0x25f))),_$VA.close(),_$VA.F):_$Lx(_$LO);for(var _$Vt=_$Lr.length;_$Vt--;)delete _$Le[_$LD][_$Lr[_$Vt]];return _$Le();};_$Lf[_$LY]=!(-0x1e28+-0x1148+0x6*0x7e8);var _$Li=Object.create||function(_$VA,_$VL){var _$Vk;return null!==_$VA?(_$LZ[_$LD]=_$LC(_$VA),_$Vk=new _$LZ(),_$LZ[_$LD]=null,_$Vk[_$LY]=_$VA):_$Vk=_$Le(),_$h.GRxgI(void(0x1d2e+-0x104a+-0xce4),_$VL)?_$Vk:_$LN.f(_$Vk,_$VL);},_$LW=_$h0,_$LK=_$q1,_$LT=Error,_$Ld=_$h.xSubX(_$I,''.replace),_$LE=String(new _$LT(Vv(0x26a)).stack),_$LG=/\n\s*at [^:]*:[^\n]*/,_$LU=_$LG.test(_$LE),_$Lg=_$P,_$LB=!_$p(function(){var DX=Vv,_$VA=new Error('a');return!(_$h.oBnuV in _$VA)||(Object.defineProperty(_$VA,DX(0x229),_$Lg(0x1342*0x2+0xb20+-0x31a3,0x119a+0x921*0x2+-0x23d5*0x1)),0x1b*-0x93+0x83*-0x1e+-0x1ee2*-0x1!==_$VA.stack);}),_$Ly=_$q1,_$Ll=function(_$VA,_$VL){var DV=Vv;if(_$LU&&DV(0x286)==typeof _$VA&&!_$LT.prepareStackTrace){for(;_$VL--;)_$VA=_$Ld(_$VA,_$LG,'');}return _$VA;},_$LP=_$LB,_$LQ=Error.captureStackTrace,_$Lu={},_$LJ=_$Lu,_$Lj=_$n4(Vv(0x212)),_$LS=Array.prototype,_$Lc=_$qT,_$Lo=_$hF,_$Lm=_$c,_$Ls=_$Lu,_$La=_$n4(Vv(0x212)),_$Lb=function(_$VA){var DD=Vv;if(!_$h.gMaCN(_$Lm,_$VA))return _$Lo(_$VA,_$La)||_$Lo(_$VA,DD(0x17f))||_$Ls[_$Lc(_$VA)];},_$Lz=_$E,_$Lv=_$hw,_$k0=_$nQ,_$k1=_$hf,_$k2=_$Lb,_$k3=TypeError,_$k4=_$E,_$k5=_$nQ,_$k6=_$hF,_$k7=_$nU,_$k8=_$E,_$k9=_$nQ,_$kh=_$hf,_$kn=function(_$VA){return void(0x1*0x1eaf+-0x1791+-0x71e)!==_$VA&&(_$h.dlsam(_$LJ.Array,_$VA)||_$LS[_$Lj]===_$VA);},_$kq=_$qN,_$kp=_$H,_$kA=function(_$VA,_$VL){var Dw=Vv,_$Vk=_$h.PIqMj(arguments.length,-0x18*0x32+0x2*-0xc52+-0x2ef*-0xa)?_$k2(_$VA):_$VL;if(_$Lv(_$Vk))return _$h.Ufhnc(_$k0,_$Lz(_$Vk,_$VA));throw new _$k3(_$h.XFSuj(_$k1(_$VA),Dw(0x207)));},_$kL=_$Lb,_$kk=function(_$VA,_$VL,_$Vk){var DY=Vv,_$Vt,_$VM;_$k5(_$VA);try{if(!(_$Vt=_$k6(_$VA,_$h.EnpGl))){if(_$h.BzZea(DY(0x1dc),_$VL))throw _$Vk;return _$Vk;}_$Vt=_$k4(_$Vt,_$VA);}catch(_$VI){_$VM=!(-0x22e5+-0x2116+-0x43fb*-0x1),_$Vt=_$VI;}if(_$h.IIyHO(DY(0x1dc),_$VL))throw _$Vk;if(_$VM)throw _$Vt;return _$k5(_$Vt),_$Vk;},_$kt=TypeError,_$kM=function(_$VA,_$VL){this.stopped=_$VA,this.result=_$VL;},_$kI=_$kM.prototype,_$kH=function(_$VA,_$VL,_$Vk){var DZ=Vv,_$Vt={'exwHz':DZ(0x291),'RwJRd':function(_$VF,_$Vx,_$Ve){return _$VF(_$Vx,_$Ve);},'mgfjO':function(_$VF,_$Vx,_$Ve){return _$VF(_$Vx,_$Ve);}},_$VM,_$VI,_$VH,_$VO,_$VR,_$VC,_$VN,_$Vr=_$Vk&&_$Vk.that,_$Vf=!(!_$Vk||!_$Vk.AS_ENTRIES),_$VX=!(!_$Vk||!_$Vk.IS_RECORD),_$VV=!(!_$Vk||!_$Vk.IS_ITERATOR),_$VD=!(!_$Vk||!_$Vk.INTERRUPTED),_$Vw=_$h.JdaCE(_$k7,_$VL,_$Vr),_$VY=function(_$VF){return _$VM&&_$kk(_$VM,_$Vt.exwHz,_$VF),new _$kM(!(-0x6f3+-0x7f4+0xee7),_$VF);},_$VZ=function(_$VF){return _$Vf?(_$k9(_$VF),_$VD?_$Vw(_$VF[-0x1291+0x68+0x1229],_$VF[0x114e+0x1*0x1cd+-0x131a],_$VY):_$Vt.RwJRd(_$Vw,_$VF[-0x211d+0x861+0x18bc],_$VF[0x1b38+-0x1c2b*0x1+-0x1*-0xf4])):_$VD?_$Vt.mgfjO(_$Vw,_$VF,_$VY):_$Vw(_$VF);};if(_$VX)_$VM=_$VA.iterator;else{if(_$VV)_$VM=_$VA;else{if(!(_$VI=_$kL(_$VA)))throw new _$kt(_$kh(_$VA)+DZ(0x207));if(_$kn(_$VI)){for(_$VH=0x10e6+-0x3*-0x3c+0x5de*-0x3,_$VO=_$kq(_$VA);_$h.QpQqQ(_$VO,_$VH);_$VH++)if((_$VR=_$h.KzvJS(_$VZ,_$VA[_$VH]))&&_$kp(_$kI,_$VR))return _$VR;return new _$kM(!(-0x3*-0x3df+0x91*-0x39+-0x43*-0x4f));}_$VM=_$kA(_$VA,_$VI);}}for(_$VC=_$VX?_$VA.next:_$VM.next;!(_$VN=_$k8(_$VC,_$VM)).done;){try{_$VR=_$VZ(_$VN.value);}catch(_$VF){_$h.moPer(_$kk,_$VM,DZ(0x1dc),_$VF);}if(_$h.PwqlJ(DZ(0x293),typeof _$VR)&&_$VR&&_$kp(_$kI,_$VR))return _$VR;}return new _$kM(!(0x202+0x1076+0x1d*-0xa3));},_$kO=_$qT,_$kR=String,_$kC=function(_$VA){var DF=Vv;if(DF(0x120)===_$kO(_$VA))throw new TypeError(DF(0x1b8));return _$kR(_$VA);},_$kN=_$kC,_$kr=_$qp,_$kf=_$H,_$kX=_$AT,_$kV=_$Au,_$kD=function(_$VA,_$VL,_$Vk){for(var _$Vt=_$h.xZgKI(_$L8,_$VL),_$VM=_$Lh.f,_$VI=_$L9.f,_$VH=0x2692+-0x2429+0x1*-0x269;_$VH<_$Vt.length;_$VH++){var _$VO=_$Vt[_$VH];_$h.qRjJo(_$L7,_$VA,_$VO)||_$Vk&&_$h.dvDMs(_$L7,_$Vk,_$VO)||_$h.IhfQQ(_$VM,_$VA,_$VO,_$h.iXjCt(_$VI,_$VL,_$VO));}},_$kw=_$Li,_$kY=_$q1,_$kZ=_$P,_$kF=function(_$VA,_$VL){var Dx=Vv;_$LW(_$VL)&&Dx(0x196)in _$VL&&_$LK(_$VA,Dx(0x196),_$VL.cause);},_$kx=function(_$VA,_$VL,_$Vk,_$Vt){var De=Vv;_$LP&&(_$LQ?_$LQ(_$VA,_$VL):_$Ly(_$VA,De(0x229),_$Ll(_$Vk,_$Vt)));},_$ke=_$kH,_$ki=function(_$VA,_$VL){return void(-0x9b9*-0x1+-0x1*-0x1235+-0x1bee)===_$VA?_$h.PIqMj(arguments.length,-0x7b*-0x3d+0x27*0x92+0x179*-0x23)?'':_$VL:_$kN(_$VA);},_$kW=_$n4(_$h.xHtlU),_$kK=Error,_$kT=[].push,_$kd=function(_$VA,_$VL){var Di=Vv,_$Vk,_$Vt=_$kf(_$kE,this);_$kV?_$Vk=_$h.wtKeL(_$kV,new _$kK(),_$Vt?_$kX(this):_$kE):(_$Vk=_$Vt?this:_$h.oHtrz(_$kw,_$kE),_$h.iccOe(_$kY,_$Vk,_$kW,Di(0x19a))),void(0x1*0x1bb2+-0x175*0x1a+0x8*0x146)!==_$VL&&_$h.moPer(_$kY,_$Vk,Di(0x1a3),_$ki(_$VL)),_$kx(_$Vk,_$kd,_$Vk.stack,0x2*0x6fa+0x8d+-0xe80),arguments.length>0x143*-0x18+-0x1b6*-0x1+-0x1c94*-0x1&&_$h.qRjJo(_$kF,_$Vk,arguments[-0x16f*-0x15+0x2313+0x104b*-0x4]);var _$VM=[];return _$ke(_$VA,_$kT,{'that':_$VM}),_$kY(_$Vk,Di(0x24b),_$VM),_$Vk;};_$kV?_$h.JbMBK(_$kV,_$kd,_$kK):_$h.pqnSq(_$kD,_$kd,_$kK,{'name':!(-0x35*0x29+0x21ca+0x17d*-0x11)});var _$kE=_$kd.prototype=_$kw(_$kK.prototype,{'constructor':_$kZ(-0x18d9+-0xd01*0x3+0x1*0x3fdd,_$kd),'message':_$kZ(-0x1e3*-0xf+-0x14d8+0x1dd*-0x4,''),'name':_$h.xKqZU(_$kZ,0xd5a+0x448+-0x1*0x11a1,Vv(0x1c7))});_$kr({'global':!(0x1328+0xbc8+-0x1ef0),'constructor':!(-0x1*-0x1bdd+0xa81+-0x265e),'arity':0x2},{'AggregateError':_$kd});var _$kG,_$kU,_$kg,_$kB=_$i,_$ky=_$R.WeakMap,_$kl=_$kB(_$ky)&&/native code/.test(String(_$ky)),_$kP=_$R,_$kQ=_$h0,_$ku=_$q1,_$kJ=_$hj,_$kj=_$hK.exports,_$kS=_$Aw,_$kc=_$Aj,_$ko=Vv(0x18e),_$km=_$kP.TypeError,_$ks=_$kP.WeakMap;if(_$kl||_$kj.state){var _$ka=_$kj.state||(_$kj.state=new _$ks());_$ka.get=_$ka.get,_$ka.has=_$ka.has,_$ka.set=_$ka.set,_$kG=function(_$VA,_$VL){if(_$ka.has(_$VA))throw new _$km(_$ko);return _$VL.facade=_$VA,_$ka.set(_$VA,_$VL),_$VL;},_$kU=function(_$VA){return _$ka.get(_$VA)||{};},_$kg=function(_$VA){return _$ka.has(_$VA);};}else{var _$kb=_$h.uoVjF(_$kS,Vv(0x13b));_$kc[_$kb]=!(0xd6*-0x1a+0x6a9+0xf13),_$kG=function(_$VA,_$VL){if(_$kJ(_$VA,_$kb))throw new _$km(_$ko);return _$VL.facade=_$VA,_$h.pDCbN(_$ku,_$VA,_$kb,_$VL),_$VL;},_$kU=function(_$VA){return _$kJ(_$VA,_$kb)?_$VA[_$kb]:{};},_$kg=function(_$VA){return _$h.ybmmt(_$kJ,_$VA,_$kb);};}var _$kz,_$kv,_$t0,_$t1={'set':_$kG,'get':_$kU,'has':_$kg,'enforce':function(_$VA){return _$kg(_$VA)?_$kU(_$VA):_$kG(_$VA,{});},'getterFor':function(_$VA){return function(_$VL){var DW=a0dbbcbn,_$Vk;if(!_$h.XuONY(_$kQ,_$VL)||(_$Vk=_$h.gMaCN(_$kU,_$VL)).type!==_$VA)throw new _$km(DW(0x237)+_$VA+' required');return _$Vk;};}},_$t2=_$K,_$t3=_$hj,_$t4=Function.prototype,_$t5=_$t2&&Object.getOwnPropertyDescriptor,_$t6=_$h.BcAzd(_$t3,_$t4,Vv(0x1a9)),_$t7={'EXISTS':_$t6,'PROPER':_$t6&&Vv(0x21a)===function(){}.name,'CONFIGURABLE':_$t6&&(!_$t2||_$t2&&_$t5(_$t4,Vv(0x1a9)).configurable)},_$t8=_$q1,_$t9=function(_$VA,_$VL,_$Vk,_$Vt){return _$Vt&&_$Vt.enumerable?_$VA[_$VL]=_$Vk:_$h.pDCbN(_$t8,_$VA,_$VL,_$Vk),_$VA;},_$th=_$p,_$tn=_$i,_$tq=_$h0,_$tp=_$Li,_$tA=_$AT,_$tL=_$t9,_$tk=_$n4(_$h.IKbdd),_$tt=!(0x2*0x12fb+-0xac1*-0x1+0x30b6*-0x1);[].keys&&(Vv(0x1e1)in(_$t0=[].keys())?(_$kv=_$tA(_$tA(_$t0)))!==Object.prototype&&(_$kz=_$kv):_$tt=!(-0x7*-0xef+-0x2de+-0x139*0x3));var _$tM=!_$tq(_$kz)||_$th(function(){var _$VA={};return _$h.iOJjX(_$kz[_$tk].call(_$VA),_$VA);});_$tn((_$kz=_$tM?{}:_$tp(_$kz))[_$tk])||_$tL(_$kz,_$tk,function(){return this;});var _$tI={'IteratorPrototype':_$kz,'BUGGY_SAFARI_ITERATORS':_$tt},_$tH=_$qT,_$tO=_$qZ?{}.toString:function(){var DK=Vv;return _$h.XFSuj(DK(0x278),_$tH(this))+']';},_$tR=_$qZ,_$tC=_$ng.f,_$tN=_$q1,_$tr=_$hj,_$tf=_$tO,_$tX=_$n4(Vv(0x174)),_$tV=function(_$VA,_$VL,_$Vk,_$Vt){var _$VM=_$Vk?_$VA:_$VA&&_$VA.prototype;_$VM&&(_$tr(_$VM,_$tX)||_$tC(_$VM,_$tX,{'configurable':!(0x8a0*-0x2+-0x910+0x1a50),'value':_$VL}),_$Vt&&!_$tR&&_$h.IhfQQ(_$tN,_$VM,_$h.ueKNJ,_$tf));},_$tD=_$tI.IteratorPrototype,_$tw=_$Li,_$tY=_$P,_$tZ=_$tV,_$tF=_$Lu,_$tx=function(){return this;},_$te=_$qp,_$ti=_$E,_$tW=_$t7,_$tK=function(_$VA,_$VL,_$Vk,_$Vt){var DT=Vv,_$VM=_$h.XFSuj(_$VL,DT(0x1a4));return _$VA.prototype=_$tw(_$tD,{'next':_$tY(+!_$Vt,_$Vk)}),_$tZ(_$VA,_$VM,!(-0x139*0xb+0xa04+0x370),!(0xf9e+-0xcf6+0xa*-0x44)),_$tF[_$VM]=_$tx,_$VA;},_$tT=_$AT,_$td=_$tV,_$tE=_$t9,_$tG=_$Lu,_$tU=_$tI,_$tg=_$tW.PROPER,_$tB=_$tU.BUGGY_SAFARI_ITERATORS,_$ty=_$n4(_$h.IKbdd),_$tl=Vv(0x167),_$tP=Vv(0x1fe),_$tQ=Vv(0x1f7),_$tu=function(){return this;},_$tJ=function(_$VA,_$VL,_$Vk,_$Vt,_$VM,_$VI,_$VH){var Dd=Vv;_$tK(_$Vk,_$VL,_$Vt);var _$VO,_$VR,_$VC,_$VN=function(_$VY){if(_$h.PyLpi(_$VY,_$VM)&&_$VD)return _$VD;if(!_$tB&&_$VY&&_$VY in _$VX)return _$VX[_$VY];switch(_$VY){case _$tl:case _$tP:case _$tQ:return function(){return new _$Vk(this,_$VY);};}return function(){return new _$Vk(this);};},_$Vr=_$VL+Dd(0x1a4),_$Vf=!(-0x13*-0x115+-0x1c*0x3d+-0x1*0xde2),_$VX=_$VA.prototype,_$VV=_$VX[_$ty]||_$VX[_$h.mWSSg]||_$VM&&_$VX[_$VM],_$VD=!_$tB&&_$VV||_$VN(_$VM),_$Vw=_$h.UMHVk(Dd(0x1af),_$VL)&&_$VX.entries||_$VV;if(_$Vw&&_$h.iQBoa(_$VO=_$tT(_$Vw.call(new _$VA())),Object.prototype)&&_$VO.next&&(_$td(_$VO,_$Vr,!(-0xf9b+-0x362+0x12fd),!(0x182a+-0x3*-0x503+-0x2d*0xdf)),_$tG[_$Vr]=_$tu),_$tg&&_$VM===_$tP&&_$VV&&_$VV.name!==_$tP&&(_$Vf=!(0x11f4+-0x12b1*-0x1+-0x24a5),_$VD=function(){return _$ti(_$VV,this);}),_$VM){if(_$VR={'values':_$VN(_$tP),'keys':_$VI?_$VD:_$VN(_$tl),'entries':_$VN(_$tQ)},_$VH){for(_$VC in _$VR)(_$tB||_$Vf||!(_$VC in _$VX))&&_$tE(_$VX,_$VC,_$VR[_$VC]);}else _$te({'target':_$VL,'proto':!(-0x1f9d+-0x5b*0x4f+-0x12*-0x351),'forced':_$tB||_$Vf},_$VR);}return _$VH&&_$h.RmGnP(_$VX[_$ty],_$VD)&&_$tE(_$VX,_$ty,_$VD,{'name':_$VM}),_$tG[_$VL]=_$VD,_$VR;},_$tj=function(_$VA,_$VL){return{'value':_$VA,'done':_$VL};},_$tS=_$z,_$tc=function(){},_$to=_$Lu,_$tm=_$t1,_$ts=(_$ng.f,_$tJ),_$ta=_$tj,_$tb=Vv(0x130),_$tz=_$tm.set,_$tv=_$tm.getterFor(_$tb);_$ts(Array,Vv(0x1af),function(_$VA,_$VL){_$tz(this,{'type':_$tb,'target':_$h.zbMrA(_$tS,_$VA),'index':0x0,'kind':_$VL});},function(){var DE=Vv,_$VA=_$tv(this),_$VL=_$VA.target,_$Vk=_$VA.index++;if(!_$VL||_$Vk>=_$VL.length)return _$VA.target=void(-0x1*0x12fd+-0x150e+-0x9*-0x473),_$ta(void(0x1539+0x5*0x30a+-0x1*0x246b),!(-0x809+-0x83*0x5+0x1*0xa98));switch(_$VA.kind){case DE(0x167):return _$h.kDZvg(_$ta,_$Vk,!(0xb*0x2c5+-0x949*0x2+-0xbe4));case _$h.zeqfk:return _$ta(_$VL[_$Vk],!(0x19bc+0x1622+0x2fdd*-0x1));}return _$h.zZzDf(_$ta,[_$Vk,_$VL[_$Vk]],!(-0x116b+-0x762*0x5+-0x3656*-0x1));},Vv(0x1fe)),_$to.Arguments=_$to.Array,(_$h.NCosq(_$tc),_$tc(),_$tc());var _$M0,_$M1,_$M2,_$M3,_$M4=Vv(0x177)===_$Y(_$R.process),_$M5=_$ng,_$M6=function(_$VA,_$VL,_$Vk){return _$M5.f(_$VA,_$VL,_$Vk);},_$M7=_$h6,_$M8=_$M6,_$M9=_$K,_$Mh=_$n4(Vv(0x270)),_$Mn=_$H,_$Mq=TypeError,_$Mp=_$qs,_$MA=_$hf,_$ML=TypeError,_$Mk=_$nQ,_$Mt=function(_$VA){var DG=Vv;if(_$Mp(_$VA))return _$VA;throw new _$ML(_$MA(_$VA)+DG(0x117));},_$MM=_$c,_$MI=_$h.UudKE(_$n4,_$h.nrzWN),_$MH=function(_$VA,_$VL){var _$Vk,_$Vt=_$Mk(_$VA).constructor;return void(0x15e4+0x17*0x8f+0x1*-0x22bd)===_$Vt||_$MM(_$Vk=_$Mk(_$Vt)[_$MI])?_$VL:_$h.zuUgq(_$Mt,_$Vk);},_$MO=TypeError,_$MR=/(?:ipad|iphone|ipod).*applewebkit/i.test(_$h7),_$MC=_$R,_$MN=_$X,_$Mr=_$nU,_$Mf=_$i,_$MX=_$hj,_$MV=_$p,_$MD=_$LR,_$Mw=_$pF,_$MY=_$nI,_$MZ=function(_$VA,_$VL){if(_$VA<_$VL)throw new _$MO(_$h.raokj);return _$VA;},_$MF=_$MR,_$Mx=_$M4,_$Me=_$MC.setImmediate,_$Mi=_$MC.clearImmediate,_$MW=_$MC.process,_$MK=_$MC.Dispatch,_$MT=_$MC.Function,_$Md=_$MC.MessageChannel,_$ME=_$MC.String,_$MG=-0x15d*0xa+0x21a4+0x1*-0x1402,_$MU={},_$Mg=Vv(0x1ac);_$MV(function(){_$M0=_$MC.location;});var _$MB=function(_$VA){if(_$MX(_$MU,_$VA)){var _$VL=_$MU[_$VA];delete _$MU[_$VA],_$VL();}},_$My=function(_$VA){return function(){_$MB(_$VA);};},_$Ml=function(_$VA){_$MB(_$VA.data);},_$MP=function(_$VA){_$MC.postMessage(_$ME(_$VA),_$M0.protocol+'//'+_$M0.host);};_$h.sbkJP(_$Me,_$Mi)||(_$Me=function(_$VA){_$MZ(arguments.length,0x1017*-0x2+0x1*-0xba3+-0x47*-0x9e);var _$VL=_$h.djOdu(_$Mf,_$VA)?_$VA:_$MT(_$VA),_$Vk=_$Mw(arguments,-0x1*0x1d54+0xb6+0x1af*0x11);return _$MU[++_$MG]=function(){_$h.pDCbN(_$MN,_$VL,void(0x1*0x202+0x15e1+-0x17e3),_$Vk);},_$M1(_$MG),_$MG;},_$Mi=function(_$VA){delete _$MU[_$VA];},_$Mx?_$M1=function(_$VA){_$MW.nextTick(_$My(_$VA));}:_$MK&&_$MK.now?_$M1=function(_$VA){_$MK.now(_$My(_$VA));}:_$Md&&!_$MF?(_$M3=(_$M2=new _$Md()).port2,_$M2.port1.onmessage=_$Ml,_$M1=_$Mr(_$M3.postMessage,_$M3)):_$MC.addEventListener&&_$Mf(_$MC.postMessage)&&!_$MC.importScripts&&_$M0&&Vv(0x1b0)!==_$M0.protocol&&!_$MV(_$MP)?(_$M1=_$MP,_$MC.addEventListener(_$h.fZBNe,_$Ml,!(-0x1218+-0xb0b*-0x1+0x70e))):_$M1=_$Mg in _$MY(Vv(0x226))?function(_$VA){_$MD.appendChild(_$h.KzvJS(_$MY,_$h.KPgLi))[_$Mg]=function(){_$MD.removeChild(this),_$h.iDnPY(_$MB,_$VA);};}:function(_$VA){setTimeout(_$My(_$VA),0x1e4e+0x23fe+-0x424c*0x1);});var _$MQ={'set':_$Me,'clear':_$Mi},_$Mu=_$R,_$MJ=_$K,_$Mj=Object.getOwnPropertyDescriptor,_$MS=function(){this.head=null,this.tail=null;};_$MS.prototype={'add':function(_$VA){var _$VL={'item':_$VA,'next':null},_$Vk=this.tail;_$Vk?_$Vk.next=_$VL:this.head=_$VL,this.tail=_$VL;},'get':function(){var _$VA=this.head;if(_$VA)return _$h.GRxgI(null,this.head=_$VA.next)&&(this.tail=null),_$VA.item;}};var _$Mc,_$Mo,_$Mm,_$Ms,_$Ma,_$Mb=_$MS,_$Mz=/ipad|iphone|ipod/i.test(_$h7) && 'undefined' != typeof Pebble, _$Mv = /web0s(?!.*chrome)/i.test(_$h7), _$I0 = _$R, _$I1 = function (_$VA) {
+    if(!_$MJ)return _$Mu[_$VA];var _$VL=_$Mj(_$Mu,_$VA);return _$VL&&_$VL.value;},_$I2=_$nU,_$I3=_$MQ.set,_$I4=_$Mb,_$I5=_$MR,_$I6=_$Mz,_$I7=_$Mv,_$I8=_$M4,_$I9=_$I0.MutationObserver||_$I0.WebKitMutationObserver,_$Ih=_$I0.document,_$In=_$I0.process,_$Iq=_$I0.Promise,_$Ip=_$I1(_$h.qHWIz);if(!_$Ip){var _$IA=new _$I4(),_$IL=function(){var _$VA,_$VL;for(_$I8&&(_$VA=_$In.domain)&&_$VA.exit();_$VL=_$IA.get();)try{_$VL();}catch(_$Vk){throw _$IA.head&&_$Mc(),_$Vk;}_$VA&&_$VA.enter();};_$h.TeLKF(_$I5,_$I8)||_$I7||!_$I9||!_$Ih?!_$I6&&_$Iq&&_$Iq.resolve?((_$Ms=_$Iq.resolve(void(-0xd52+0x2b*-0x6d+0x1fa1))).constructor=_$Iq,_$Ma=_$I2(_$Ms.then,_$Ms),_$Mc=function(){_$Ma(_$IL);}):_$I8?_$Mc=function(){_$In.nextTick(_$IL);}:(_$I3=_$I2(_$I3,_$I0),_$Mc=function(){_$I3(_$IL);}):(_$Mo=!(-0x137b*-0x1+-0x1464+0xe9),_$Mm=_$Ih.createTextNode(''),new _$I9(_$IL).observe(_$Mm,{'characterData':!(0xabe+-0x1*0x2501+0x1a43)}),_$Mc=function(){_$Mm.data=_$Mo=!_$Mo;}),_$Ip=function(_$VA){_$IA.head||_$Mc(),_$IA.add(_$VA);};}var _$Ik=_$Ip,_$It=function(_$VA){try{return{'error':!(-0x2644+-0x953+0x2f98),'value':_$VA()};}catch(_$VL){return{'error':!(0x13bb*-0x1+-0x157d+-0xa4e*-0x4),'value':_$VL};}},_$IM=_$R.Promise,_$II=Vv(0x293)==typeof Deno&&Deno&&_$h.DDRHK==typeof Deno.version,_$IH=!_$II&&!_$M4&&Vv(0x293)==typeof window&&Vv(0x293)==typeof document,_$IO=_$R,_$IR=_$IM,_$IC=_$i,_$IN=_$nT,_$Ir=_$qg,_$If=_$n4,_$IX=_$IH,_$IV=_$II,_$ID=_$hA,_$Iw=_$IR&&_$IR.prototype,_$IY=_$If(Vv(0x270)),_$IZ=!(0x1*0xba8+-0x242+-0x965),_$IF=_$IC(_$IO.PromiseRejectionEvent),_$Ix=_$IN(Vv(0x14a),function(){var _$VA=_$Ir(_$IR),_$VL=_$VA!==_$h.KzvJS(String,_$IR);if(!_$VL&&-0x15f*-0xe+-0x17be+0x4ce===_$ID)return!(-0x1c14+-0x2118+0x4*0xf4b);if(!_$Iw.catch||!_$Iw.finally)return!(0x234b+0xeb7*-0x1+-0x1494);if(!_$ID||_$ID<0x773+-0xec+-0x654||!/native code/.test(_$VA)){var _$Vk=new _$IR(function(_$VM){_$VM(-0x6cf+0x305*0x3+0x1*-0x23f);}),_$Vt=function(_$VM){_$VM(function(){},function(){});};if((_$Vk.constructor={})[_$IY]=_$Vt,!(_$IZ=_$h.RNNcU(_$Vk.then(function(){}),_$Vt)))return!(0xd*-0x62+0x5b*-0x2f+0x1ab*0xd);}return!_$VL&&_$h.ULjga(_$IX,_$IV)&&!_$IF;}),_$Ie={'CONSTRUCTOR':_$Ix,'REJECTION_EVENT':_$IF,'SUBCLASSING':_$IZ},_$Ii={},_$IW=_$hw,_$IK=TypeError,_$IT=function(_$VA){var _$VL={'FKhob':function(_$VM,_$VI){return _$VM!==_$VI;}},_$Vk,_$Vt;this.promise=new _$VA(function(_$VM,_$VI){var DU=a0dbbcbn;if(void(-0x2*0x637+0x1682+-0xa14)!==_$Vk||_$VL.FKhob(void(-0x1c55*0x1+-0x1fc0+0x3c15*0x1),_$Vt))throw new _$IK(DU(0x141));_$Vk=_$VM,_$Vt=_$VI;}),this.resolve=_$IW(_$Vk),this.reject=_$IW(_$Vt);};_$Ii.f=function(_$VA){return new _$IT(_$VA);};var _$Id,_$IE,_$IG=_$qp,_$IU=_$M4,_$Ig=_$R,_$IB=_$E,_$Iy=_$t9,_$Il=_$tV,_$IP=function(_$VA){var _$VL=_$h.zbMrA(_$M7,_$VA);_$M9&&_$VL&&!_$VL[_$Mh]&&_$h.OfyCt(_$M8,_$VL,_$Mh,{'configurable':!(0xedc+-0x1*-0x1d87+-0x2c63*0x1),'get':function(){return this;}});},_$IQ=_$hw,_$Iu=_$i,_$IJ=_$h0,_$Ij=function(_$VA,_$VL){var Dg=Vv;if(_$Mn(_$VL,_$VA))return _$VA;throw new _$Mq(Dg(0x187));},_$IS=_$MH,_$Ic=_$MQ.set,_$Io=_$Ik,_$Im=function(_$VA,_$VL){try{-0x13*0x3c+-0x125*-0x8+-0x4b3===arguments.length?console.error(_$VA):console.error(_$VA,_$VL);}catch(_$Vk){}},_$Is=_$It,_$Ia=_$Mb,_$Ib=_$t1,_$Iz=_$IM,_$Iv=_$Ii,_$H0=Vv(0x14a),_$H1=_$Ie.CONSTRUCTOR,_$H2=_$Ie.REJECTION_EVENT,_$H3=_$Ib.getterFor(_$H0),_$H4=_$Ib.set,_$H5=_$Iz&&_$Iz.prototype,_$H6=_$Iz,_$H7=_$H5,_$H8=_$Ig.TypeError,_$H9=_$Ig.document,_$Hh=_$Ig.process,_$Hn=_$Iv.f,_$Hq=_$Hn,_$Hp=!!(_$H9&&_$H9.createEvent&&_$Ig.dispatchEvent),_$HA=Vv(0x1d4),_$HL=function(_$VA){var _$VL;return!(!_$h.trtIp(_$IJ,_$VA)||!_$Iu(_$VL=_$VA.then))&&_$VL;},_$Hk=function(_$VA,_$VL){var DB=Vv,_$Vk,_$Vt,_$VM,_$VI=_$VL.value,_$VH=-0x270f+-0x213c+-0x2426*-0x2===_$VL.state,_$VO=_$VH?_$VA.ok:_$VA.fail,_$VR=_$VA.resolve,_$VC=_$VA.reject,_$VN=_$VA.domain;try{_$VO?(_$VH||(0x544*-0x1+0x2*0x480+0x35*-0x12===_$VL.rejection&&_$HO(_$VL),_$VL.rejection=0x871*0x1+0x22c1+-0x2b31*0x1),_$h.eOfWP(!(0x16*0x1c3+0x1a72+0x282*-0x1a),_$VO)?_$Vk=_$VI:(_$VN&&_$VN.enter(),_$Vk=_$VO(_$VI),_$VN&&(_$VN.exit(),_$VM=!(0x1f3+0x1cb2+0xf*-0x20b))),_$Vk===_$VA.promise?_$VC(new _$H8(DB(0x26c))):(_$Vt=_$HL(_$Vk))?_$h.jRwrf(_$IB,_$Vt,_$Vk,_$VR,_$VC):_$VR(_$Vk)):_$VC(_$VI);}catch(_$Vr){_$VN&&!_$VM&&_$VN.exit(),_$VC(_$Vr);}},_$Ht=function(_$VA,_$VL){_$VA.notified||(_$VA.notified=!(-0x220e+0x1*0x1b0a+0x704),_$Io(function(){for(var _$Vk,_$Vt=_$VA.reactions;_$Vk=_$Vt.get();)_$Hk(_$Vk,_$VA);_$VA.notified=!(-0x168d+0x20e2+-0xa54),_$VL&&!_$VA.rejection&&_$HI(_$VA);}));},_$HM=function(_$VA,_$VL,_$Vk){var _$Vt,_$VM;_$Hp?((_$Vt=_$H9.createEvent(_$h.zphPy)).promise=_$VL,_$Vt.reason=_$Vk,_$Vt.initEvent(_$VA,!(-0x217e+0x25b6+-0x1*0x437),!(-0x1*0x1085+0x49*-0x71+-0x16f*-0x22)),_$Ig.dispatchEvent(_$Vt)):_$Vt={'promise':_$VL,'reason':_$Vk},!_$H2&&(_$VM=_$Ig[_$h.tqjMz('on',_$VA)])?_$h.zuUgq(_$VM,_$Vt):_$VA===_$HA&&_$Im(_$h.pxXOQ,_$Vk);},_$HI=function(_$VA){_$IB(_$Ic,_$Ig,function(){var Dy=a0dbbcbn,_$VL={'tRxoy':Dy(0x242)},_$Vk,_$Vt=_$VA.facade,_$VM=_$VA.value;if(_$HH(_$VA)&&(_$Vk=_$Is(function(){_$IU?_$Hh.emit(_$VL.tRxoy,_$VM,_$Vt):_$HM(_$HA,_$Vt,_$VM);}),_$VA.rejection=_$IU||_$HH(_$VA)?-0x18ca+0x8e8+0xfe4:-0x1c1e*0x1+-0x1366+0x2f85,_$Vk.error))throw _$Vk.value;});},_$HH=function(_$VA){return _$h.kFFqQ(0x12e*-0x3+0x199+0x1*0x1f2,_$VA.rejection)&&!_$VA.parent;},_$HO=function(_$VA){_$IB(_$Ic,_$Ig,function(){var Dl=a0dbbcbn,_$VL=_$VA.facade;_$IU?_$Hh.emit(_$h.zLqtG,_$VL):_$HM(Dl(0x280),_$VL,_$VA.value);});},_$HR=function(_$VA,_$VL,_$Vk){return function(_$Vt){_$VA(_$VL,_$Vt,_$Vk);};},_$HC=function(_$VA,_$VL,_$Vk){_$VA.done||(_$VA.done=!(-0xe7b+0x6e5*-0x1+0x1560),_$Vk&&(_$VA=_$Vk),_$VA.value=_$VL,_$VA.state=0x19d9*0x1+-0x1*-0x9fd+-0x8f5*0x4,_$h.qRjJo(_$Ht,_$VA,!(0xf19+-0x12ad*0x2+0x1641)));},_$HN=function(_$VA,_$VL,_$Vk){var DP=Vv;if(!_$VA.done){_$VA.done=!(0x2139+0x3*-0x5ec+-0xf75),_$Vk&&(_$VA=_$Vk);try{if(_$VA.facade===_$VL)throw new _$H8(DP(0x1d5));var _$Vt=_$h.xZgKI(_$HL,_$VL);_$Vt?_$h.uoVjF(_$Io,function(){var _$VM={'done':!(-0x1441+0x1*0x23b9+0x25*-0x6b)};try{_$IB(_$Vt,_$VL,_$HR(_$HN,_$VM,_$VA),_$HR(_$HC,_$VM,_$VA));}catch(_$VI){_$HC(_$VM,_$VI,_$VA);}}):(_$VA.value=_$VL,_$VA.state=-0x1*0x1319+-0xf9d*-0x2+-0x2*0x610,_$Ht(_$VA,!(0x1acb+0x107+0x1bd1*-0x1)));}catch(_$VM){_$HC({'done':!(-0x1f5*0x7+-0x43*-0x4f+-0x6f9)},_$VM,_$VA);}}};_$H1&&(_$H7=(_$H6=function(_$VA){_$Ij(this,_$H7),_$IQ(_$VA),_$IB(_$Id,this);var _$VL=_$H3(this);try{_$VA(_$HR(_$HN,_$VL),_$HR(_$HC,_$VL));}catch(_$Vk){_$HC(_$VL,_$Vk);}}).prototype,(_$Id=function(_$VA){_$H4(this,{'type':_$H0,'done':!(0x1d2*-0x11+0x23e3+-0x4f0),'notified':!(0x13b7+-0x9d6+-0x9e0*0x1),'parent':!(-0x23aa+0x1e6+0x299*0xd),'reactions':new _$Ia(),'rejection':!(-0x1b*-0x154+0x313+-0x26ee),'state':0x0,'value':void(-0x5*-0x5fc+0xa1f*-0x3+-0x71*-0x1)});}).prototype=_$Iy(_$H7,Vv(0x1b2),function(_$VA,_$VL){var _$Vk=_$H3(this),_$Vt=_$h.ADsTu(_$Hn,_$h.mwvVk(_$IS,this,_$H6));return _$Vk.parent=!(0x1*-0xe1b+-0xa18+0x15*0x127),_$Vt.ok=!_$Iu(_$VA)||_$VA,_$Vt.fail=_$Iu(_$VL)&&_$VL,_$Vt.domain=_$IU?_$Hh.domain:void(0x25c3*-0x1+-0x1f56+-0x169*-0x31),0x1281+-0x9b8+-0x8c9===_$Vk.state?_$Vk.reactions.add(_$Vt):_$h.nKgOd(_$Io,function(){_$Hk(_$Vt,_$Vk);}),_$Vt.promise;}),_$IE=function(){var _$VA=new _$Id(),_$VL=_$H3(_$VA);this.promise=_$VA,this.resolve=_$h.qRjJo(_$HR,_$HN,_$VL),this.reject=_$h.kDZvg(_$HR,_$HC,_$VL);},_$Iv.f=_$Hn=function(_$VA){return _$VA===_$H6||undefined===_$VA?new _$IE(_$VA):_$Hq(_$VA);}),_$IG({'global':!(0x3*-0x161+-0x8b8*-0x3+-0x1605),'constructor':!(0x2b3+0x32f*0x7+-0x2*0xc7e),'wrap':!(-0x2*0xcd4+-0xf75*0x1+0x291d),'forced':_$H1},{'Promise':_$H6}),_$h.vxeVi(_$Il,_$H6,_$H0,!(0x9c3+-0x28*-0x99+-0x21aa),!(0x107*0x22+-0x1*0x647+-0x1ca7)),_$IP(_$H0);var _$Hr=_$n4(_$h.IKbdd),_$Hf=!(-0x71*-0x1+-0xb2d*0x1+0xabd);try{var _$HX=0x4*0x7c+0x414+-0x604,_$HV={'next':function(){return{'done':!!_$HX++};},'return':function(){_$Hf=!(-0x696+0x136*0x17+-0x1544);}};_$HV[_$Hr]=function(){return this;},Array.from(_$HV,function(){throw 0xe*-0x1f3+-0x7f6+0x2*0x11a1;});}catch(_$VA){}var _$HD=_$IM,_$Hw=function(_$VL,_$Vk){try{if(!_$Vk&&!_$Hf)return!(0x1*0x1bff+0x9*0x50+0x1ece*-0x1);}catch(_$VI){return!(-0x1fd*-0x2+0x24b+-0x191*0x4);}var _$Vt=!(-0x1a69*0x1+0x519+0x1551*0x1);try{var _$VM={};_$VM[_$Hr]=function(){return{'next':function(){return{'done':_$Vt=!(0x1bdc+0x789*0x2+0x44b*-0xa)};}};},_$VL(_$VM);}catch(_$VH){}return _$Vt;},_$HY=_$Ie.CONSTRUCTOR||!_$Hw(function(_$VL){_$HD.all(_$VL).then(void(0xa*0x17d+0x6*0x2eb+-0x3*0xacc),function(){});}),_$HZ=_$E,_$HF=_$hw,_$Hx=_$Ii,_$He=_$It,_$Hi=_$kH;_$qp({'target':Vv(0x14a),'stat':!(0x1809+-0xc66*0x3+-0x1*-0xd29),'forced':_$HY},{'all':function(_$VL){var _$Vk=this,_$Vt=_$Hx.f(_$Vk),_$VM=_$Vt.resolve,_$VI=_$Vt.reject,_$VH=_$He(function(){var _$VO=_$h.lzbEZ(_$HF,_$Vk.resolve),_$VR=[],_$VC=0xb6c+-0x2283+0x1717,_$VN=-0x12bf+0x574*0x3+0x264;_$Hi(_$VL,function(_$Vr){var _$Vf={'miRJS':function(_$VD,_$Vw){return _$VD(_$Vw);}},_$VX=_$VC++,_$VV=!(-0x1c1b+0x43*0x7d+-0x1*0x49b);_$VN++,_$HZ(_$VO,_$Vk,_$Vr).then(function(_$VD){_$VV||(_$VV=!(0x2*0x17b+0x31*0x70+-0x15b*0x12),_$VR[_$VX]=_$VD,--_$VN||_$Vf.miRJS(_$VM,_$VR));},_$VI);}),--_$VN||_$VM(_$VR);});return _$VH.error&&_$VI(_$VH.value),_$Vt.promise;}});var _$HW=_$qp,_$HK=_$Ie.CONSTRUCTOR;_$IM&&_$IM.prototype,_$HW({'target':Vv(0x14a),'proto':!(0x260e*0x1+0x2de*0x5+-0x3464),'forced':_$HK,'real':!(-0x701+0x4*0x4f8+-0xcdf)},{'catch':function(_$VL){return this.then(void(-0x1b82+0x2268+-0x6e6*0x1),_$VL);}});var _$HT=_$E,_$Hd=_$hw,_$HE=_$Ii,_$HG=_$It,_$HU=_$kH;_$qp({'target':Vv(0x14a),'stat':!(0xea7+-0x3*0x26b+-0x1*0x766),'forced':_$HY},{'race':function(_$VL){var _$Vk=this,_$Vt=_$HE.f(_$Vk),_$VM=_$Vt.reject,_$VI=_$HG(function(){var _$VH=_$Hd(_$Vk.resolve);_$HU(_$VL,function(_$VO){_$HT(_$VH,_$Vk,_$VO).then(_$Vt.resolve,_$VM);});});return _$VI.error&&_$VM(_$VI.value),_$Vt.promise;}});var _$Hg=_$Ii;_$qp({'target':_$h.ghaYB,'stat':!(-0x247f+-0x11dd*-0x1+0x12a2),'forced':_$Ie.CONSTRUCTOR},{'reject':function(_$VL){var _$Vk=_$Hg.f(this);return(0x8e4+-0x2f9*0x5+0x8b*0xb,_$Vk.reject)(_$VL),_$Vk.promise;}});var _$HB=_$nQ,_$Hy=_$h0,_$Hl=_$Ii,_$HP=function(_$VL,_$Vk){if(_$HB(_$VL),_$Hy(_$Vk)&&_$h.UMHVk(_$Vk.constructor,_$VL))return _$Vk;var _$Vt=_$Hl.f(_$VL);return(0x818+0x10d+0x1*-0x925,_$Vt.resolve)(_$Vk),_$Vt.promise;},_$HQ=_$qp,_$Hu=_$IM,_$HJ=_$Ie.CONSTRUCTOR,_$Hj=_$HP,_$HS=_$h6(Vv(0x14a)),_$Hc=!_$HJ;_$HQ({'target':Vv(0x14a),'stat':!(-0x1e53+-0x1*0x15c9+0x341c),'forced':!![]},{'resolve':function(_$VL){return _$Hj(_$Hc&&_$h.GRxgI(this,_$HS)?_$Hu:this,_$VL);}});var _$Ho=_$E,_$Hm=_$hw,_$Hs=_$Ii,_$Ha=_$It,_$Hb=_$kH;_$qp({'target':Vv(0x14a),'stat':!(-0x3*0xb66+-0x1b61*-0x1+0x6d1),'forced':_$HY},{'allSettled':function(_$VL){var _$Vk=this,_$Vt=_$Hs.f(_$Vk),_$VM=_$Vt.resolve,_$VI=_$Vt.reject,_$VH=_$Ha(function(){var _$VO={'uqHyL':function(_$Vf,_$VX){return _$Vf(_$VX);},'KKIyt':function(_$Vf,_$VX,_$VV,_$VD){return _$h.rXDay(_$Vf,_$VX,_$VV,_$VD);}},_$VR=_$Hm(_$Vk.resolve),_$VC=[],_$VN=0x11*0x7c+0xece+-0x170a,_$Vr=-0x1c4*0xe+-0x2319+0x3bd2;_$Hb(_$VL,function(_$Vf){var _$VX=_$VN++,_$VV=!(0x7f*-0x23+0x61*0x3b+-0x1*0x4fd);_$Vr++,_$VO.KKIyt(_$Ho,_$VR,_$Vk,_$Vf).then(function(_$VD){var DQ=a0dbbcbn;_$VV||(_$VV=!(0xe*-0x139+-0x1*0x17a3+0x28c1),_$VC[_$VX]={'status':DQ(0x1fd),'value':_$VD},--_$Vr||_$VM(_$VC));},function(_$VD){var Du=a0dbbcbn;_$VV||(_$VV=!(0xb8d+0x4*-0x4d6+-0x15*-0x5f),_$VC[_$VX]={'status':Du(0x25a),'reason':_$VD},--_$Vr||_$VO.uqHyL(_$VM,_$VC));});}),--_$Vr||_$VM(_$VC);});return _$VH.error&&_$h.YLmfR(_$VI,_$VH.value),_$Vt.promise;}});var _$Hz=_$E,_$Hv=_$hw,_$O0=_$h6,_$O1=_$Ii,_$O2=_$It,_$O3=_$kH,_$O4=Vv(0x1e4);_$qp({'target':_$h.ghaYB,'stat':!(0x22*0xf8+0x1d*-0x7+-0x2025),'forced':_$HY},{'any':function(_$VL){var _$Vk={'odlkw':function(_$VC,_$VN,_$Vr,_$Vf){return _$VC(_$VN,_$Vr,_$Vf);},'FMnnG':function(_$VC,_$VN,_$Vr){return _$h.zZzDf(_$VC,_$VN,_$Vr);}},_$Vt=this,_$VM=_$O0(_$h.vgJLU),_$VI=_$O1.f(_$Vt),_$VH=_$VI.resolve,_$VO=_$VI.reject,_$VR=_$O2(function(){var _$VC=_$Hv(_$Vt.resolve),_$VN=[],_$Vr=-0x97f+0x2*0xa5c+-0x1*0xb39,_$Vf=0xdb3*0x1+0x1ca3+-0x2a55,_$VX=!(-0x1*0xd46+0x1e0c+-0x10c5);_$Vk.FMnnG(_$O3,_$VL,function(_$VV){var _$VD={'QvLFY':function(_$VZ,_$VF){return _$VZ||_$VF;}},_$Vw=_$Vr++,_$VY=!(0x11b1*0x1+-0x1*-0x22d1+-0x3481);_$Vf++,_$Vk.odlkw(_$Hz,_$VC,_$Vt,_$VV).then(function(_$VZ){_$VD.QvLFY(_$VY,_$VX)||(_$VX=!(-0xa75*0x3+-0x17*-0x13f+0x2b6),_$VH(_$VZ));},function(_$VZ){_$VY||_$VX||(_$VY=!(0x692+0x1f1+-0x883*0x1),_$VN[_$Vw]=_$VZ,--_$Vf||_$VO(new _$VM(_$VN,_$O4)));});}),--_$Vf||_$VO(new _$VM(_$VN,_$O4));});return _$VR.error&&_$VO(_$VR.value),_$VI.promise;}});var _$O5=_$Ii;_$qp({'target':Vv(0x14a),'stat':!(-0x21ea+-0x1391+0x357b*0x1)},{'withResolvers':function(){var _$VL=_$O5.f(this);return{'promise':_$VL.promise,'resolve':_$VL.resolve,'reject':_$VL.reject};}});var _$O6=_$qp,_$O7=_$IM,_$O8=_$p,_$O9=_$h6,_$Oh=_$i,_$On=_$MH,_$Oq=_$HP,_$Op=_$O7&&_$O7.prototype;_$O6({'target':Vv(0x14a),'proto':!(0x28*-0x6f+-0xd61+-0x37*-0x8f),'real':!(-0x7d4+0x9*-0x2c9+0x20e5),'forced':!!_$O7&&_$O8(function(){_$Op.finally.call({'then':function(){}},function(){});})},{'finally':function(_$VL){var DJ=Vv,_$Vk=_$h.YSTGj(_$On,this,_$O9(DJ(0x14a))),_$Vt=_$Oh(_$VL);return this.then(_$Vt?function(_$VM){return _$Oq(_$Vk,_$VL()).then(function(){return _$VM;});}:_$VL,_$Vt?function(_$VM){return _$Oq(_$Vk,_$VL()).then(function(){throw _$VM;});}:_$VL);}});var _$OA=_$I,_$OL=_$qI,_$Ok=_$kC,_$Ot=_$s,_$OM=_$OA(''.charAt),_$OI=_$OA(''.charCodeAt),_$OH=_$h.vzltm(_$OA,''.slice),_$OO=function(_$VL){var _$Vk={'NQvlH':function(_$Vt,_$VM){return _$Vt>=_$VM;},'OiwvH':function(_$Vt,_$VM){return _$Vt<_$VM;},'VfwHa':function(_$Vt,_$VM){return _$Vt===_$VM;},'cltZC':function(_$Vt,_$VM,_$VI){return _$Vt(_$VM,_$VI);},'wKkSu':function(_$Vt,_$VM,_$VI){return _$Vt(_$VM,_$VI);},'WDAzD':function(_$Vt,_$VM){return _$Vt+_$VM;},'ThdKm':function(_$Vt,_$VM){return _$Vt-_$VM;}};return function(_$Vt,_$VM){var _$VI,_$VH,_$VO=_$Ok(_$Ot(_$Vt)),_$VR=_$OL(_$VM),_$VC=_$VO.length;return _$VR<0x94f*0x3+0xf01+-0x2aee||_$Vk.NQvlH(_$VR,_$VC)?_$VL?'':void(0x1*-0x1cf5+-0x1ce2*0x1+0x39d7):_$Vk.OiwvH(_$VI=_$OI(_$VO,_$VR),-0x4385+0xcda4+0x1*0x4de1)||_$VI>-0x18ccf+-0x13c5*0xe+0x6*0x94ee||_$Vk.VfwHa(_$VR+(0x3a*-0x8b+-0x22d*-0x4+0x5*0x48f),_$VC)||(_$VH=_$Vk.cltZC(_$OI,_$VO,_$VR+(-0x4b9+-0x147*-0x10+0x7db*-0x2)))<-0x40a9+-0x895d+0x3c4a*0x7||_$VH>0x15d0e+-0x5*-0x5579+-0x2286c?_$VL?_$Vk.wKkSu(_$OM,_$VO,_$VR):_$VI:_$VL?_$OH(_$VO,_$VR,_$VR+(0x134b+-0xe57+-0x4f2)):_$Vk.WDAzD(_$VH-(-0x43d4+-0x74*0x85+0x15c18),_$Vk.ThdKm(_$VI,-0x9059+0x165c7+-0x1*-0x292)<<-0x147f+-0x8*0xa4+-0x19a9*-0x1)+(-0x29*-0xc16+-0xb82d+-0x3759);};},_$OR={'codeAt':_$OO(!(-0x29*0xc5+0x1*0x254e+0x17*-0x40)),'charAt':_$OO(!(0x2*-0xe5c+0x202d*-0x1+-0x8b3*-0x7))}.charAt,_$OC=_$kC,_$ON=_$t1,_$Or=_$tJ,_$Of=_$tj,_$OX=Vv(0x18d),_$OV=_$ON.set,_$OD=_$ON.getterFor(_$OX);_$Or(String,Vv(0x233),function(_$VL){_$OV(this,{'type':_$OX,'string':_$OC(_$VL),'index':0x0});},function(){var _$VL,_$Vk=_$OD(this),_$Vt=_$Vk.string,_$VM=_$Vk.index;return _$h.uPqgA(_$VM,_$Vt.length)?_$Of(void(0x2*0x88c+-0x100b+-0x10d),!(0x24cb*-0x1+-0x2*-0x7e2+-0x1507*-0x1)):(_$VL=_$OR(_$Vt,_$VM),_$Vk.index+=_$VL.length,_$Of(_$VL,!(-0x82c+-0x8*0x125+0x57*0x33)));});var _$Ow=_$h1.Promise,_$OY={'CSSRuleList':0x0,'CSSStyleDeclaration':0x0,'CSSValueList':0x0,'ClientRectList':0x0,'DOMRectList':0x0,'DOMStringList':0x0,'DOMTokenList':0x1,'DataTransferItemList':0x0,'FileList':0x0,'HTMLAllCollection':0x0,'HTMLCollection':0x0,'HTMLFormElement':0x0,'HTMLSelectElement':0x0,'MediaList':0x0,'MimeTypeArray':0x0,'NamedNodeMap':0x0,'NodeList':0x1,'PaintRequestList':0x0,'Plugin':0x0,'PluginArray':0x0,'SVGLengthList':0x0,'SVGNumberList':0x0,'SVGPathSegList':0x0,'SVGPointList':0x0,'SVGStringList':0x0,'SVGTransformList':0x0,'SourceBufferList':0x0,'StyleSheetList':0x0,'TextTrackCueList':0x0,'TextTrackList':0x0,'TouchList':0x0},_$OZ=_$R,_$OF=_$tV,_$Ox=_$Lu;for(var _$Oe in _$OY)_$OF(_$OZ[_$Oe],_$Oe),_$Ox[_$Oe]=_$Ox.Array;var _$Oi=_$Ow,_$OW=_$Ii,_$OK=_$It;_$qp({'target':Vv(0x14a),'stat':!(0x159+0x1*0x399+-0x4f2),'forced':!(-0xafe+-0x1a*0x71+0x1678)},{'try':function(_$VL){var _$Vk=_$OW.f(this),_$Vt=_$OK(_$VL);return(_$Vt.error?_$Vk.reject:_$Vk.resolve)(_$Vt.value),_$Vk.promise;}});var _$OT=_$Oi,_$Od=_$qI,_$OE=_$kC,_$OG=_$s,_$OU=RangeError,_$Og=_$I,_$OB=_$qR,_$Oy=_$kC,_$Ol=_$s,_$OP=_$Og(function(_$VL){var Dj=Vv,_$Vk=_$OE(_$h.nKgOd(_$OG,this)),_$Vt='',_$VM=_$Od(_$VL);if(_$h.MUrxt(_$VM,-0x7*0x287+-0x9d6+-0x1b*-0x105)||_$VM===(-0xe73*-0x2+-0x2a2*0x4+-0x1*0x125d)/(-0x22c1+0xc4d+0x1674))throw new _$OU(Dj(0x19c));for(;_$VM>0x2522+-0x35*0xf+0x119*-0x1f;(_$VM>>>=0x2185*0x1+0xb6a+-0x2cee)&&(_$Vk+=_$Vk))-0x1*-0x1f75+-0x1ef+-0x1d85&_$VM&&(_$Vt+=_$Vk);return _$Vt;}),_$OQ=_$Og(''.slice),_$Ou=Math.ceil,_$OJ=function(_$VL){return function(_$Vk,_$Vt,_$VM){var _$VI,_$VH,_$VO=_$h.XuONY(_$Oy,_$Ol(_$Vk)),_$VR=_$OB(_$Vt),_$VC=_$VO.length,_$VN=void(0xcef*0x1+-0x50*-0x5b+-0x295f)===_$VM?'\x20':_$h.vzltm(_$Oy,_$VM);return _$h.OsJtP(_$VR,_$VC)||''===_$VN?_$VO:((_$VH=_$OP(_$VN,_$Ou((_$VI=_$VR-_$VC)/_$VN.length))).length>_$VI&&(_$VH=_$OQ(_$VH,-0x1eb1+-0x1385*-0x2+0x1*-0x859,_$VI)),_$VL?_$VO+_$VH:_$VH+_$VO);};},_$Oj=_$I,_$OS=_$p,_$Oc={'start':_$OJ(!(-0x12a3*0x1+-0x45e+0x1702)),'end':_$OJ(!(-0xbc8+0xfe8+0x42*-0x10))}.start,_$Oo=RangeError,_$Om=isFinite,_$Os=Math.abs,_$Oa=Date.prototype,_$Ob=_$Oa.toISOString,_$Oz=_$Oj(_$Oa.getTime),_$Ov=_$Oj(_$Oa.getUTCDate),_$R0=_$Oj(_$Oa.getUTCFullYear),_$R1=_$Oj(_$Oa.getUTCHours),_$R2=_$h.kUgEc(_$Oj,_$Oa.getUTCMilliseconds),_$R3=_$h.PVBti(_$Oj,_$Oa.getUTCMinutes),_$R4=_$Oj(_$Oa.getUTCMonth),_$R5=_$h.YANgx(_$Oj,_$Oa.getUTCSeconds),_$R6=_$OS(function(){var DS=Vv;return _$h.PKdnS(DS(0x252),_$Ob.call(new Date(-(-0x18e959*0x2418dd+0x4f*0xb991f6680e+-0x84746e7327c))));})||!_$h.kUgEc(_$OS,function(){_$Ob.call(new Date(NaN));})?function(){var Dc=Vv;if(!_$h.uTzii(_$Om,_$Oz(this)))throw new _$Oo(Dc(0x202));var _$VL=this,_$Vk=_$R0(_$VL),_$Vt=_$R2(_$VL),_$VM=_$Vk<0x2516*-0x1+0x194*0x3+0x205a?'-':_$Vk>-0x1*0x325b+-0x6*0x3a8+-0x6*-0x128f?'+':'';return _$h.nAeiZ(_$h.soOWB(_$h.UtNVx(_$VM+_$Oc(_$Os(_$Vk),_$VM?0xc26+-0x1*-0x925+-0x1545:0x28*0x79+0x25cc+-0x38b0,0x218*-0x3+-0x172b+0x1d73),'-')+_$Oc(_$R4(_$VL)+(0x405*-0x2+-0x204*-0x2+0x403),-0x3f2*0x7+-0x1111*0x1+0x2cb1,0x25e4+-0x1f9d+-0x647*0x1)+'-'+_$Oc(_$Ov(_$VL),0x63e+0x2ed+-0x7*0x14f,-0x2591+0xc4f+-0x6a*-0x3d)+'T'+_$Oc(_$R1(_$VL),-0x1*-0x1016+-0x1*-0x18a3+0x7*-0x5d1,0xd1d+-0x1b76+-0xe59*-0x1)+':'+_$Oc(_$R3(_$VL),0x6d*0x17+-0x2051+0x1688,-0x11a8+-0x20*0x59+0x1cc8),':')+_$Oc(_$R5(_$VL),0x7a9+0xbfc+-0x13a3,-0x4*-0x1d0+-0x9c1+0x281),'.')+_$Oc(_$Vt,0x145*-0xd+0x13fb+0x377*-0x1,0xab*0x22+-0x15*-0x119+0xa5*-0x47)+'Z';}:_$Ob,_$R7=_$E,_$R8=_$hQ,_$R9=_$nq,_$Rh=_$R6,_$Rn=_$Y;_$qp({'target':Vv(0x241),'proto':!(0xff4+0x10cf+0x20c3*-0x1),'forced':_$p(function(){return null!==new Date(NaN).toJSON()||-0x799*-0x2+-0x33*-0x1f+-0x155e!==_$R7(Date.prototype.toJSON,{'toISOString':function(){return 0x1*0x1301+-0x4*0x8e7+0x109c;}});})},{'toJSON':function(_$VL){var Do=Vv,_$Vk=_$R8(this),_$Vt=_$h.LsYYs(_$R9,_$Vk,Do(0x1de));return Do(0x1de)!=typeof _$Vt||isFinite(_$Vt)?_$h.qjisv(_$h.uaslj,_$Vk)||Do(0x241)!==_$Rn(_$Vk)?_$Vk.toISOString():_$h.fELdc(_$R7,_$Rh,_$Vk):null;}});var _$Rq=_$qL,_$Rp=_$i,_$RA=_$Y,_$RL=_$kC,_$Rk=_$h.xSubX(_$I,[].push),_$Rt=_$qp,_$RM=_$h6,_$RI=_$X,_$RH=_$E,_$RO=_$I,_$RR=_$p,_$RC=_$i,_$RN=_$hN,_$Rr=_$pF,_$Rf=function(_$VL){var Dm=Vv;if(_$Rp(_$VL))return _$VL;if(_$Rq(_$VL)){for(var _$Vk=_$VL.length,_$Vt=[],_$VM=0x2*-0x100c+-0x21dc+0x41f4;_$VM<_$Vk;_$VM++){var _$VI=_$VL[_$VM];Dm(0x286)==typeof _$VI?_$Rk(_$Vt,_$VI):_$h.YMYXD(Dm(0x1de),typeof _$VI)&&_$h.wWfGa(Dm(0x1c6),_$RA(_$VI))&&Dm(0x233)!==_$RA(_$VI)||_$h.LsYYs(_$Rk,_$Vt,_$RL(_$VI));}var _$VH=_$Vt.length,_$VO=!(0x2343+0x258d+-0x48d0);return function(_$VR,_$VC){if(_$VO)return _$VO=!(-0x16*-0x1d+0x49*0x17+-0x90c),_$VC;if(_$Rq(this))return _$VC;for(var _$VN=0x23a2+0x26d3*0x1+-0x4a75;_$VN<_$VH;_$VN++)if(_$Vt[_$VN]===_$VR)return _$VC;};}},_$RX=_$hM,_$RV=String,_$RD=_$RM(Vv(0x1ff),Vv(0x1d0)),_$Rw=_$RO(/./.exec), _$RY = _$RO(''.charAt), _$RZ = _$RO(''.charCodeAt), _$RF = _$RO(''.replace), _$Rx = _$h.nHbsq(_$RO, (0x3a0 + -0x39 * -0x7b + -0x1f02).toString), _$Re = /[\uD800-\uDFFF]/g, _$Ri = /^[\uD800-\uDBFF]$/, _$RW = /^[\uDC00-\uDFFF]$/, _$RK = !_$RX || _$RR(function () {
+    var Ds=Vv,_$VL=_$RM(Ds(0x120))(Ds(0x232));return Ds(0x178)!==_$RD([_$VL])||'{}'!==_$RD({'a':_$VL})||'{}'!==_$h.pLhbz(_$RD,_$h.GEEQF(Object,_$VL));}),_$RT=_$RR(function(){var Da=Vv;return _$h.iQBoa(_$h.HLLUJ,_$RD('\ufffd\ufffd'))||Da(0x21c)!==_$RD('\ufffd');}),_$Rd=function(_$VL,_$Vk){var _$Vt={'hvwog':function(_$VH,_$VO){return _$h.iDnPY(_$VH,_$VO);}},_$VM=_$Rr(arguments),_$VI=_$Rf(_$Vk);if(_$RC(_$VI)||void(-0xf16+0x1*-0x56b+0x1481)!==_$VL&&!_$RN(_$VL))return _$VM[-0x1635+0x498+0x8cf*0x2]=function(_$VH,_$VO){if(_$Vt.hvwog(_$RC,_$VI)&&(_$VO=_$RH(_$VI,this,_$RV(_$VH),_$VO)),!_$RN(_$VO))return _$VO;},_$RI(_$RD,null,_$VM);},_$RE=function(_$VL,_$Vk,_$Vt){var _$VM=_$RY(_$Vt,_$Vk-(-0x1108+0x1*0xec9+-0x24*-0x10)),_$VI=_$RY(_$Vt,_$Vk+(-0x17e4+0x10f2+0x6f3));return _$Rw(_$Ri,_$VL)&&!_$Rw(_$RW,_$VI)||_$Rw(_$RW,_$VL)&&!_$Rw(_$Ri,_$VM)?'\\u'+_$Rx(_$RZ(_$VL,-0x4*0x58b+-0x1088+0x26b4),-0x214d+-0x111b*0x1+0xaa*0x4c):_$VL;};_$RD&&_$Rt({'target':Vv(0x1ff),'stat':!(0x1fd4+-0x1*-0x67f+-0x2653),'arity':0x3,'forced':_$RK||_$RT},{'stringify':function(_$VL,_$Vk,_$Vt){var Db=Vv,_$VM=_$h.xSubX(_$Rr,arguments),_$VI=_$RI(_$RK?_$Rd:_$RD,null,_$VM);return _$RT&&Db(0x286)==typeof _$VI?_$RF(_$VI,_$Re,_$RE):_$VI;}});var _$RG=_$h1,_$RU=_$X;_$RG.JSON||(_$RG.JSON={'stringify':JSON.stringify});var _$Rg=function(_$VL,_$Vk,_$Vt){return _$RU(_$RG.JSON.stringify,null,arguments);},_$RB=_$Rg,_$Ry=_$hf,_$Rl=TypeError,_$RP=function(_$VL,_$Vk){var Dz=Vv;if(!delete _$VL[_$Vk])throw new _$Rl(Dz(0x16d)+_$h.iDnPY(_$Ry,_$Vk)+Dz(0x12c)+_$Ry(_$VL));},_$RQ=_$pF,_$Ru=Math.floor,_$RJ=function(_$VL,_$Vk){var _$Vt=_$VL.length;if(_$Vt<-0x6a*-0x2+-0x1f1b*0x1+0x1e4f)for(var _$VM,_$VI,_$VH=0x5e5+0x1af*-0x5+0x287;_$VH<_$Vt;){for(_$VI=_$VH,_$VM=_$VL[_$VH];_$VI&&_$Vk(_$VL[_$h.huwGQ(_$VI,0x1be*0x1+0x2e*-0xd3+0x52b*0x7)],_$VM)>0x60d*0x2+0x1398+-0x1fb2;)_$VL[_$VI]=_$VL[--_$VI];_$VI!==_$VH++&&(_$VL[_$VI]=_$VM);}else{for(var _$VO=_$h.ayQpC(_$Ru,_$Vt/(-0x2085+-0x63d*-0x4+0x793)),_$VR=_$RJ(_$RQ(_$VL,0x242+0x190e+-0x8*0x36a,_$VO),_$Vk),_$VC=_$RJ(_$h.kDZvg(_$RQ,_$VL,_$VO),_$Vk),_$VN=_$VR.length,_$Vr=_$VC.length,_$Vf=-0x1*-0x190d+-0x1ee7+0x5da,_$VX=-0x2587+0x11b7+-0x4*-0x4f4;_$Vf<_$VN||_$VX<_$Vr;)_$VL[_$Vf+_$VX]=_$Vf<_$VN&&_$VX<_$Vr?_$Vk(_$VR[_$Vf],_$VC[_$VX])<=-0x1ac7+0x8d1+0x11f6?_$VR[_$Vf++]:_$VC[_$VX++]:_$Vf<_$VN?_$VR[_$Vf++]:_$VC[_$VX++];}return _$VL;},_$Rj=_$RJ,_$RS=_$h7.match(/firefox\/(\d+)/i), _$Rc = !!_$RS && +_$RS[-0x8 * 0x409 + 0x37 * -0x4c + -0x1 * -0x309d], _$Ro = /MSIE|Trident/.test(_$h7), _$Rm = _$h7.match(/AppleWebKit\/(\d+)\./),_$Rs=!!_$Rm&&+_$Rm[0xc4a*-0x3+0x1*-0xebf+0x2*0x19cf],_$Ra=_$qp,_$Rb=_$I,_$Rz=_$hw,_$Rv=_$hQ,_$C0=_$qN,_$C1=_$RP,_$C2=_$kC,_$C3=_$p,_$C4=_$Rj,_$C5=_$pb,_$C6=_$Rc,_$C7=_$Ro,_$C8=_$hA,_$C9=_$Rs,_$Ch=[],_$Cn=_$Rb(_$Ch.sort),_$Cq=_$Rb(_$Ch.push),_$Cp=_$C3(function(){_$Ch.sort(void(-0x176e+0x26fd+-0xf8f));}),_$CA=_$C3(function(){_$Ch.sort(null);}),_$CL=_$C5(_$h.BtYHF),_$Ck=!_$h.XuONY(_$C3,function(){var Dv=Vv;if(_$C8)return _$C8<-0xd1f*0x1+0xa6b+0x2fa*0x1;if(!(_$C6&&_$C6>0x1*0x2371+-0x3*0x690+0x7df*-0x2)){if(_$C7)return!(0x247d+0x121a*0x2+-0x48b1);if(_$C9)return _$C9<-0x1243+-0xe53+0x22f1;var _$VL,_$Vk,_$Vt,_$VM,_$VI='';for(_$VL=0x9aa*-0x3+-0xe84+0x2bc3;_$VL<0x19d0+0x8*-0x434+0x6*0x15a;_$VL++){switch(_$Vk=String.fromCharCode(_$VL),_$VL){case-0xbc9*-0x1+0x21d6*0x1+-0x2d5d:case-0x61*-0x1d+-0xca*0x6+-0x17f*0x4:case-0xb21+0xa*-0x366+-0x3*-0xf21:case-0x1819*0x1+0x1e55+-0x5f4:_$Vt=0x1b1*0x2+-0x25*-0x5b+0xf*-0x11a;break;case-0xb*0x356+0x11c5+0x1331:case 0x3*-0x65d+-0x6c2+0x1a20:_$Vt=0xdfd*-0x1+0x1d2*-0x15+0x343b*0x1;break;default:_$Vt=0x10f*-0x6+0x8*-0x480+-0xa97*-0x4;}for(_$VM=-0x17e3+-0x20bf+0x16*0x293;_$VM<0xf1*0x1b+0xf97+0x7*-0x5d5;_$VM++)_$Ch.push({'k':_$Vk+_$VM,'v':_$Vt});}for(_$Ch.sort(function(_$VH,_$VO){return _$VO.v-_$VH.v;}),_$VM=-0x1*0x1ab3+0x2166+-0x6b3;_$VM<_$Ch.length;_$VM++)_$Vk=_$Ch[_$VM].k.charAt(-0x1fd0+-0x4*-0x8e1+-0x3b4),_$VI.charAt(_$VI.length-(0xf32+0xb3*-0x22+-0xa9*-0xd))!==_$Vk&&(_$VI+=_$Vk);return Dv(0x122)!==_$VI;}});_$Ra({'target':Vv(0x1af),'proto':!(-0x1b79+0x2127+-0x5ae),'forced':_$Cp||!_$CA||!_$CL||!_$Ck},{'sort':function(_$VL){var _$Vk={'KRPYe':function(_$VR,_$VC){return _$VR!==_$VC;},'zIYCW':function(_$VR,_$VC){return _$VR(_$VC);}};void(-0x38*-0xad+-0x76+-0x2562)!==_$VL&&_$h.ZlsXU(_$Rz,_$VL);var _$Vt=_$h.YLmfR(_$Rv,this);if(_$Ck)return void(0x639+0x65c*0x5+0x1*-0x2605)===_$VL?_$Cn(_$Vt):_$Cn(_$Vt,_$VL);var _$VM,_$VI,_$VH=[],_$VO=_$h.vrUKZ(_$C0,_$Vt);for(_$VI=0x1236+0x639+0x1*-0x186f;_$VI<_$VO;_$VI++)_$VI in _$Vt&&_$Cq(_$VH,_$Vt[_$VI]);for(_$h.mwvVk(_$C4,_$VH,function(_$VR){return function(_$VC,_$VN){return void(0x1dda*-0x1+-0x21c4+0x3f9e)===_$VN?-(-0x1487+-0x1a93*-0x1+0x5b*-0x11):void(-0x1*-0x23a2+0x1824+-0x3bc6)===_$VC?-0x13*-0x143+-0x1*-0x16bb+0x31d*-0xf:_$Vk.KRPYe(void(0x1*0x1283+-0xd*-0x2a9+0x6a3*-0x8),_$VR)?+_$VR(_$VC,_$VN)||0x27c*0xc+0xdb3*0x2+0x1c9b*-0x2:_$Vk.zIYCW(_$C2,_$VC)>_$C2(_$VN)?-0x1fdd*-0x1+0x1*-0x2471+0x495:-(-0x8d2*-0x1+-0x22*0x125+-0x14f*-0x17);};}(_$VL)),_$VM=_$C0(_$VH),_$VI=-0x173f*0x1+0x1*0xd5f+0x9e*0x10;_$VI<_$VM;)_$Vt[_$VI]=_$VH[_$VI++];for(;_$VI<_$VO;)_$C1(_$Vt,_$VI++);return _$Vt;}});var _$Ct=_$pC(Vv(0x1af),Vv(0x183)),_$CM=_$H,_$CI=_$Ct,_$CH=Array.prototype,_$CO=function(_$VL){var _$Vk=_$VL.sort;return _$VL===_$CH||_$CM(_$CH,_$VL)&&_$Vk===_$CH.sort?_$CI:_$Vk;},_$CR=_$hQ,_$CC=_$LA;_$qp({'target':Vv(0x142),'stat':!(-0x2e*0x71+0x15f9+-0x1ab),'forced':_$p(function(){_$h.OBGHi(_$CC,0x1156+-0x22+-0x1133);})},{'keys':function(_$VL){return _$h.pLhbz(_$CC,_$CR(_$VL));}});var _$CN=_$h1.Object.keys,_$Cr=_$ps.includes;_$qp({'target':Vv(0x1af),'proto':!(-0x99d*0x1+-0x43*0x29+-0x364*-0x6),'forced':_$p(function(){return!Array(-0x745+0x2*0x4f4+-0x151*0x2).includes();})},{'includes':function(_$VL){return _$Cr(this,_$VL,arguments.length>0x80*0x3b+-0x1*-0x19e8+-0x3767?arguments[0x14*-0x194+-0x1*-0x441+0x1b50]:void(-0x22dc+0x26c7+-0x3eb));}});var _$Cf=_$h.xKqZU(_$pC,_$h.GkWtq,Vv(0x189)),_$CX=_$h0,_$CV=_$Y,_$CD=_$n4(Vv(0x11c)),_$Cw=function(_$VL){var w0=Vv,_$Vk;return _$h.nKgOd(_$CX,_$VL)&&(_$h.bCRHj(void(0xa5d*0x1+-0x133*0x13+0x35*0x3c),_$Vk=_$VL[_$CD])?!!_$Vk:w0(0x149)===_$h.wWnFW(_$CV,_$VL));},_$CY=TypeError,_$CZ=_$n4(Vv(0x11c)),_$CF=_$qp,_$Cx=function(_$VL){var w1=Vv;if(_$Cw(_$VL))throw new _$CY(w1(0x213));return _$VL;},_$Ce=_$s,_$Ci=_$kC,_$CW=function(_$VL){var w2=Vv,_$Vk=/./;try{w2(0x127)[_$VL](_$Vk);}catch(_$Vt){try{return _$Vk[_$CZ]=!(0x26b8+-0x1286*0x2+0x1ab*-0x1),w2(0x127)[_$VL](_$Vk);}catch(_$VM){}}return!(-0x5db*0x1+-0x86*0x49+0x2c12*0x1);},_$CK=_$I(''.indexOf);_$CF({'target':Vv(0x233),'proto':!(0x12be+0x18e+-0x3*0x6c4),'forced':!_$CW(Vv(0x189))},{'includes':function(_$VL){return!!~_$CK(_$Ci(_$Ce(this)),_$h.xSubX(_$Ci,_$Cx(_$VL)),arguments.length>0x1d92+-0xd45+-0x413*0x4?arguments[0x49a*0x4+0x1f0a+-0x3171]:void(-0x9*0x367+-0x137b+0x321a));}});var _$CT=_$pC(Vv(0x233),Vv(0x189)),_$Cd=_$H,_$CE=_$Cf,_$CG=_$CT,_$CU=Array.prototype,_$Cg=String.prototype,_$CB=function(_$VL){var w3=Vv,_$Vk=_$VL.includes;return _$VL===_$CU||_$h.JdaCE(_$Cd,_$CU,_$VL)&&_$Vk===_$CU.includes?_$CE:_$h.PwqlJ(w3(0x286),typeof _$VL)||_$VL===_$Cg||_$Cd(_$Cg,_$VL)&&_$h.BzZea(_$Vk,_$Cg.includes)?_$CG:_$Vk;},_$Cy={},_$Cl=_$Y,_$CP=_$z,_$CQ=_$AJ.f,_$Cu=_$pF,_$CJ=Vv(0x293)==typeof window&&window&&Object.getOwnPropertyNames?Object.getOwnPropertyNames(window):[];_$Cy.f=function(_$VL){var w4=Vv;return _$CJ&&w4(0x135)===_$Cl(_$VL)?function(_$Vk){try{return _$CQ(_$Vk);}catch(_$Vt){return _$Cu(_$CJ);}}(_$VL):_$CQ(_$CP(_$VL));};var _$Cj={},_$CS=_$n4;_$Cj.f=_$CS;var _$Cc=_$h1,_$Co=_$hj,_$Cm=_$Cj,_$Cs=_$ng.f,_$Ca=function(_$VL){var _$Vk=_$Cc.Symbol||(_$Cc.Symbol={});_$h.LsYYs(_$Co,_$Vk,_$VL)||_$Cs(_$Vk,_$VL,{'value':_$Cm.f(_$VL)});},_$Cb=_$E,_$Cz=_$h6,_$Cv=_$n4,_$N0=_$t9,_$N1=function(){var w5=Vv,_$VL=_$h.RSAhr(_$Cz,w5(0x120)),_$Vk=_$VL&&_$VL.prototype,_$Vt=_$Vk&&_$Vk.valueOf,_$VM=_$h.KxBXj(_$Cv,w5(0x13f));_$Vk&&!_$Vk[_$VM]&&_$N0(_$Vk,_$VM,function(_$VI){return _$Cb(_$Vt,this);},{'arity':0x1});},_$N2=_$qp,_$N3=_$R,_$N4=_$E,_$N5=_$I,_$N6=_$K,_$N7=_$hM,_$N8=_$p,_$N9=_$hj,_$Nh=_$H,_$Nn=_$nQ,_$Nq=_$z,_$Np=_$nL,_$NA=_$kC,_$NL=_$P,_$Nk=_$Li,_$Nt=_$LA,_$NM=_$AJ,_$NI=_$Cy,_$NH=_$L0,_$NO=_$W,_$NR=_$ng,_$NC=_$Ln,_$NN=_$G,_$Nr=_$t9,_$Nf=_$M6,_$NX=_$hy,_$NV=_$Aj,_$ND=_$hs,_$Nw=_$n4,_$NY=_$Cj,_$NZ=_$Ca,_$NF=_$N1,_$Nx=_$tV,_$Ne=_$t1,_$Ni=_$AL.forEach,_$NW=_$Aw(_$h.BDRNP),_$NK=Vv(0x120),_$NT=_$h.sGyVb,_$Nd=_$Ne.set,_$NE=_$Ne.getterFor(_$NK),_$NG=Object[_$NT],_$NU=_$N3.Symbol,_$Ng=_$NU&&_$NU[_$NT],_$NB=_$N3.RangeError,_$Ny=_$N3.TypeError,_$Nl=_$N3.QObject,_$NP=_$NO.f,_$NQ=_$NR.f,_$Nu=_$NI.f,_$NJ=_$NN.f,_$Nj=_$N5([].push),_$NS=_$h.ayQpC(_$NX,Vv(0x14f)),_$Nc=_$NX(Vv(0x1db)),_$No=_$h.MPTAg(_$NX,Vv(0x129)),_$Nm=!_$Nl||!_$Nl[_$NT]||!_$Nl[_$NT].findChild,_$Ns=function(_$VL,_$Vk,_$Vt){var _$VM=_$NP(_$NG,_$Vk);_$VM&&delete _$NG[_$Vk],_$NQ(_$VL,_$Vk,_$Vt),_$VM&&_$VL!==_$NG&&_$NQ(_$NG,_$Vk,_$VM);},_$Na=_$N6&&_$N8(function(){return 0x236d+-0x1*-0x1606+-0x396c!==_$Nk(_$NQ({},'a',{'get':function(){return _$NQ(this,'a',{'value':0x7}).a;}})).a;})?_$Ns:_$NQ,_$Nb=function(_$VL,_$Vk){var _$Vt=_$NS[_$VL]=_$Nk(_$Ng);return _$Nd(_$Vt,{'type':_$NK,'tag':_$VL,'description':_$Vk}),_$N6||(_$Vt.description=_$Vk),_$Vt;},_$Nz=function(_$VL,_$Vk,_$Vt){_$VL===_$NG&&_$Nz(_$Nc,_$Vk,_$Vt),_$Nn(_$VL);var _$VM=_$Np(_$Vk);return _$Nn(_$Vt),_$N9(_$NS,_$VM)?(_$Vt.enumerable?(_$N9(_$VL,_$NW)&&_$VL[_$NW][_$VM]&&(_$VL[_$NW][_$VM]=!(-0xa*-0x274+0x1d4b+-0x35d2)),_$Vt=_$Nk(_$Vt,{'enumerable':_$h.UnZDF(_$NL,-0x1bec+0x241+0x1*0x19ab,!(-0x45+-0x1c30+0x1c76*0x1))})):(_$h.IgsLq(_$N9,_$VL,_$NW)||_$NQ(_$VL,_$NW,_$NL(-0x1c*0xd3+0x9a3*0x3+-0x5d4*0x1,_$Nk(null))),_$VL[_$NW][_$VM]=!(0xc0*0x30+0x10a4+0x118c*-0x3)),_$Na(_$VL,_$VM,_$Vt)):_$NQ(_$VL,_$VM,_$Vt);},_$Nv=function(_$VL,_$Vk){_$Nn(_$VL);var _$Vt=_$Nq(_$Vk),_$VM=_$Nt(_$Vt).concat(_$r3(_$Vt));return _$Ni(_$VM,function(_$VI){_$N6&&!_$N4(_$r0,_$Vt,_$VI)||_$h.XgFBW(_$Nz,_$VL,_$VI,_$Vt[_$VI]);}),_$VL;},_$r0=function(_$VL){var _$Vk=_$Np(_$VL),_$Vt=_$h.IhfQQ(_$N4,_$NJ,this,_$Vk);return!(_$h.hwmtI(this,_$NG)&&_$N9(_$NS,_$Vk)&&!_$N9(_$Nc,_$Vk))&&(!(_$Vt||!_$N9(this,_$Vk)||!_$N9(_$NS,_$Vk)||_$N9(this,_$NW)&&this[_$NW][_$Vk])||_$Vt);},_$r1=function(_$VL,_$Vk){var _$Vt=_$Nq(_$VL),_$VM=_$Np(_$Vk);if(_$Vt!==_$NG||!_$N9(_$NS,_$VM)||_$N9(_$Nc,_$VM)){var _$VI=_$NP(_$Vt,_$VM);return!_$VI||!_$N9(_$NS,_$VM)||_$N9(_$Vt,_$NW)&&_$Vt[_$NW][_$VM]||(_$VI.enumerable=!(0x166f*0x1+0x14b8+-0x2b27)),_$VI;}},_$r2=function(_$VL){var _$Vk={'jaDQC':function(_$VI,_$VH,_$VO){return _$VI(_$VH,_$VO);}},_$Vt=_$Nu(_$h.MFaDD(_$Nq,_$VL)),_$VM=[];return _$Ni(_$Vt,function(_$VI){_$N9(_$NS,_$VI)||_$N9(_$NV,_$VI)||_$Vk.jaDQC(_$Nj,_$VM,_$VI);}),_$VM;},_$r3=function(_$VL){var _$Vk=_$VL===_$NG,_$Vt=_$Nu(_$Vk?_$Nc:_$Nq(_$VL)),_$VM=[];return _$Ni(_$Vt,function(_$VI){!_$N9(_$NS,_$VI)||_$Vk&&!_$N9(_$NG,_$VI)||_$Nj(_$VM,_$NS[_$VI]);}),_$VM;};_$N7||(_$NU=function(){var w6=Vv,_$VL={'tBliq':function(_$VI,_$VH){return _$VI===_$VH;},'XSSqK':function(_$VI,_$VH,_$VO){return _$VI(_$VH,_$VO);},'XqMPq':function(_$VI,_$VH){return _$VI instanceof _$VH;}};if(_$h.iXjCt(_$Nh,_$Ng,this))throw new _$Ny(w6(0x27c));var _$Vk=arguments.length&&void(-0xee8+-0x2507+0x33ef)!==arguments[-0x8a2+-0x3e*-0x65+-0xfd4]?_$NA(arguments[-0x1*-0xcbb+-0x11e7*0x2+0x1713]):void(-0xa9a+-0xefa+0x1994),_$Vt=_$ND(_$Vk),_$VM=function(_$VI){var _$VH=void(0x2d6+-0x214e+0x1e78)===this?_$N3:this;_$VL.tBliq(_$VH,_$NG)&&_$N4(_$VM,_$Nc,_$VI),_$N9(_$VH,_$NW)&&_$VL.XSSqK(_$N9,_$VH[_$NW],_$Vt)&&(_$VH[_$NW][_$Vt]=!(0x1600+-0x2371+0x2*0x6b9));var _$VO=_$NL(0x1ee+0x2*0xaaf+-0x174b,_$VI);try{_$Na(_$VH,_$Vt,_$VO);}catch(_$VR){if(!_$VL.XqMPq(_$VR,_$NB))throw _$VR;_$Ns(_$VH,_$Vt,_$VO);}};return _$N6&&_$Nm&&_$Na(_$NG,_$Vt,{'configurable':!(0x2157+-0x9d6*0x3+0x9*-0x6d),'set':_$VM}),_$h.IfOgq(_$Nb,_$Vt,_$Vk);},_$Nr(_$Ng=_$NU[_$NT],Vv(0x1d9),function(){return _$NE(this).tag;}),_$h.meTby(_$Nr,_$NU,Vv(0x222),function(_$VL){return _$h.JdaCE(_$Nb,_$ND(_$VL),_$VL);}),_$NN.f=_$r0,_$NR.f=_$Nz,_$NC.f=_$Nv,_$NO.f=_$r1,_$NM.f=_$NI.f=_$r2,_$NH.f=_$r3,_$NY.f=function(_$VL){return _$Nb(_$Nw(_$VL),_$VL);},_$N6&&_$Nf(_$Ng,Vv(0x17c),{'configurable':!(-0x14c6+-0x1*-0x1eaf+-0x3b*0x2b),'get':function(){return _$NE(this).description;}})),_$N2({'global':!(-0x1a7b+-0x4ee+0x1f69),'constructor':!(0x52a*0x7+0xff*-0x14+-0x103a),'wrap':!(0x37*-0xad+-0x263+-0xa6*-0x3d),'forced':!_$N7,'sham':!_$N7},{'Symbol':_$NU}),_$Ni(_$Nt(_$No),function(_$VL){_$NZ(_$VL);}),_$N2({'target':_$NK,'stat':!(0x1*-0x1fc3+0x89e+0x1725),'forced':!_$N7},{'useSetter':function(){_$Nm=!(-0x1*0x20e9+-0x1540+0xad5*0x5);},'useSimple':function(){_$Nm=!(0x79+-0x1*-0x234a+0x11e1*-0x2);}}),_$N2({'target':Vv(0x142),'stat':!(0x1ebd*0x1+-0x33d*-0x7+-0x3568),'forced':!_$N7,'sham':!_$N6},{'create':function(_$VL,_$Vk){return void(-0x25ac+0x190*0x15+0x1*0x4dc)===_$Vk?_$Nk(_$VL):_$Nv(_$Nk(_$VL),_$Vk);},'defineProperty':_$Nz,'defineProperties':_$Nv,'getOwnPropertyDescriptor':_$r1}),_$N2({'target':Vv(0x142),'stat':!(-0x1868+-0x597*-0x2+0x69d*0x2),'forced':!_$N7},{'getOwnPropertyNames':_$r2}),_$NF(),_$Nx(_$NU,_$NK),_$NV[_$NW]=!(0x4cb*-0x7+0xde3+0x3*0x68e);var _$r4=_$hM&&!!Symbol.for&&!!Symbol.keyFor,_$r5=_$qp,_$r6=_$h6,_$r7=_$hj,_$r8=_$kC,_$r9=_$hy,_$rh=_$r4,_$rn=_$h.sIJOk(_$r9,Vv(0x16b)),_$rq=_$r9(Vv(0x28f));_$r5({'target':Vv(0x120),'stat':!(0xc82+0x14*0x61+-0x1416),'forced':!_$rh},{'for':function(_$VL){var w7=Vv,_$Vk=_$r8(_$VL);if(_$r7(_$rn,_$Vk))return _$rn[_$Vk];var _$Vt=_$r6(w7(0x120))(_$Vk);return _$rn[_$Vk]=_$Vt,_$rq[_$Vt]=_$Vk,_$Vt;}});var _$rp=_$qp,_$rA=_$hj,_$rL=_$hN,_$rk=_$hf,_$rt=_$r4,_$rM=_$hy(Vv(0x28f));_$rp({'target':Vv(0x120),'stat':!(-0x15*0x199+0xa*-0x3da+-0x1*-0x4811),'forced':!_$rt},{'keyFor':function(_$VL){if(!_$rL(_$VL))throw new TypeError(_$rk(_$VL)+_$h.iegBn);if(_$rA(_$rM,_$VL))return _$rM[_$VL];}});var _$rI=_$L0,_$rH=_$hQ;_$qp({'target':_$h.kLzUQ,'stat':!(-0x24f2+-0x1*-0x159+0x2399),'forced':!_$hM||_$p(function(){_$rI.f(-0x1180+-0xca*-0x2f+0x3*-0x687);})},{'getOwnPropertySymbols':function(_$VL){var _$Vk=_$rI.f;return _$Vk?_$h.Rvrsx(_$Vk,_$rH(_$VL)):[];}}),_$Ca(_$h.JBfBF),_$Ca(_$h.DSPmo),_$Ca(Vv(0x13e)),_$Ca(Vv(0x212)),_$Ca(Vv(0x11c)),_$Ca(Vv(0x1d7)),_$Ca(Vv(0x152)),_$h.PTgVG(_$Ca,Vv(0x257)),_$Ca(Vv(0x270)),_$Ca(Vv(0x13c));var _$rO=_$N1;_$Ca(_$h.SgiDB),_$rO();var _$rR=_$h6,_$rC=_$tV;_$Ca(_$h.xHtlU),_$h.zQbuW(_$rC,_$rR(Vv(0x120)),_$h.nPxlh),_$Ca(Vv(0x186)),_$tV(_$R.JSON,Vv(0x1ff),!(0x37f+-0x22a2+0x1f23));var _$rN=_$h1.Symbol,_$rr=_$n4,_$rf=_$ng.f,_$rX=_$h.MPTAg(_$rr,Vv(0x14e)),_$rV=Function.prototype;_$h.UMHVk(void(0x3b*-0x7c+0x2575*-0x1+-0x325*-0x15),_$rV[_$rX])&&_$h.TUzIn(_$rf,_$rV,_$rX,{'value':null}),_$Ca(Vv(0x1ba)),_$Ca(Vv(0x1a8)),_$Ca(_$h.eaRLj);var _$rD=_$rN,_$rw=_$I,_$rY=_$h6(_$h.nPxlh),_$rZ=_$rY.keyFor,_$rF=_$rw(_$rY.prototype.valueOf),_$rx=_$rY.isRegisteredSymbol||function(_$VL){try{return void(0xfb7+-0x3*0x35b+-0x1*0x5a6)!==_$rZ(_$rF(_$VL));}catch(_$Vk){return!(-0xa5b+0x15*-0x119+0x2169);}};_$qp({'target':_$h.nPxlh,'stat':!(-0x2c*0x3e+-0x4b7+0xf5f)},{'isRegisteredSymbol':_$rx});for(var _$re=_$hy,_$ri=_$h6,_$rW=_$I,_$rK=_$hN,_$rT=_$n4,_$rd=_$h.LSfyD(_$ri,_$h.nPxlh),_$rE=_$rd.isWellKnownSymbol,_$rG=_$h.Bjrhf(_$ri,Vv(0x142),_$h.ndfYx),_$rU=_$rW(_$rd.prototype.valueOf),_$rg=_$re(Vv(0x129)),_$rB=-0x129a+-0x188e*-0x1+0x2*-0x2fa,_$ry=_$h.gOTBu(_$rG,_$rd),_$rl=_$ry.length;_$rB<_$rl;_$rB++)try{var _$rP=_$ry[_$rB];_$rK(_$rd[_$rP])&&_$rT(_$rP);}catch(_$VL){}var _$rQ=function(_$Vk){if(_$rE&&_$rE(_$Vk))return!(0x23ae+0x1d3d+0x1*-0x40eb);try{for(var _$Vt=_$rU(_$Vk),_$VM=-0x1*0xbe4+-0x1*-0x1af3+-0xf0f,_$VI=_$h.GEEQF(_$rG,_$rg),_$VH=_$VI.length;_$VM<_$VH;_$VM++)if(_$rg[_$VI[_$VM]]==_$Vt)return!(-0x2*0xb1f+-0x166*0x6+0x1ea2*0x1);}catch(_$VO){}return!(-0x1*0x14ef+-0x4a8*0x1+0x1998);};_$qp({'target':Vv(0x120),'stat':!(-0x1*0xba2+0xae6+0xbc),'forced':!(-0x2526+0xda9+0x177d)},{'isWellKnownSymbol':_$rQ}),_$h.EKJIW(_$Ca,Vv(0x1e2)),_$h.OVkUC(_$Ca,Vv(0x1be)),_$qp({'target':Vv(0x120),'stat':!(0x297*-0x4+-0x1a2e*0x1+0x617*0x6),'name':Vv(0x1c8)},{'isRegistered':_$rx}),_$qp({'target':Vv(0x120),'stat':!(-0x167d+-0x1ea3+0x3520),'name':Vv(0x240),'forced':!(0x61d+0xb5*-0x34+-0x461*-0x7)},{'isWellKnown':_$rQ}),_$Ca(_$h.EuDyC),_$Ca(_$h.HdypT),_$Ca(_$h.WulUL);var _$ru=_$rD,_$rJ=_$Cj.f(_$h.IKbdd);function _$rj(_$Vk){var w8=Vv;return _$rj=_$h.QuHhA==typeof _$ru&&w8(0x25d)==typeof _$rJ?function(_$Vt){return typeof _$Vt;}:function(_$Vt){var w9=w8;return _$Vt&&'function'==typeof _$ru&&_$Vt.constructor===_$ru&&_$Vt!==_$ru.prototype?w9(0x25d):typeof _$Vt;},_$rj(_$Vk);}var _$rS=_$X,_$rc=_$z,_$ro=_$qI,_$rm=_$qN,_$rs=_$pb,_$ra=Math.min,_$rb=[].lastIndexOf,_$rz=!!_$rb&&_$h.PIqMj((0x13d6*0x1+0x2*0xf05+-0x31df)/[0x18d5+0x108d+0xdcb*-0x3].lastIndexOf(-0x935+-0x3b3+0xce9*0x1,-(0x150b+0x1c+-0x1527)),-0x435+-0x1*-0x8f9+-0x4c4),_$rv=_$rs(Vv(0x1b1)),_$f0=_$rz||!_$rv?function(_$Vk){if(_$rz)return _$rS(_$rb,this,arguments)||0x15a5+0x824+0x7d*-0x3d;var _$Vt=_$rc(this),_$VM=_$rm(_$Vt);if(-0x14*-0x107+0x20d1+-0x355d===_$VM)return-(-0xf6b+-0x1*-0x2297+0x132b*-0x1);var _$VI=_$VM-(0x1cc6+-0x5f5+-0x490*0x5);for(arguments.length>0x1*-0x67+-0x1*0x10df+0x1147&&(_$VI=_$ra(_$VI,_$ro(arguments[0xf82+0x21ba*0x1+-0x313b]))),_$VI<0x1be3+0x22*-0x17+-0x18d5&&(_$VI=_$VM+_$VI);_$VI>=-0x1fe4+0x713*0x5+-0x37b;_$VI--)if(_$VI in _$Vt&&_$Vt[_$VI]===_$Vk)return _$VI||0xf3c+0x1194+-0x20d0;return-(0x701*0x4+0x930+0x59*-0x6b);}:_$rb;_$qp({'target':_$h.GkWtq,'proto':!(-0x1034*-0x2+-0x5eb+0x1*-0x1a7d),'forced':_$f0!==[].lastIndexOf},{'lastIndexOf':_$f0});var _$f1=_$h.sEpTn(_$pC,Vv(0x1af),Vv(0x1b1)),_$f2=_$H,_$f3=_$f1,_$f4=Array.prototype,_$f5=function(_$Vk){var _$Vt=_$Vk.lastIndexOf;return _$Vk===_$f4||_$f2(_$f4,_$Vk)&&_$Vt===_$f4.lastIndexOf?_$f3:_$Vt;},_$f6={'exports':{}},_$f7=_$qp,_$f8=_$qL,_$f9=_$I([].reverse),_$fh=[0x3*-0x68a+0x1455+-0x1*0xb6,-0x582*0x5+-0x31d*-0x3+0x4f*0x3b];_$f7({'target':Vv(0x1af),'proto':!(-0x1db8+-0x1*-0x26e9+0xb5*-0xd),'forced':_$h.hwmtI(String(_$fh),String(_$fh.reverse()))},{'reverse':function(){return _$f8(this)&&(this.length=this.length),_$f9(this);}});var _$fn=_$pC(Vv(0x1af),Vv(0x151)),_$fq=_$H,_$fp=_$fn,_$fA=Array.prototype,_$fL=function(_$Vk){var _$Vt=_$Vk.reverse;return _$Vk===_$fA||_$fq(_$fA,_$Vk)&&_$Vt===_$fA.reverse?_$fp:_$Vt;},_$fk=Vv(0x25e),_$ft=_$s,_$fM=_$kC,_$fI=_$fk,_$fH=_$h.RfoIC(_$I,''.replace),_$fO=RegExp('^['+_$fI+']+'),_$fR=RegExp(_$h.uLQoa(_$h.RXcAD(Vv(0x21b)+_$fI,Vv(0x234))+_$fI,Vv(0x158))),_$fC=function(_$Vk){return function(_$Vt){var _$VM=_$fM(_$ft(_$Vt));return _$h.MaEfr(-0xcf5+0x7de*0x2+-0x2c6,_$Vk)&&(_$VM=_$h.OfyCt(_$fH,_$VM,_$fO,'')),0x1*-0x199f+-0x1d6a+0x370b&_$Vk&&(_$VM=_$h.bjaRO(_$fH,_$VM,_$fR,'$1')),_$VM;};},_$fN={'start':_$fC(-0x1*0x305+-0xa*-0x1b1+-0xde4),'end':_$fC(-0x318+0x2*0x446+0x2*-0x2b9),'trim':_$fC(0x8*-0x2bb+-0xaa9+-0x1042*-0x2)},_$fr=_$R,_$ff=_$p,_$fX=_$I,_$fV=_$kC,_$fD=_$fN.trim,_$fw=_$fk,_$fY=_$fr.parseInt,_$fZ=_$fr.Symbol,_$fF=_$fZ&&_$fZ.iterator,_$fx=/^[+-]?0x/i, _$fe = _$fX(_$fx.exec), _$fi = 0x2 * -0x124d + -0x3 * -0xc88 + -0x52 * 0x3 !== _$fY(_$fw + '08') || -0xf3b + -0x641 * 0x1 + 0xac9 * 0x2 !== _$fY(_$fw + Vv(0x10d)) || _$fF && !_$ff(function () {
+    _$fY(Object(_$fF));})?function(_$Vk,_$Vt){var _$VM=_$h.gMaCN(_$fD,_$h.kUgEc(_$fV,_$Vk));return _$fY(_$VM,_$Vt>>>-0x2487+0xbd+0x1*0x23ca||(_$h.LsYYs(_$fe,_$fx,_$VM)?0x2056+-0x10*0xa6+-0x15e6:-0x2c3+0x215f*-0x1+0x1cf*0x14));}:_$fY;_$qp({'global':!(-0x1eef+0x8*-0x3a4+0x3c0f),'forced':parseInt!==_$fi},{'parseInt':_$fi});var _$fW=_$h1.parseInt,_$fK=_$K,_$fT=_$qL,_$fd=TypeError,_$fE=Object.getOwnPropertyDescriptor,_$fG=_$fK&&!function(){var wh=Vv;if(_$h.GjvwD(void(0x954+-0x2684+0x1d30),this))return!(0x17ed+-0x1004+-0x7e9);try{Object.defineProperty([],wh(0x1bc),{'writable':!(-0x19e0+0x1ebb*0x1+0x2e*-0x1b)}).length=-0x2*-0xf01+0x2636+-0x4437;}catch(_$Vk){return _$Vk instanceof TypeError;}}(),_$fU=_$qp,_$fg=_$hQ,_$fB=_$pZ,_$fy=_$qI,_$fl=_$qN,_$fP=_$fG?function(_$Vk,_$Vt){var wn=Vv;if(_$fT(_$Vk)&&!_$fE(_$Vk,wn(0x1bc)).writable)throw new _$fd(wn(0x157));return _$Vk.length=_$Vt;}:function(_$Vk,_$Vt){return _$Vk.length=_$Vt;},_$fQ=_$qf,_$fu=_$p2,_$fJ=_$qw,_$fj=_$RP,_$fS=_$h.VkPis(_$p6,Vv(0x28e)),_$fc=Math.max,_$fo=Math.min;_$fU({'target':Vv(0x1af),'proto':!(-0x1b7*-0x10+0x1*0x5b9+-0x2129),'forced':!_$fS},{'splice':function(_$Vk,_$Vt){var _$VM,_$VI,_$VH,_$VO,_$VR,_$VC,_$VN=_$fg(this),_$Vr=_$fl(_$VN),_$Vf=_$fB(_$Vk,_$Vr),_$VX=arguments.length;for(-0xf*-0xb1+0x1bd7*0x1+-0x2636===_$VX?_$VM=_$VI=0x9*-0x19d+0xd7f+-0x1*-0x106:-0x107*0x16+0x775*-0x3+-0x12f*-0x26===_$VX?(_$VM=0x9d*0x3f+0x1c2b*-0x1+0x53c*-0x2,_$VI=_$Vr-_$Vf):(_$VM=_$VX-(-0x1670+0x112c+-0x1c2*-0x3),_$VI=_$fo(_$fc(_$fy(_$Vt),0x1*-0xdbd+-0x1529+0x22e6),_$Vr-_$Vf)),_$fQ(_$Vr+_$VM-_$VI),_$VH=_$fu(_$VN,_$VI),_$VO=-0x2224+0x868+-0x1b*-0xf4;_$VO<_$VI;_$VO++)(_$VR=_$Vf+_$VO)in _$VN&&_$fJ(_$VH,_$VO,_$VN[_$VR]);if(_$VH.length=_$VI,_$VM<_$VI){for(_$VO=_$Vf;_$h.MUrxt(_$VO,_$Vr-_$VI);_$VO++)_$VC=_$h.XFSuj(_$VO,_$VM),(_$VR=_$h.UtNVx(_$VO,_$VI))in _$VN?_$VN[_$VC]=_$VN[_$VR]:_$fj(_$VN,_$VC);for(_$VO=_$Vr;_$VO>_$Vr-_$VI+_$VM;_$VO--)_$fj(_$VN,_$VO-(-0x51*0x17+-0x1ed*0xc+0xf32*0x2));}else{if(_$VM>_$VI){for(_$VO=_$Vr-_$VI;_$h.TGQAf(_$VO,_$Vf);_$VO--)_$VC=_$h.vWdOb(_$h.ptbCu(_$VO,_$VM),0x1812*0x1+-0x1*0x4df+-0x1332),_$h.CdwEM(_$VR=_$VO+_$VI-(0x1ac9+0x101c*-0x1+-0x556*0x2),_$VN)?_$VN[_$VC]=_$VN[_$VR]:_$fj(_$VN,_$VC);}}for(_$VO=0x5eb*0x4+-0x16*-0xef+-0x2c36;_$VO<_$VM;_$VO++)_$VN[_$VO+_$Vf]=arguments[_$VO+(-0x241f+0x164e+0x1*0xdd3)];return _$fP(_$VN,_$Vr-_$VI+_$VM),_$VH;}});var _$fm,_$fs=_$pC(Vv(0x1af),Vv(0x28e)),_$fa=_$H,_$fb=_$fs,_$fz=Array.prototype,_$fv=function(_$Vk){var _$Vt=_$Vk.splice;return _$Vk===_$fz||_$fa(_$fz,_$Vk)&&_$Vt===_$fz.splice?_$fb:_$Vt;},_$X0={'exports':{}},_$X1=_$q(Object.freeze({'__proto__':null,'default':{}}));_$X0.exports=(_$fm=_$fm||function(_$Vk,_$Vt){var wq=Vv,_$VM={'sNUnY':_$h.QuHhA,'jrpJi':function(_$VZ,_$VF){return _$VZ<_$VF;},'kBeQK':function(_$VZ,_$VF){return _$VZ&_$VF;},'oSOKb':function(_$VZ,_$VF){return _$VZ-_$VF;},'rlCYN':function(_$VZ,_$VF){return _$VZ*_$VF;},'foYhs':function(_$VZ,_$VF){return _$VZ%_$VF;},'YPwiT':function(_$VZ,_$VF){return _$VZ>>>_$VF;},'iQXtf':function(_$VZ,_$VF){return _$h.vWdOb(_$VZ,_$VF);},'yllMk':function(_$VZ,_$VF){return _$VZ==_$VF;},'mzdYL':wq(0x282),'QCsPr':wq(0x27d),'BXUoY':function(_$VZ,_$VF){return _$VZ+_$VF;}},_$VI;if('undefined'!=typeof window&&window.crypto&&(_$VI=window.crypto),!_$VI&&'undefined'!=typeof window&&window.msCrypto&&(_$VI=window.msCrypto),!_$VI&&void(0x10d*0x25+-0x185e*-0x1+0x303*-0x15)!==_$n&&_$n.crypto&&(_$VI=_$n.crypto),!_$VI)try{_$VI=_$X1;}catch(_$VZ){}var _$VH=function(){var wp=wq;if(_$VI){if(_$VM.sNUnY==typeof _$VI.getRandomValues)try{return _$VI.getRandomValues(new Uint32Array(-0x141c+0x7c*-0x7+0x1781))[-0xf21+0x1*0xb96+0x38b];}catch(_$VF){}if('function'==typeof _$VI.randomBytes)try{return _$VI.randomBytes(0x1de*-0x1+0x81+0x161).readInt32LE();}catch(_$Vx){}}throw new Error(wp(0x153));},_$VO=Object.create||function(){function _$VF(){}return function(_$Vx){var _$Ve;return _$VF.prototype=_$Vx,_$Ve=new _$VF(),_$VF.prototype=null,_$Ve;};}(),_$VR={},_$VC=_$VR.lib={},_$VN=_$VC.Base={'extend':function(_$VF){var wA=wq,_$Vx=_$VO(this);return _$VF&&_$Vx.mixIn(_$VF),_$Vx.hasOwnProperty(wA(0x164))&&_$h.iOJjX(this.init,_$Vx.init)||(_$Vx.init=function(){_$Vx.$super.init.apply(this,arguments);}),_$Vx.init.prototype=_$Vx,_$Vx.$super=this,_$Vx;},'create':function(){var _$VF=this.extend();return _$VF.init.apply(_$VF,arguments),_$VF;},'init':function(){},'mixIn':function(_$VF){var wL=wq;for(var _$Vx in _$VF)_$VF.hasOwnProperty(_$Vx)&&(this[_$Vx]=_$VF[_$Vx]);_$VF.hasOwnProperty(wL(0x1d9))&&(this.toString=_$VF.toString);},'clone':function(){return this.init.prototype.extend(this);}},_$Vr=_$VC.WordArray=_$VN.extend({'init':function(_$VF,_$Vx){_$VF=this.words=_$VF||[],this.sigBytes=_$Vx!=_$Vt?_$Vx:(0x7*0x3fd+-0x1883+-0x364)*_$VF.length;},'toString':function(_$VF){return(_$VF||_$VX).stringify(this);},'concat':function(_$VF){var _$Vx=this.words,_$Ve=_$VF.words,_$Vi=this.sigBytes,_$VW=_$VF.sigBytes;if(this.clamp(),_$Vi%(0x8b3*-0x3+-0x3*-0x3e6+0xe6b))for(var _$VK=-0x25*-0xe5+-0xf*-0x145+-0x3424*0x1;_$VM.jrpJi(_$VK,_$VW);_$VK++){var _$VT=_$VM.kBeQK(_$Ve[_$VK>>>-0x11b*-0x3+0x1a24+-0x167*0x15]>>>0x5*-0x145+0x255a+-0x1ee9-_$VK%(0x573+0x41*0x25+-0x124*0xd)*(0x3*-0x115+-0x2*0xaf7+0x1935),-0x4*0x611+-0x29*0xc+0x1b2f);_$Vx[_$Vi+_$VK>>>0x33d*-0x5+0x73*-0x17+0x236*0xc]|=_$VT<<_$VM.oSOKb(0x1078+0x8bf+-0x191f,(_$Vi+_$VK)%(-0x1c03+-0x10cb+0x2cd2)*(-0x1*-0x1367+-0x162e+0x2cf));}else{for(_$VK=-0x1*0x2466+-0x10b+0x2571;_$VM.jrpJi(_$VK,_$VW);_$VK+=-0x142e+0x1*-0x4b9+-0x18eb*-0x1)_$Vx[_$Vi+_$VK>>>0x24f*-0x4+-0x15a2+0x1ee0]=_$Ve[_$VK>>>0x1082+-0x1*-0x182d+0x485*-0x9];}return this.sigBytes+=_$VW,this;},'clamp':function(){var _$VF=this.words,_$Vx=this.sigBytes;_$VF[_$Vx>>>-0x15a*0x1c+0x11a4+0x1436]&=-0x21c*0x362de5+-0x383275*0x228+0x1eb759b53<<0x1*0x1e71+0x143b+-0x328c-_$Vx%(0x121b+0x16c1+-0x28d8)*(0x6d2*-0x2+0x21ac*0x1+-0x1400),_$VF.length=_$Vk.ceil(_$Vx/(-0xca3*-0x3+-0xb57*0x2+-0xf37));},'clone':function(){var _$VF,_$Vx=_$VN.clone.call(this);return _$Vx.words=_$pj(_$VF=this.words).call(_$VF,-0x1c18+0x1a95+0x2b*0x9),_$Vx;},'random':function(_$VF){for(var _$Vx=[],_$Ve=-0x2000+0x459+0x1ba7;_$Ve<_$VF;_$Ve+=0x44c+0xf*0x101+0x1*-0x1357)_$Vx.push(_$VH());return new _$Vr.init(_$Vx,_$VF);}}),_$Vf=_$VR.enc={},_$VX=_$Vf.Hex={'stringify':function(_$VF){'use strict';var a=_3h9qp;var r=_2t8qp;var _$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT;var j=[];var n=0;var m,s;l0:for(;;){switch(r[n++]){case 7:j.push(null);break;case 12:j.push(j[j.length-1]);j[j.length-2]=j[j.length-2][_1wnqp[r[n++]]];break;case 13:j.push(_$VW);break;case 15:_$Vi=j[j.length-1];break;case 17:_$VW=j[j.length-1];break;case 18:j.push(_$VT);break;case 21:j.push(new Array(r[n++]));break;case 22:j.push(_$Vi);break;case 23:j.push(_$VK);break;case 25:if(j[j.length-2]!=null){j[j.length-3]=a.call(j[j.length-3],j[j.length-2],j[j.length-1]);j.length-=2;}else{m=j[j.length-3];j[j.length-3]=m(j[j.length-1]);j.length-=2;}break;case 29:j[j.length-1]=j[j.length-1][_1wnqp[r[n++]]];break;case 30:j[j.length-1]=j[j.length-1].length;break;case 32:j.push(_$fL);break;case 33:m=j.pop();j[j.length-1]+=m;break;case 37:_$VK=j[j.length-1];break;case 38:_$Ve=j[j.length-1];break;case 42:return;break;case 44:_$Vx=j[j.length-1];break;case 49:m=j.pop();j[j.length-1]=j[j.length-1]>m;break;case 51:j.push(r[n++]);break;case 52:return j.pop();break;case 53:j[j.length-4]=a.call(j[j.length-4],j[j.length-3],j[j.length-2],j[j.length-1]);j.length-=3;break;case 57:j.push(_$h);break;case 62:n+=r[n];break;case 69:j.pop();break;case 72:_$VT=j[j.length-1];break;case 75:j.push(this);break;case 78:j.push(Array);break;case 84:j.push(_$VF);break;case 89:j[j.length-5]=a.call(j[j.length-5],j[j.length-4],j[j.length-3],j[j.length-2],j[j.length-1]);j.length-=4;break;case 91:j.push(_$pj);break;case 92:j.push(_$Ve);break;case 94:j.push(_$Vx);break;case 95:j.push(_$fm);break;case 96:if(j.pop())++n;else n+=r[n];break;}}},'parse':function(_$VF){for(var _$Vx=_$VF.length,_$Ve=[],_$Vi=-0x218e+-0x1659+0x37e7;_$Vi<_$Vx;_$Vi+=0x22d5+-0x1*0x8fa+-0x19d9)_$Ve[_$Vi>>>0x2613*0x1+0x1ed2+-0x44e2]|=_$fW(_$VF.substr(_$Vi,-0x10c4+-0xfce+-0x2094*-0x1),0x509*-0x2+0x68a+0x398)<<0x65*-0x61+0x7*-0x427+0x3f*0x112-_$Vi%(0x7ed+0x728+-0x1*0xf0d)*(0x1f63+0x1*0x1231+-0xd*0x3d0);return new _$Vr.init(_$Ve,_$Vx/(0x20a+0x1199+-0x13a1));},'format':function(_$VF){for(var _$Vx=_$VF.words,_$Ve=_$VF.sigBytes,_$Vi=[],_$VW=-0xe8*0x3+0x3*-0xa98+0xb80*0x3;_$VW<_$Ve;_$VW++){var _$VK=_$VM.kBeQK(_$Vx[_$VW>>>-0x1a*0x83+-0x4*-0xa5+0xabc]>>>0x24f5*-0x1+0x198+-0x1*-0x2375-_$VM.rlCYN(_$VM.foYhs(_$VW,0x1*-0x369+0x2063+-0x1*0x1cf6),-0x1*-0x364+-0x79a*-0x1+0xaf6*-0x1),0x1*0xbc2+0x1*-0x171b+0xc58);_$Vi.push((_$VK>>>0x2228*-0x1+0x1*-0x22e3+0x450f).toString(0x17ff+-0x3*-0xa3+-0x19d8)),_$Vi.push((-0x1830+0x1f5e+0x71f*-0x1&_$VK).toString(0x89c+-0xbad+0x321));}return _$Vi.join('');}};_$Vf.Utils={'toWordArray':function(_$VF){for(var _$Vx=[],_$Ve=0x32*0x8b+0x14f1+0x3017*-0x1;_$h.MUrxt(_$Ve,_$VF.length);_$Ve++)_$Vx[_$Ve>>>0xf0c+0x4*-0x458+0x256*0x1]|=_$VF[_$Ve]<<_$h.vWdOb(-0x3*0xc51+0x2460+0xab,_$h.RGjSl(_$Ve%(0x1bd2+0x1e0c+-0x39da*0x1),0x12*-0x1e9+0x2497+-0x22d));return _$fm.lib.WordArray.create(_$Vx,_$VF.length);},'fromWordArray':function(_$VF){for(var _$Vx=new Uint8Array(_$VF.sigBytes),_$Ve=0xe2*0x13+-0x8f2+-0xc*0xa7;_$Ve<_$VF.sigBytes;_$Ve++)_$Vx[_$Ve]=_$VF.words[_$VM.YPwiT(_$Ve,-0x1a*0x105+-0x15e6+0x306a)]>>>_$VM.iQXtf(0xa*-0x226+-0x77*-0x20+-0x9c*-0xb,_$Ve%(0x2339+0x5*-0x6d4+0x7*-0x27)*(-0x289*-0xd+-0x1706+-0x9e7))&0xb6b*-0x2+0x17f*0x15+-0x3cb*0x2;return _$Vx;}};var _$VV=_$Vf.Latin1={'stringify':function(_$VF){for(var _$Vx=_$VF.words,_$Ve=_$VF.sigBytes,_$Vi=[],_$VW=-0x945+0xab8+-0x1*0x173;_$VW<_$Ve;_$VW++){var _$VK=_$VM.kBeQK(_$Vx[_$VW>>>-0x3*-0xb41+0x1413+-0x4*0xd75]>>>0x21f7+0x255+0x7*-0x52c-_$VM.foYhs(_$VW,-0x1331*-0x1+-0x11ed+-0x140)*(-0x2*0x781+0x2*-0x15+0xf34),-0x5e*0x52+0x4*-0x97f+0x4517);_$Vi.push(String.fromCharCode(_$VK));}return _$Vi.join('');},'parse':function(_$VF){for(var _$Vx=_$VF.length,_$Ve=[],_$Vi=-0x12a0+-0x1b87+0x2e27;_$h.PIqMj(_$Vi,_$Vx);_$Vi++)_$Ve[_$Vi>>>-0x2552+-0x1960+0x2*0x1f5a]|=(0x53a*-0x2+0x154b+-0x9d8&_$VF.charCodeAt(_$Vi))<<-0x22ef+0x21b5+0x152-_$h.XPVfw(_$Vi,-0x2073+0x14bc+0xbbb)*(0xe58+0xe03+-0x1*0x1c53);return new _$Vr.init(_$Ve,_$Vx);}},_$VD=_$Vf.Utf8={'stringify':function(_$VF){var wk=wq;try{return decodeURIComponent(escape(_$VV.stringify(_$VF)));}catch(_$Vx){throw new Error(wk(0x112));}},'parse':function(_$VF){return _$VV.parse(unescape(encodeURIComponent(_$VF)));}},_$Vw=_$VC.BufferedBlockAlgorithm=_$VN.extend({'reset':function(){this._data=new _$Vr.init(),this._nDataBytes=-0x16ef+0x1d5a*-0x1+-0x3449*-0x1;},'_append':function(_$VF){'use strict';var y=_3h9qp;var t=_2t8qp;var wt,_$Vx;var q=[];var k=133;var x,r;l1:for(;;){switch(t[k++]){case 1:q.push(_$pV);break;case 8:q.push(null);break;case 9:q.pop();break;case 19:q.push(_$VD);break;case 23:if(q[q.length-2]!=null){q[q.length-3]=y.call(q[q.length-3],q[q.length-2],q[q.length-1]);q.length-=2;}else{x=q[q.length-3];q[q.length-3]=x(q[q.length-1]);q.length-=2;}break;case 31:x=q.pop();q[q.length-1]+=x;break;case 33:q.push(this);break;case 34:q.push(q[q.length-1]);q[q.length-2]=q[q.length-2][_1wnqp[10+t[k++]]];break;case 35:q.push(this[_1wnqp[10+t[k++]]]);break;case 36:_$VF=q[q.length-1];break;case 37:q[q.length-1]=typeof q[q.length-1];break;case 41:q.push(_$Vx);break;case 42:q[q.length-4]=y.call(q[q.length-4],q[q.length-3],q[q.length-2],q[q.length-1]);q.length-=3;break;case 43:return;break;case 45:wt=q[q.length-1];break;case 49:q.push(wt);break;case 51:q.push(q[q.length-1]);break;case 58:if(q[q.length-1]){++k;--q.length;}else k+=t[k];break;case 62:q.push(_$VM);break;case 67:q.push(wq);break;case 76:q.push(t[k++]);break;case 83:q.push(_$VF);break;case 87:q[q.length-1]=q[q.length-1][_1wnqp[10+t[k++]]];break;case 89:_$Vx=q[q.length-1];break;case 90:q[q.length-2][_1wnqp[10+t[k++]]]=q[q.length-1];q[q.length-2]=q[q.length-1];q.length--;break;}}},'_process':function(_$VF){var _$Vx,_$Ve=this._data,_$Vi=_$Ve.words,_$VW=_$Ve.sigBytes,_$VK=this.blockSize,_$VT=_$VW/_$h.RGjSl(0x1675+0x1*0x221+-0x275*0xa,_$VK),_$Vd=(_$VT=_$VF?_$Vk.ceil(_$VT):_$Vk.max((-0x217a*0x1+-0x571*-0x3+-0x1*-0x1127|_$VT)-this._minBufferSize,-0x84f+-0xa9f*-0x1+-0x8*0x4a))*_$VK,_$VE=_$Vk.min((0x25b3+-0x1a3d*-0x1+-0x3fec)*_$Vd,_$VW);if(_$Vd){for(var _$VG=-0x1a17+0x7*0x1fb+0xc3a;_$h.STSUP(_$VG,_$Vd);_$VG+=_$VK)this._doProcessBlock(_$Vi,_$VG);_$Vx=_$h.uoVjF(_$fv,_$Vi).call(_$Vi,-0x1bbe+0x2e*0xa3+-0x24*0xb,_$Vd),_$Ve.sigBytes-=_$VE;}return new _$Vr.init(_$Vx,_$VE);},'_eData':function(_$VF){'use strict';var l=_3h9qp;var w=_2t8qp;var r=[];var b=186;var u,k;l2:for(;;){switch(w[b++]){case 11:r[r.length-4]=l.call(r[r.length-4],r[r.length-3],r[r.length-2],r[r.length-1]);r.length-=3;break;case 14:return r.pop();break;case 18:r.push(_$VM);break;case 35:r.push(null);break;case 49:r[r.length-1]=r[r.length-1][_1wnqp[17+w[b++]]];break;case 61:return;break;case 68:if(r[r.length-2]!=null){r[r.length-3]=l.call(r[r.length-3],r[r.length-2],r[r.length-1]);r.length-=2;}else{u=r[r.length-3];r[r.length-3]=u(r[r.length-1]);r.length-=2;}break;case 73:r.push(_$VF);break;case 92:r.push(_$pV);break;case 93:r.push(r[r.length-1]);r[r.length-2]=r[r.length-2][_1wnqp[17+w[b++]]];break;}}},'clone':function(){var _$VF=_$VN.clone.call(this);return _$VF._data=this._data.clone(),_$VF;},'_minBufferSize':0x0});_$VC.Hasher=_$Vw.extend({'cfg':_$VN.extend(),'init':function(_$VF){this.cfg=this.cfg.extend(_$VF),this.reset();},'reset':function(){_$Vw.reset.call(this),this._doReset();},'update':function(_$VF){return this._append(_$VF),this._process(),this;},'finalize':function(_$VF){var wM=wq;return _$VF&&(wM(0x286)==typeof _$VF&&(_$VF=this._seData(_$VF)),this._append(_$VF)),this._doFinalize();},'_seData':function(_$VF){return this._seData1(_$VF);},'_seData1':function(_$VF){'use strict';var m=_3h9qp;var y=_2t8qp;var _$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE,_$VG,_$VU,_$Vg;var i=[];var t=199;var g,e;l3:for(;;){switch(y[t++]){case 1:_$Vd=i[i.length-1];break;case 2:i.pop();break;case 7:i.push(_$Vg);break;case 8:i.push(_$VU++);break;case 10:_$VT=i[i.length-1];break;case 11:g=i.pop();i[i.length-1]*=g;break;case 12:if(i.pop())t+=y[t];else++t;break;case 13:i.push(_$VG);break;case 14:i.push(_$VT++);break;case 15:i.push(_$VM);break;case 21:i.push(i[i.length-1]);i[i.length-2]=i[i.length-2][_1wnqp[19+y[t++]]];break;case 24:_$Vi=i[i.length-1];break;case 26:g=i.pop();i[i.length-1]-=g;break;case 27:_$Vx=i[i.length-1];break;case 30:t+=y[t];break;case 31:g=i.pop();i[i.length-1]+=g;break;case 33:_$VU=i[i.length-1];break;case 34:_$VW=i[i.length-1];break;case 40:g=i.pop();i[i.length-1]=i[i.length-1]<g;break;case 41:i[i.length-1]=i[i.length-1][_1wnqp[19+y[t++]]];break;case 42:i.push(_$VW);break;case 43:i[i.length-4]=m.call(i[i.length-4],i[i.length-3],i[i.length-2],i[i.length-1]);i.length-=3;break;case 48:_$VE=i[i.length-1];break;case 49:_$Vg=i[i.length-1];break;case 51:i.push(_$VT);break;case 54:i.push(_$Vx);break;case 55:i.push(_$Ve);break;case 56:if(i.pop())++t;else t+=y[t];break;case 57:return i.pop();break;case 59:i.push(_$VE);break;case 60:g=i.pop();i[i.length-1]=i[i.length-1]===g;break;case 61:i[i.length-1]=i[i.length-1].length;break;case 62:i.push(y[t++]);break;case 66:if(i[i.length-1]){++t;--i.length;}else t+=y[t];break;case 68:i.push(_$Vi);break;case 69:_$Ve=i[i.length-1];break;case 70:i.push(_1wnqp[19+y[t++]]);break;case 72:_$VG=i[i.length-1];break;case 77:i.push(_$VF);break;case 78:i.push(_$Vk);break;case 79:i.push(_$Vd);break;case 80:i.push(_$VU);break;case 86:g=i.pop();i[i.length-1]%=g;break;case 87:g=i.pop();i[i.length-1]/=g;break;case 90:return;break;case 91:i.push(_$VK);break;case 92:i.push(new Array(y[t++]));break;case 93:_$VK=i[i.length-1];break;case 96:if(i[i.length-2]!=null){i[i.length-3]=m.call(i[i.length-3],i[i.length-2],i[i.length-1]);i.length-=2;}else{g=i[i.length-3];i[i.length-3]=g(i[i.length-1]);i.length-=2;}break;}}},'blockSize':0x10,'_createHelper':function(_$VF){return function(_$Vx,_$Ve){return new _$VF.init(_$Ve).finalize(_$Vx);};},'_createHmacHelper':function(_$VF){return function(_$Vx,_$Ve){return new _$VY.HMAC.init(_$VF,_$Ve).finalize(_$Vx);};}});var _$VY=_$VR.algo={};return _$VR;}(Math),_$fm),function(_$Vk,_$Vt){var _$VM={'BsJvm':function(_$VI,_$VH){return _$VI>>>_$VH;},'TlEwn':function(_$VI,_$VH,_$VO,_$VR,_$VC,_$VN,_$Vr,_$Vf){return _$VI(_$VH,_$VO,_$VR,_$VC,_$VN,_$Vr,_$Vf);},'fagHc':function(_$VI,_$VH,_$VO,_$VR,_$VC,_$VN,_$Vr,_$Vf){return _$VI(_$VH,_$VO,_$VR,_$VC,_$VN,_$Vr,_$Vf);},'ZYoRd':function(_$VI,_$VH,_$VO,_$VR,_$VC,_$VN,_$Vr,_$Vf){return _$VI(_$VH,_$VO,_$VR,_$VC,_$VN,_$Vr,_$Vf);}};_$Vk.exports=function(_$VI){var _$VH={'FXDwy':function(_$VO,_$VR){return _$h.PIqMj(_$VO,_$VR);},'EqgoM':function(_$VO,_$VR){return _$VO*_$VR;},'iNCun':function(_$VO,_$VR){return _$h.RrNtO(_$VO,_$VR);},'uHDlJ':function(_$VO,_$VR){return _$VO/_$VR;},'DHCex':function(_$VO,_$VR){return _$VO>>>_$VR;},'TkUgp':function(_$VO,_$VR){return _$VO|_$VR;},'HCmPs':function(_$VO,_$VR){return _$VO&_$VR;},'ippTk':function(_$VO,_$VR){return _$VO|_$VR;},'XSEDJ':function(_$VO,_$VR){return _$VO&_$VR;},'ggwsK':function(_$VO,_$VR){return _$VO|_$VR;},'dhTao':function(_$VO,_$VR){return _$VO-_$VR;},'rxYMT':function(_$VO,_$VR){return _$VO+_$VR;},'NwqGi':function(_$VO,_$VR){return _$VO^_$VR;}};return function(_$VO){var _$VR={'fGCKq':function(_$Vx,_$Ve){return _$Vx&_$Ve;},'ZTnAR':function(_$Vx,_$Ve){return _$Vx<<_$Ve;},'NMunH':function(_$Vx,_$Ve){return _$VM.BsJvm(_$Vx,_$Ve);},'utkyf':function(_$Vx,_$Ve){return _$Vx+_$Ve;},'oGuGA':function(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE){return _$VM.TlEwn(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE);},'tDJhi':function(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE){return _$VM.fagHc(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE);},'mSTZc':function(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE){return _$Vx(_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE);},'ciHAq':function(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE){return _$Vx(_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE);},'dJaxK':function(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE){return _$Vx(_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE);},'ZnDbv':function(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE){return _$Vx(_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE);},'HenXr':function(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE){return _$Vx(_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE);},'bIYDQ':function(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE){return _$VM.ZYoRd(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd,_$VE);},'XNIVc':function(_$Vx,_$Ve){return _$Vx^_$Ve;}},_$VC=_$VI,_$VN=_$VC.lib,_$Vr=_$VN.WordArray,_$Vf=_$VN.Hasher,_$VX=_$VC.algo,_$VV=[];!function(){for(var _$Vx=-0xd7c*-0x2+-0x2*-0x112d+-0x3d52;_$VH.FXDwy(_$Vx,-0x1328+-0x14fa+-0x6bb*-0x6);_$Vx++)_$VV[_$Vx]=(-0x190e19d70+0x157e6b88c+-0x2*-0x9c7d7272)*_$VO.abs(_$VO.sin(_$Vx+(0xc2*-0x5+-0x641+0xa0c)))|0x8*0x118+-0x90+-0x830;}();var _$VD=_$VX.MD5=_$Vf.extend({'_doReset':function(){this._hash=new _$Vr.init([-0x6dbd0380+0x1ca4ce*0x89+0xc5adf443,-0xee3a0c7a+-0x1a442b2d7+0x8801*0x69ada,0x854c725+-0x104*0x1110a61+0x1a5b4a05d,0x1159a1fb+-0x147*0x6ded1+0x79f4f72]);},'_doProcessBlock':function(_$Vx,_$Ve){for(var _$Vi=0x13a4+0xdef+-0x2193;_$Vi<-0x750+-0x23f2+0x2b52;_$Vi++){var _$VW=_$Ve+_$Vi,_$VK=_$Vx[_$VW];_$Vx[_$VW]=-0x466*0x5215+-0xedac03+0x355b560*0x1&(_$VK<<-0x75b+-0x13ff+-0x2bd*-0xa|_$VK>>>0x72b*0x4+0xd09+-0x43*0x9f)|_$VR.fGCKq(0x3*-0x2ae1c17d+-0x64579*0x4673+-0x528bdb15*-0xa,_$VR.ZTnAR(_$VK,0x6c6+-0x1*0x219c+-0x2fe*-0x9)|_$VR.NMunH(_$VK,0x228b*-0x1+0x1723+0xb7*0x10));}var _$VT=this._hash.words,_$Vd=_$Vx[_$Ve+(-0x1029*-0x1+0x9f*-0x6+-0xc6f)],_$VE=_$Vx[_$Ve+(-0x3*0x755+0x563+-0x109d*-0x1)],_$VG=_$Vx[_$Ve+(0x19*-0xc1+0x2*0xaf+0x117d)],_$VU=_$Vx[_$Ve+(-0xa*-0x3c5+-0x1a27+-0x2*0x5c4)],_$Vg=_$Vx[_$Ve+(0x255*0x2+0x103a+-0x14e0)],_$VB=_$Vx[_$VR.utkyf(_$Ve,0x2ba*0x3+0x16df+-0x1f08)],_$Vy=_$Vx[_$Ve+(0x1d3a+0x19f*-0x4+-0x1*0x16b8)],_$Vl=_$Vx[_$Ve+(-0x526+-0x19f0+0x1f1d)],_$VP=_$Vx[_$Ve+(-0x7*-0x4be+-0x235e+0x234)],_$VQ=_$Vx[_$VR.utkyf(_$Ve,0x2278+0x1*0x513+-0xd*0x30a)],_$Vu=_$Vx[_$Ve+(-0x930+0x255*-0xf+-0x1*-0x2c35)],_$VJ=_$Vx[_$VR.utkyf(_$Ve,0xaca+0xfd8+-0x1a97)],_$Vj=_$Vx[_$Ve+(-0xba5*-0x3+0x1*0x11d1+0x1*-0x34b4)],_$VS=_$Vx[_$Ve+(0x1fa9*0x1+-0x2151*-0x1+-0x40ed*0x1)],_$Vc=_$Vx[_$Ve+(0x1f9d+0x1*0x1f9d+-0x4dc*0xd)],_$Vo=_$Vx[_$Ve+(0x8*0x17f+0x1aec+-0x26d5)],_$Vm=_$VT[0x786+-0x15b0+-0x1*-0xe2a],_$Vs=_$VT[0x102+0x304*0x8+-0x1921],_$Va=_$VT[0x2619+-0x47*0x67+-0x986],_$Vb=_$VT[0x634+-0xab5*0x1+0x484];_$Vm=_$Vw(_$Vm,_$Vs,_$Va,_$Vb,_$Vd,-0x22*0x3e+-0xd*-0xcb+-0x20c*0x1,_$VV[-0x1*0x1770+-0x2492+0x3c02]),_$Vb=_$Vw(_$Vb,_$Vm,_$Vs,_$Va,_$VE,0xa8a+0x22f9+0x67*-0x71,_$VV[0x2710+0x1*0xe59+0x4*-0xd5a]),_$Va=_$Vw(_$Va,_$Vb,_$Vm,_$Vs,_$VG,0x205f*-0x1+0x201f+0x9*0x9,_$VV[0x8*-0x316+-0x1c20+-0x2*-0x1a69]),_$Vs=_$Vw(_$Vs,_$Va,_$Vb,_$Vm,_$VU,-0xc70+0xc54+0x32,_$VV[-0x5b3*-0x2+-0x23e4+0x171*0x11]),_$Vm=_$Vw(_$Vm,_$Vs,_$Va,_$Vb,_$Vg,-0x7e3+0x1*0x1ab9+-0x12cf,_$VV[0x4*-0x7c1+0x98e+-0x157a*-0x1]),_$Vb=_$VR.oGuGA(_$Vw,_$Vb,_$Vm,_$Vs,_$Va,_$VB,-0x18ae+0x135*-0x18+-0x6*-0x8f3,_$VV[-0x6aa+-0x87e+0xf2d]),_$Va=_$VR.oGuGA(_$Vw,_$Va,_$Vb,_$Vm,_$Vs,_$Vy,0x2e3*-0x1+0xf31+-0xc3d,_$VV[-0x1375+-0x2593+0x86*0x6d]),_$Vs=_$Vw(_$Vs,_$Va,_$Vb,_$Vm,_$Vl,-0x41+-0x1a*0xae+0x9f*0x1d,_$VV[-0x1d*0x11+0x9cf+-0x7db]),_$Vm=_$Vw(_$Vm,_$Vs,_$Va,_$Vb,_$VP,0xf31+0xbb2+-0x6*0x47a,_$VV[0x1dc0+0x201a*-0x1+0x262]),_$Vb=_$Vw(_$Vb,_$Vm,_$Vs,_$Va,_$VQ,0x1a+-0x1efc+-0xf77*-0x2,_$VV[-0x1be+0xcaa+-0xae3]),_$Va=_$Vw(_$Va,_$Vb,_$Vm,_$Vs,_$Vu,0x2ea*0x7+0x961*-0x1+-0xaf4,_$VV[-0x1a44+-0x13*-0x18a+0x8*-0x5e]),_$Vs=_$VR.tDJhi(_$Vw,_$Vs,_$Va,_$Vb,_$Vm,_$VJ,-0x219*0xf+-0x1*0x13d9+0x3366,_$VV[-0x62b*0x3+-0xc7*-0x11+0x555]),_$Vm=_$Vw(_$Vm,_$Vs,_$Va,_$Vb,_$Vj,0x9+0x115*0x13+-0x195*0xd,_$VV[0x1a44+0x1*-0x259f+0xb67*0x1]),_$Vb=_$Vw(_$Vb,_$Vm,_$Vs,_$Va,_$VS,0x3*-0x6ed+-0x263b+0x1d87*0x2,_$VV[-0x1*-0x2587+0x1a6+-0x2720]),_$Va=_$Vw(_$Va,_$Vb,_$Vm,_$Vs,_$Vc,-0x1f1c+0x41d+0x1b10,_$VV[-0x1e05+-0x1d*0xd+0x1f8c]),_$Vm=_$VY(_$Vm,_$Vs=_$Vw(_$Vs,_$Va,_$Vb,_$Vm,_$Vo,-0x1fce+-0x4a2*0x5+-0x1b87*-0x2,_$VV[-0x1905+-0x3*0x5dd+0xe39*0x3]),_$Va,_$Vb,_$VE,0x1c3c+-0x1*-0x1229+-0x2e60,_$VV[-0x7*0x10d+0x17*0x18e+0x5*-0x5ab]),_$Vb=_$VY(_$Vb,_$Vm,_$Vs,_$Va,_$Vy,-0x1d*0x29+-0x2d*-0x8d+-0x141b*0x1,_$VV[-0x38f*0x1+0x5*-0x331+0x1*0x1395]),_$Va=_$VY(_$Va,_$Vb,_$Vm,_$Vs,_$VJ,-0x1*-0x1940+-0xfed+-0x71*0x15,_$VV[0x16d*-0x6+0x339+0x1*0x567]),_$Vs=_$VY(_$Vs,_$Va,_$Vb,_$Vm,_$Vd,-0x20c8+0x106c+0x20e*0x8,_$VV[0x110a*-0x2+-0xbe8+0xd*0x38b]),_$Vm=_$VY(_$Vm,_$Vs,_$Va,_$Vb,_$VB,0x1766+-0x119*-0x1b+-0x3504,_$VV[-0x511+-0x1a95+0x1fba]),_$Vb=_$VY(_$Vb,_$Vm,_$Vs,_$Va,_$Vu,-0x2546+0x52d+0x2022,_$VV[0xc*0x5+-0x2111+-0x2fe*-0xb]),_$Va=_$VY(_$Va,_$Vb,_$Vm,_$Vs,_$Vo,0x1686+0x425+0x9*-0x2f5,_$VV[0x14*-0xad+-0x84+-0x70f*-0x2]),_$Vs=_$VY(_$Vs,_$Va,_$Vb,_$Vm,_$Vg,-0x6*-0x4f9+0x66c+-0x242e,_$VV[-0x267b+-0x120c+0x1*0x389e]),_$Vm=_$VR.oGuGA(_$VY,_$Vm,_$Vs,_$Va,_$Vb,_$VQ,-0x11*-0x81+-0x5*0x629+0x1641,_$VV[-0x20b9+-0x1f46+0x4017]),_$Vb=_$VY(_$Vb,_$Vm,_$Vs,_$Va,_$Vc,-0x1afc+-0x12e*-0x11+0x6f7*0x1,_$VV[0xa41+-0x7d0+-0x19*0x18]),_$Va=_$VY(_$Va,_$Vb,_$Vm,_$Vs,_$VU,-0x8*0x388+-0x1a45+0x3693,_$VV[-0x1b4*0x13+-0x1681+0x36f7*0x1]),_$Vs=_$VY(_$Vs,_$Va,_$Vb,_$Vm,_$VP,-0xc1*-0x25+0x12a0+-0x2e71,_$VV[0x245*0x10+0x1bd+-0x25f2]),_$Vm=_$VR.tDJhi(_$VY,_$Vm,_$Vs,_$Va,_$Vb,_$VS,-0x1e23+-0x134b+0x3173,_$VV[-0x2270+0x1*-0x1e79+0x4105]),_$Vb=_$VY(_$Vb,_$Vm,_$Vs,_$Va,_$VG,-0x249f+0x2*0x526+0x7*0x3c4,_$VV[-0xdb*0x17+0x1c04+0x1*-0x83a]),_$Va=_$VY(_$Va,_$Vb,_$Vm,_$Vs,_$Vl,0x126b*0x1+-0x593*0x3+-0xa*0x2a,_$VV[0x1*-0x3c7+0xc68+0x1*-0x883]),_$Vm=_$VR.tDJhi(_$VZ,_$Vm,_$Vs=_$VY(_$Vs,_$Va,_$Vb,_$Vm,_$Vj,0x45e+0x14d0+0x2a*-0x99,_$VV[-0x941+-0x997+0x12f7]),_$Va,_$Vb,_$VB,-0xb*0x137+0x2*-0x4a1+0x16a3,_$VV[-0x5b8+0x49c+0x13c]),_$Vb=_$VZ(_$Vb,_$Vm,_$Vs,_$Va,_$VP,-0x17cc+0x7*0x269+0x37c*0x2,_$VV[0x28*-0x2+0x1d03+0xe49*-0x2]),_$Va=_$VZ(_$Va,_$Vb,_$Vm,_$Vs,_$VJ,0xa6b+0xc93+-0x16ee,_$VV[-0x1*0x18d1+0x1*-0x1d3b+0x362e]),_$Vs=_$VZ(_$Vs,_$Va,_$Vb,_$Vm,_$Vc,-0x803+-0x1*-0x144+0x6d6,_$VV[0x1*0x1a0f+-0x833+0x1*-0x11b9]),_$Vm=_$VZ(_$Vm,_$Vs,_$Va,_$Vb,_$VE,-0x3*-0x1a8+-0x471*-0x5+0x1*-0x1b29,_$VV[-0x19a7+-0x313*0x5+-0x3be*-0xb]),_$Vb=_$VR.mSTZc(_$VZ,_$Vb,_$Vm,_$Vs,_$Va,_$Vg,0x42c+-0x2159+0x1d38,_$VV[0x5*-0x1+0x1628+-0xa*0x233]),_$Va=_$VR.ciHAq(_$VZ,_$Va,_$Vb,_$Vm,_$Vs,_$Vl,-0x3f*-0x73+0x22b7*0x1+-0x3ef4,_$VV[-0x24*0x1+-0x1d1b+-0x5e1*-0x5]),_$Vs=_$VR.dJaxK(_$VZ,_$Vs,_$Va,_$Vb,_$Vm,_$Vu,0x119b+-0x2613+0x148f,_$VV[-0x14ad+-0x588+0x1a5c]),_$Vm=_$VZ(_$Vm,_$Vs,_$Va,_$Vb,_$VS,-0x350+0x22e4+-0x1f90,_$VV[-0xd5*-0xd+-0x2684+-0x3*-0x949]),_$Vb=_$VR.ZnDbv(_$VZ,_$Vb,_$Vm,_$Vs,_$Va,_$Vd,0x201d*0x1+-0x18ce+-0x744,_$VV[0x1*0x1c2f+-0xb86+-0x1080]),_$Va=_$VZ(_$Va,_$Vb,_$Vm,_$Vs,_$VU,0x3f1*-0x1+0x496+-0x95,_$VV[-0x17*-0x92+-0x41f+0x7*-0x143]),_$Vs=_$VZ(_$Vs,_$Va,_$Vb,_$Vm,_$Vy,0x93b+-0xa62+0x13e,_$VV[0xb7*-0x2f+0xb*0x34d+-0x28b]),_$Vm=_$VR.HenXr(_$VZ,_$Vm,_$Vs,_$Va,_$Vb,_$VQ,0x1*-0x983+0x1c4f+0x964*-0x2,_$VV[-0x6b6+-0x3*0x5bf+0x181f]),_$Vb=_$VR.bIYDQ(_$VZ,_$Vb,_$Vm,_$Vs,_$Va,_$Vj,-0x279*0x5+-0x1170+0xeec*0x2,_$VV[0x21dc+-0x1*-0x2375+-0x4524]),_$Va=_$VZ(_$Va,_$Vb,_$Vm,_$Vs,_$Vo,-0x582+0x515+0x1*0x7d,_$VV[0x10f*0xa+-0x15*0x193+0x16a7]),_$Vm=_$VR.ciHAq(_$VF,_$Vm,_$Vs=_$VZ(_$Vs,_$Va,_$Vb,_$Vm,_$VG,-0xe97+0x1*-0x831+-0x16df*-0x1,_$VV[-0x1*0x1ff1+-0x1ae9+0x11*0x379]),_$Va,_$Vb,_$Vd,0xa1*-0x3e+0x1*0x228e+0x476,_$VV[0x4*0x955+0x5e4+0x1cb*-0x18]),_$Vb=_$VF(_$Vb,_$Vm,_$Vs,_$Va,_$Vl,-0x1ade+-0xc53+0x273b,_$VV[-0x1864+-0x1873+-0x8*-0x621]),_$Va=_$VF(_$Va,_$Vb,_$Vm,_$Vs,_$Vc,0x1041+0xd7d+0x9e5*-0x3,_$VV[0xa51*-0x2+0x1*0x2027+-0xb53]),_$Vs=_$VF(_$Vs,_$Va,_$Vb,_$Vm,_$VB,0x88d+0x1*0x149a+0x2*-0xe89,_$VV[0x7b9+0x8b*-0x1d+0x839]),_$Vm=_$VF(_$Vm,_$Vs,_$Va,_$Vb,_$Vj,0x1*-0x4+-0x1121+0x112b,_$VV[0x61*-0x5+0x329*0x3+-0x9*0xd2]),_$Vb=_$VF(_$Vb,_$Vm,_$Vs,_$Va,_$VU,0x7*0x141+-0x425+-0x1*0x498,_$VV[0x1*-0x1a93+0x1aec+-0x9*0x4]),_$Va=_$VF(_$Va,_$Vb,_$Vm,_$Vs,_$Vu,0x26e*0x8+-0x26c9+0x1368,_$VV[0x88d*-0x1+0x1*0x223d+-0x3*0x87e]),_$Vs=_$VF(_$Vs,_$Va,_$Vb,_$Vm,_$VE,0x20c*-0xe+0x1cf*-0x8+0x2b35,_$VV[-0x423+0x1979+-0x1*0x151f]),_$Vm=_$VF(_$Vm,_$Vs,_$Va,_$Vb,_$VP,0x26b7+0x1fe6+-0x4697,_$VV[-0x2187+0x13ff+0xdc0]),_$Vb=_$VF(_$Vb,_$Vm,_$Vs,_$Va,_$Vo,0x529*0x5+-0x209f+-0x6dc*-0x1,_$VV[0x4ee+0x79d+0x1*-0xc52]),_$Va=_$VF(_$Va,_$Vb,_$Vm,_$Vs,_$Vy,-0x21f7+-0x201f+-0x3b*-0x11f,_$VV[0x2*-0x639+0x21de*-0x1+-0x2*-0x1745]),_$Vs=_$VF(_$Vs,_$Va,_$Vb,_$Vm,_$VS,-0xb0c+-0x5e*0x54+0x29f9,_$VV[0x3be*0x4+0x618+-0x14d5*0x1]),_$Vm=_$VF(_$Vm,_$Vs,_$Va,_$Vb,_$Vg,0x2*-0xb41+0x1a2b+-0x3a3,_$VV[-0x19c6+-0x1d*-0x3+0x19ab*0x1]),_$Vb=_$VF(_$Vb,_$Vm,_$Vs,_$Va,_$VJ,-0x2f9*-0xd+-0x1718+-0xd1*0x13,_$VV[0x2b*0x97+0x2*-0xbbb+0x8e*-0x3]),_$Va=_$VF(_$Va,_$Vb,_$Vm,_$Vs,_$VG,-0x2*0xeaa+-0x12d4+-0x1*-0x3037,_$VV[-0x1*-0x141a+-0x2070*-0x1+-0x344c]),_$Vs=_$VF(_$Vs,_$Va,_$Vb,_$Vm,_$VQ,0x2f4*0x6+0x5a7*-0x5+0xaa0,_$VV[0xb64+-0x1675+0xb50]),_$VT[-0x9*0x281+0xd1f*-0x1+0x23a8]=_$VT[-0x258a+0x57b*-0x1+0x2b05]+_$Vm|0x8dc+-0x7b9+-0x123,_$VT[-0x23dc+0x32b*-0x2+-0x115*-0x27]=_$VT[-0x13d8+0x7a+0x135f]+_$Vs|-0x1226+0x67b+0xbab,_$VT[-0x1299*-0x2+-0x251e+0x6*-0x3]=_$VT[0x21f7+-0x2476*0x1+0x281]+_$Va|0x20d9+-0x26a*-0x6+-0x2f55,_$VT[-0x1b72+-0x8a4+0x2419]=_$VT[0x1*0x1364+0x1d2e+-0x1*0x308f]+_$Vb|-0x1e3b+-0x15d*-0xd+0xc82;},'_doFinalize':function(){var _$Vx=this._data,_$Ve=_$Vx.words,_$Vi=_$VH.EqgoM(-0xb3c+0x210+0x934,this._nDataBytes),_$VW=(0xef*-0x2+0x3*0xc09+-0x2235)*_$Vx.sigBytes;_$Ve[_$VW>>>-0x18a8+0x375*-0x1+0x22a*0xd]|=-0x9cb*0x1+-0x431*-0x7+-0x2e*0x6a<<-0x31*-0x33+-0x977*0x3+-0x1*-0x12ba-_$VH.iNCun(_$VW,-0xfe*0x10+-0xb78+0x1b78);var _$VK=_$VO.floor(_$VH.uHDlJ(_$Vi,0x13f967f30+0x6460e874*0x2+0x54*-0x3259f6e)),_$VT=_$Vi;_$Ve[0xf71+-0x1*0x26c2+0x1760+(_$VW+(0x25f*0x2+0x239e+0x25c*-0x11)>>>-0x11a6+0x2021*-0x1+-0x31d0*-0x1<<0x1fbe+0x2113*0x1+-0x40cd)]=0xb*-0xd151f+-0x393ed3+-0x13*-0x18021d&(_$VK<<-0x1127+0xc96+0x499|_$VK>>>-0x9*0x6d+-0x23c5+0x27b2)|-0x2d200b11+-0x148e065cd+0x275016fde&(_$VK<<-0xd6f*-0x1+-0x1*-0x1669+-0x23c0|_$VH.DHCex(_$VK,-0x255a+-0x223f+0x47a1)),_$Ve[-0xb77+-0x16*0x27+0xedf+(_$VW+(-0x2469+-0xff+0x25a8)>>>-0x2664+0x3aa*0x2+0x1f19<<-0x847+0x37*0x11+0x129*0x4)]=0x2a383f*-0x5+0x82882d+-0x30b*-0x6e47&_$VH.TkUgp(_$VT<<0x1eb0*0x1+0x25ac+-0x4454,_$VT>>>0x1d3a+0x5*0x7a5+-0x435b)|_$VH.HCmPs(-0x15c70b962+-0x3a5f*0x469e4+0x35d12abfe,_$VH.ippTk(_$VT<<0x6ba+0x8*-0x2f4+0x19*0xae,_$VH.DHCex(_$VT,0x182b+-0x1*-0xd8b+0x2*-0x12d7))),_$Vx.sigBytes=(-0xfd1+-0xd*0x287+-0x1858*-0x2)*(_$Ve.length+(-0x147c+0x146*0x10+0x1d)),this._process();for(var _$Vd=this._hash,_$VE=_$Vd.words,_$VG=0x2530+-0x17a4+-0x484*0x3;_$VG<-0x90a+-0x1*0x35b+0xc69;_$VG++){var _$VU=_$VE[_$VG];_$VE[_$VG]=_$VH.XSEDJ(0x5b3*-0x554a+-0x1b6f761+0x49c0d1e,_$VU<<-0x29*0x3b+-0x72d*-0x1+0x24e|_$VU>>>-0x7f*-0x45+0xf22+0x3145*-0x1)|-0x16555e1b*0x3+0xcaef7b0+0x1355221a1&(_$VU<<-0x1db1+0x806+0x15c3|_$VH.DHCex(_$VU,-0x207*-0x10+0x5b8+-0x2620));}return _$Vd;},'_eData':function(_$Vx){'use strict';var b=_3h9qp;var k=_2t8qp;var wI;var i=[];var r=370;var u,o;l4:for(;;){switch(k[r++]){case 11:wI=i[i.length-1];break;case 13:return i.pop();break;case 14:i.push(wI);break;case 16:i[i.length-4]=b.call(i[i.length-4],i[i.length-3],i[i.length-2],i[i.length-1]);i.length-=3;break;case 21:i.push(null);break;case 22:if(i.pop())++r;else r+=k[r];break;case 30:i.push(k[r++]);break;case 43:u=i.pop();i[i.length-1]+=u;break;case 47:u=i.pop();i[i.length-1]=i[i.length-1]===u;break;case 54:i.push(_$f5);break;case 65:i.push(_$pV);break;case 68:i.push(a0dbbcbn);break;case 71:i.push(_$Vx);break;case 74:return;break;case 81:r+=k[r];break;case 86:if(i[i.length-2]!=null){i[i.length-3]=b.call(i[i.length-3],i[i.length-2],i[i.length-1]);i.length-=2;}else{u=i[i.length-3];i[i.length-3]=u(i[i.length-1]);i.length-=2;}break;case 92:i.push(i[i.length-1]);i[i.length-2]=i[i.length-2][_1wnqp[28+k[r++]]];break;case 97:i.pop();break;}}},'clone':function(){var _$Vx=_$Vf.clone.call(this);return _$Vx._hash=this._hash.clone(),_$Vx;},'_seData':function(_$Vx){'use strict';var o=_3h9qp;var i=_2t8qp;var wH;var y=[];var u=426;var j,k;l5:for(;;){switch(i[u++]){case 1:return y.pop();break;case 9:y.push(wH);break;case 10:y.pop();break;case 21:y.push(a0dbbcbn);break;case 29:y.push(this);break;case 38:u+=i[u];break;case 44:y.push(y[y.length-1]);y[y.length-2]=y[y.length-2][_1wnqp[30+i[u++]]];break;case 45:y.push(null);break;case 47:j=y.pop();y[y.length-1]+=j;break;case 51:y.push(i[u++]);break;case 54:wH=y[y.length-1];break;case 62:j=y.pop();y[y.length-1]=y[y.length-1]===j;break;case 74:y.push(_$f5);break;case 76:if(y[y.length-2]!=null){y[y.length-3]=o.call(y[y.length-3],y[y.length-2],y[y.length-1]);y.length-=2;}else{j=y[y.length-3];y[y.length-3]=j(y[y.length-1]);y.length-=2;}break;case 77:if(y.pop())++u;else u+=i[u];break;case 82:y[y.length-4]=o.call(y[y.length-4],y[y.length-3],y[y.length-2],y[y.length-1]);y.length-=3;break;case 83:y.push(_$Vx);break;case 95:return;break;}}}});function _$Vw(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd){var _$VE=_$Vx+(_$Ve&_$Vi|~_$Ve&_$VW)+_$VK+_$Vd;return(_$VE<<_$VT|_$VE>>>0x1477+0xbc1*0x1+-0x2018-_$VT)+_$Ve;}function _$VY(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd){var _$VE=_$Vx+_$VH.ggwsK(_$VH.HCmPs(_$Ve,_$VW),_$Vi&~_$VW)+_$VK+_$Vd;return(_$VE<<_$VT|_$VE>>>_$VH.dhTao(0x5*0x35+-0x138a+0x12a1,_$VT))+_$Ve;}function _$VZ(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd){var _$VE=_$VH.rxYMT(_$Vx,_$VH.NwqGi(_$Ve^_$Vi,_$VW))+_$VK+_$Vd;return(_$VE<<_$VT|_$VE>>>0x9*0x225+0xdf*-0x1d+-0x1*-0x616-_$VT)+_$Ve;}function _$VF(_$Vx,_$Ve,_$Vi,_$VW,_$VK,_$VT,_$Vd){var _$VE=_$Vx+_$VR.XNIVc(_$Vi,_$Ve|~_$VW)+_$VK+_$Vd;return(_$VE<<_$VT|_$VE>>>0x1ff2+0x8*0x498+-0x4492-_$VT)+_$Ve;}_$VC.MD5=_$Vf._createHelper(_$VD),_$VC.HmacMD5=_$Vf._createHmacHelper(_$VD);}(Math),_$VI.MD5;}(_$X0.exports);}(_$f6);var _$X2=_$f6.exports,_$X3={'exports':{}};!function(_$Vk,_$Vt){_$Vk.exports=function(_$VM){return _$VM.enc.Hex;}(_$X0.exports);}(_$X3);var _$X4=_$X3.exports;function _$X5(_$Vk){var wO=Vv,_$Vt=new RegExp(_$h.RXcAD(wO(0x20a)+_$Vk,wO(0x1f6))),_$VM=document.cookie.match(_$Vt);if(!_$VM||!_$VM[-0xf*-0x11c+0x15cb+-0x266d])return'';var _$VI=_$VM[0x1292+-0x1*-0x206b+0x32fb*-0x1];try{return/(%[0-9A-F]{2}){2,}/.test(_$VI)?decodeURIComponent(_$VI):unescape(_$VI);}catch(_$VH){return unescape(_$VI);}}function _$X6(){var wR=Vv,_$Vk=arguments.length>-0x184*0x10+0x1d*0x131+-0xa4d&&void(-0xb1e+-0x36*-0x19+0x5d8)!==arguments[0x18d7*-0x1+0x1736+0x1a1]?arguments[-0x2*0x8a+-0x602+-0x38b*-0x2]:Date.now(),_$Vt=arguments.length>0x11aa+-0x5*-0x3e0+0x1*-0x2509&&void(-0x37e*-0x7+-0xc2f+-0xc43)!==arguments[-0x211f+-0xef3*0x1+0x3013]?arguments[0x539*0x1+-0x1*0x2433+-0x46d*-0x7]:wR(0x1e3);_$Vk+=-0xf36+0x631+-0x44f*-0x3;var _$VM=new Date(_$Vk),_$VI=_$Vt,_$VH={'M+':_$VM.getMonth()+(0x7*0x4b+0x176e+-0x197a),'d+':_$VM.getDate(),'D+':_$VM.getDate(),'h+':_$VM.getHours(),'H+':_$VM.getHours(),'m+':_$VM.getMinutes(),'s+':_$VM.getSeconds(),'w+':_$VM.getDay(),'q+':Math.floor(_$h.nAeiZ(_$VM.getMonth(),-0x94+-0x10e8+-0x117f*-0x1)/(-0x231b+0x2281+0x9d)),'S+':_$VM.getMilliseconds()};return/(y+)/i.test(_$VI) && (_$VI = _$VI.replace(RegExp.$1, ''.concat(_$VM.getFullYear()).substr(-0xcc + -0x13 * -0x10d + -0x1327 - RegExp.$1.length))), _$CN(_$VH).forEach(function (_$VO) {
+    var wC=wR;if(new RegExp('('.concat(_$VO,')')).test(_$VI)){var _$VR,_$VC='S+'===_$VO?wC(0x1fb):'00';_$VI=_$VI.replace(RegExp.$1,_$h.GbSDO(0x207d+0xd4b+0x2dc7*-0x1,RegExp.$1.length)?_$VH[_$VO]:_$pV(_$VR=''.concat(_$VC)).call(_$VR,_$VH[_$VO]).substr(''.concat(_$VH[_$VO]).length));}}),_$VI;}function _$X7(_$Vk){return _$h.NDgSu===Object.prototype.toString.call(_$Vk);}function _$X8(_$Vk){var wN=Vv;for(var _$Vt='',_$VM=wN(0x247);_$Vk--;)_$Vt+=_$VM[(0x1*0x1db6+-0x1875+0x50b*-0x1)*Math.random()|-0x4*0x666+0xb3a+0x265*0x6];return _$h.TesMb(_$Vt.length,-0x48f*-0x4+0x404*-0x8+0x1*0xde9)&&(_$Vt=_$h.yzOwW(_$Vt.substring(-0xf7c+-0x128b*0x1+0x2207,0x1d38+-0x1903*-0x1+-0x3636),'2')+_$Vt.substring(0x2254+0x1ca6+-0x3ef5,_$Vt.length-(0x51f*0x3+-0x2453+0x14f7))),_$Vt;}function _$X9(){}function _$Xh(_$Vk){var wr=Vv;return _$h.HlAeX(wr(0x286),typeof _$Vk);}function _$Xn(_$Vk){return'function'==typeof _$Vk;}var _$Xq=[Vv(0x279),_$h.kEjhL,Vv(0x225)];function _$Xp(_$Vk){var wf=Vv;if(_$Vk){for(var _$Vt,_$VM=arguments.length,_$VI=new Array(_$VM>0x193b+0x18fc+-0x3236?_$VM-(0x226d+0xc13*-0x1+-0x1659):0x7c5*0x5+-0xaec*0x3+0x1*-0x615),_$VH=0x3*0x998+-0x1a0f+-0x1*0x2b8;_$VH<_$VM;_$VH++)_$VI[_$VH-(0x11ea+0x1*0xbe9+-0x1dd2)]=arguments[_$VH];var _$VO=function(_$VR,_$VC){_$VC=_$VC||-0xd*0x22c+0x1850+0x3ec;for(var _$VN=_$VR.length-_$VC,_$Vr=new Array(_$VN);_$VN--;)_$Vr[_$VN]=_$VR[_$VN+_$VC];return _$Vr;}(_$VI);console.log.apply(console,_$pV(_$Vt=[wf(0x128)]).call(_$Vt,_$VO));}}function _$XA(_$Vk){if(null==_$Vk)throw new TypeError('Cannot convert undefined or null to object');_$Vk=Object(_$Vk);for(var _$Vt=0x132*0xe+0xcb*0x13+-0x1fcc;_$Vt<arguments.length;_$Vt++){var _$VM=arguments[_$Vt];if(null!=_$VM){for(var _$VI in _$VM)Object.prototype.hasOwnProperty.call(_$VM,_$VI)&&(_$Vk[_$VI]=_$VM[_$VI]);}}return _$Vk;}function _$XL(_$Vk){var wX=Vv,_$Vt={'JaNEg':function(_$VH,_$VO){return _$VH(_$VO);}},_$VM=arguments.length>0x323+0x1*-0x208f+0x1d6d&&void(0x1fa5+-0x18bd+-0x6e8)!==arguments[0x1a1e+-0x6fb*0x1+-0x3e*0x4f]?arguments[0x1298+0x1c41+-0x2ed8]:-0x32d9*-0x1+-0x1af*-0x13+0x6b*-0x3a,_$VI=_$Xk(wX(0x16f),{});return _$VI[_$Vk]||(_$VI[_$Vk]=new _$OT(function(_$VH,_$VO){var wV=wX,_$VR={'IMuxH':wV(0x1f0),'BkVzH':function(_$VC,_$VN){return _$Vt.JaNEg(_$VC,_$VN);}};return function(_$VC){var _$VN=arguments.length>0x2f*0x99+-0x2*0x33d+-0x159c&&void(-0x2*-0x5a4+-0xb5b*0x1+0x1*0x13)!==arguments[0x55*-0x6a+0x1b89+-0xda*-0x9]?arguments[0x250d+0x25*0xed+-0x474d]:-0x2400+0x5503+0x995;return new _$OT(function(_$Vr,_$Vf){var wD=a0dbbcbn,_$VX={'gNzMf':_$VR.IMuxH},_$VV=function(_$VY){return function(_$VZ){_$VY(),clearTimeout(_$VD),_$Vw.parentNode&&_$Vw.parentNode.removeChild(_$Vw);};},_$VD=setTimeout(_$VV(_$Vf),_$VN),_$Vw=document.createElement(wD(0x226));_$Vw.type=wD(0x15e),_$Vw.readyState?_$Vw.onreadystatechange=function(_$VY){var ww=wD;_$VX.gNzMf!==_$Vw.readyState&&ww(0x147)!==_$Vw.readyState||_$VV(_$Vr)();}:_$Vw.onload=_$VV(_$Vr),_$Vw.onerror=_$VR.BkVzH(_$VV,_$Vf),_$Vw.src=_$VC,document.getElementsByTagName(wD(0x292))[0x248b+0x6a*0x57+-0x4891*0x1].appendChild(_$Vw);});}(_$Vk,_$VM).then(function(_$VC){_$VH();}).catch(function(_$VC){delete _$VI[_$Vk],_$VO();});})),_$VI[_$Vk];}function _$Xk(_$Vk){var _$Vt,_$VM=arguments.length>0x557+-0xd27+0x57*0x17&&void(0x8e0+-0x1baa+-0xb9*-0x1a)!==arguments[0x52*0x49+-0xbb6*0x3+-0x3eb*-0x3]?arguments[0x1262+-0xc83+-0x1*0x5de]:{};return window.__JDWEBSIGNHELPER_$DATA__=window.__JDWEBSIGNHELPER_$DATA__||{},window.__JDWEBSIGNHELPER_$DATA__[_$Vk]=window.__JDWEBSIGNHELPER_$DATA__[_$Vk]||('function'==typeof(_$Vt=_$VM)?_$Vt():_$Vt);}function _$Xt(){var wY=Vv,_$Vk=document.createElement(wY(0x210)),_$Vt=_$Vk.getContext('2d');return _$Vt.fillStyle=wY(0x154),_$Vt.fillRect(-0xd1f*-0x1+0x8*0x3f1+0x36d*-0xd,-0x49a+-0xde2*-0x2+-0x1720,-0x80d+-0x18ee+-0x2b*-0xc9,-0x175d+0x1*-0x11b3+-0xa5d*-0x4),_$Vt.strokeStyle=wY(0x238),_$Vt.lineWidth=-0x3*-0x296+0x1ea+-0x9a6,_$Vt.lineCap=wY(0x1aa),_$Vt.arc(-0x1bdc*0x1+0x1*0x26da+0x2*-0x566,0x8a*0x21+0x1aea+-0x1641*0x2,0xb9c+-0x439+-0x74f,-0x1211+0x1ca*-0x6+0x1ccd*0x1,Math.PI,!(0x1*0x19a9+0x577*-0x3+-0x943*0x1)),_$Vt.stroke(),_$Vt.fillStyle=_$h.qDYye,_$Vt.font=wY(0x179),_$Vt.textBaseline=wY(0x11d),_$Vt.fillText(_$h.rGVxV,-0x2606+0x2325+0x2f0*0x1,-0x1961*0x1+0x1f8a*0x1+-0x5ed),_$Vt.shadowOffsetX=0x1762+-0x1c7*-0x4+0x45b*-0x7,_$Vt.shadowOffsetY=-0x10b3+-0x2*-0xc18+0x77b*-0x1,_$Vt.shadowColor=_$h.AcZTU,_$Vt.fillStyle=wY(0x200),_$Vt.font=_$h.hdGsb,_$Vt.fillText(wY(0x180),0x1d01+0x2d5*-0x2+0x4a3*-0x5,0xb8*0x1f+-0x4f8+-0x1100),_$X4.format(_$X2(wY(0x243).concat(_$Vk.toDataURL())));}function _$XM(_$Vk){var wZ=Vv,_$Vt=_$rj(_$Vk);return null!=_$Vk&&(wZ(0x293)===_$Vt||'function'===_$Vt);}function _$XI(_$Vk,_$Vt,_$VM){if(!_$XM(_$Vk))return _$Vk;for(var _$VI=_$Vt.length,_$VH=_$VI-(0x1d53+0x120*0x22+-0x4392),_$VO=-(0x25fa+0xd7+-0xc*0x33c),_$VR=_$Vk;null!=_$VR&&++_$VO<_$VI;){var _$VC=_$Vt[_$VO];if(_$h.qHGqM(_$VO,_$VH))return void(_$VR[_$VC]=_$VM);var _$VN=_$VR[_$VC];_$XM(_$VN)||(_$VN={},_$VR[_$VC]=_$VN),_$VR=_$VN;}return _$Vk;}function _$XH(_$Vk,_$Vt){for(var _$VM=_$Vt.length,_$VI=0x134*-0x20+-0x197a*0x1+-0x35e*-0x13;null!=_$Vk&&_$VI<_$VM;){_$Vk=_$Vk[_$Vt[_$VI++]];}return _$VI&&_$VI===_$VM?_$Vk:void(0x281+0x1c*0x2+-0x2b9);}function _$XO(_$Vk,_$Vt){if(_$h.djOdu(_$XM,_$Vk))for(var _$VM in _$Vk){if(!(-0x10ed+0x16e1*-0x1+0x27cf)===_$Vt(_$Vk[_$VM],_$VM,_$Vk))return;}}function _$XR(_$Vk,_$Vt,_$VM,_$VI){var _$VH=_$VI.context;_$VI.error.call(_$VH,{'code':{'timeout':0x1f40,'error':0x1388,'load':0xbcc,'abort':0x1389,'parsererror':0xbcd}[_$Vt]||-0x1*0xb47+-0x3d99+0x6c08,'message':_$Vt},_$VI,_$Vk,_$VM);}function _$XC(_$Vk){var wF=Vv,_$Vt={'pJtZc':wF(0x188),'ubwwF':wF(0x274),'QrUmo':function(_$VM,_$VI,_$VH){return _$VM(_$VI,_$VH);},'qmuDV':wF(0x10f),'vWLid':_$h.enWEn};return new _$OT(function(_$VM,_$VI){var _$VH={'hFdBt':function(_$VO,_$VR){return _$h.uPqgA(_$VO,_$VR);},'xbFFv':function(_$VO,_$VR,_$VC,_$VN,_$Vr){return _$VO(_$VR,_$VC,_$VN,_$Vr);}};_$Vk?(_$Vk.success=function(_$VO){try{_$VM({'body':_$VO});}catch(_$VR){_$VI({'code':0x3e7,'message':_$VR});}},_$Vk.error=function(_$VO){_$VI(_$VO);},function(_$VO){var wx=a0dbbcbn;if(!_$VO)return!(0xcf9+0x1c65+0x1*-0x295d);_$VO.method=_$VO.method.toUpperCase(),_$VO.noCredentials||(_$VO.xhrFields={'withCredentials':!(-0x18d9+-0x1dc1*0x1+0x369a)});var _$VR,_$VC={},_$VN=function(_$VD,_$Vw){_$VC[_$VD.toLowerCase()]=[_$VD,_$Vw];},_$Vr=new window.XMLHttpRequest(),_$Vf=_$Vr.setRequestHeader;if((_$VO.contentType||!(0xbdb+-0x16f9+0xb1f)!==_$VO.contentType&&_$VO.data&&_$Vt.pJtZc!==_$VO.method)&&_$VN(_$Vt.ubwwF,_$VO.contentType||wx(0x173)),_$Vt.QrUmo(_$VN,_$Vt.qmuDV,_$Vt.vWLid),_$Vr.setRequestHeader=_$VN,_$Vr.onreadystatechange=function(){var we=wx;if(-0x1955+-0x8c9*0x3+-0xced*-0x4===_$Vr.readyState){_$Vr.onreadystatechange=function(){},clearTimeout(_$VR);var _$VD,_$Vw=!(-0x1787+0x1*0x16b+0x161d);if(_$VH.hFdBt(_$Vr.status,-0x2*0xaf4+0xeb6+0x7fa)&&_$Vr.status<0x23f0+-0x33*0xbd+-0x1*-0x2e3||0x1*0x23d3+0x1*0x1faf+-0x4252===_$Vr.status){_$VD=_$Vr.responseText;try{_$VD=JSON.parse(_$VD);}catch(_$VY){_$Vw=_$VY;}_$Vw?_$XR(_$Vw,we(0x16e),_$Vr,_$VO):function(_$VZ,_$VF,_$Vx){var wi=we,_$Ve=_$Vx.context,_$Vi=wi(0x194);_$Vx.success.call(_$Ve,_$VZ,_$Vx,_$Vi,_$VF);}(_$VD,_$Vr,_$VO);}else _$XR(_$Vr.statusText||null,we(0x20b),_$Vr,_$VO);}},_$VO.xhrFields){for(var _$VX in _$VO.xhrFields)_$Vr[_$VX]=_$VO.xhrFields[_$VX];}for(var _$VV in(_$Vr.open(_$VO.method,_$VO.url),_$VC))_$Vf.apply(_$Vr,_$VC[_$VV]);_$VO.timeout>-0x1cf9+0x1c72+0x87&&(_$VR=setTimeout(function(){var wW=wx;_$Vr.onreadystatechange=function(){},_$Vr.abort(),_$VH.xbFFv(_$XR,null,wW(0x172),_$Vr,_$VO);},(-0x751*-0x2+-0x3d1*0x1+-0x1d*0x3d)*_$VO.timeout)),_$Vr.send(_$VO.data?_$VO.data:null);}(_$Vk)):_$VI();});}function _$XN(_$Vk){return function(_$Vt){return _$Vt.method=_$Vk,_$XC(_$Vt);};}!function(){var wK=Vv,_$Vk={'CEPoV':_$h.hYDHf,'eKRuP':wK(0x1ef)},_$Vt,_$VM;if(!(window.__MICRO_APP_ENVIRONMENT_TEMPORARY__||window.__MICRO_APP_ENVIRONMENT__||(null===(_$Vt=window.rawWindow)||void(-0x37e+-0x1*-0x2605+-0x2287)===_$Vt?void(-0x1298+-0x16f1+-0x1*-0x2989):_$Vt.__MICRO_APP_ENVIRONMENT__)||window.__MICRO_APP_PROXY_WINDOW__||window.__MICRO_APP_BASE_APPLICATION__)){var _$VI,_$VH,_$VO=_$CB(_$VI=_$h.xSubX(_$CN,window.document)).call(_$VI,wK(0x140)),_$VR=(_$VM=window.document.querySelector,function(){try{var _$VN=_$Xk(_$Vk.CEPoV,{}),_$Vr=new Error(_$Vk.eKRuP);_$VN.querySelector=_$Vr.stack.toString();}catch(_$Vf){}return _$VM.apply(this,arguments);}),_$VC=function(){var wT=wK;try{var _$VN=_$Xk(wT(0x1f8),{}),_$Vr=new Error(wT(0x1ef));_$VN.querySelector=_$Vr.stack.toString();}catch(_$Vf){}return Document.prototype.querySelector.apply(this,arguments);};window.document.querySelector=_$VO?_$VR:_$VC,_$CB(_$VH=_$h.xdDoU(_$CN,Element.prototype)).call(_$VH,_$h.tbhdv)&&(Element.prototype.scrollIntoViewIfNeeded=function(_$VN){return function(){var wd=a0dbbcbn;try{var _$Vr=_$Xk(wd(0x281),{}),_$Vf=new Error(wd(0x1ef));_$Vr.dp=_$Vf.stack.toString();}catch(_$VX){}return _$VN.apply(this,arguments);};}(Element.prototype.scrollIntoViewIfNeeded));}_$XL(wK(0x125)+_$h.iuduY(_$X6,Date.now()-(-0x4c842c+-0x28e182+0xac542e)*(0x1*0x16c3+0x26a5+-0x3d67+0.10000000000000009),wK(0x218)),0x11b3+0x13ba+0x2185*-0x1).then(function(_$VN){var wE=wK;console.log(wE(0x1e8));}).catch(function(_$VN){var wG=wK;console.log(wG(0x182));});}();var _$Xr={'get':_$XN(Vv(0x188)),'post':_$XN(Vv(0x191))},_$Xf={'CANVAS_FP':Vv(0x111),'WEBGL_FP':Vv(0x262),'STORAGE_KEY_TK':Vv(0x126),'STORAGE_KEY_VK':_$h.mKZap},_$XX=-0x6f8+0x68*0xd+0x1b1*0x1,_$XV=0x3*0xab5+-0x1e6a+-0x1b3,_$XD=0x2*0xcf1+0x473+-0x1e52,_$Xw=-0x2473+0x1afc+-0x97b*-0x1,_$XY=-(0x1949+0x1*-0x217b+0x1*0x833),_$XZ=Vv(0x21d),_$XF=Vv(0x11a),_$Xx={'exports':{}};!function(_$Vk,_$Vt){var _$VM={'SiPac':function(_$VI,_$VH){return _$h.GechC(_$VI,_$VH);},'kbewn':function(_$VI,_$VH){return _$VI(_$VH);}};_$Vk.exports=function(_$VI){var _$VH={'lEhae':function(_$VO,_$VR){return _$VO-_$VR;},'FJbaj':function(_$VO,_$VR){return _$VO*_$VR;},'Aeoko':function(_$VO,_$VR){return _$VO%_$VR;}};return function(){var wU=a0dbbcbn,_$VO={'DJIWp':function(_$Vr,_$Vf){return _$Vr<<_$Vf;},'ENnWk':function(_$Vr,_$Vf){return _$Vr%_$Vf;},'ljQJh':function(_$Vr,_$Vf){return _$Vr<_$Vf;},'xpuBa':function(_$Vr,_$Vf){return _$Vr%_$Vf;},'mQnNo':function(_$Vr,_$Vf){return _$VM.SiPac(_$Vr,_$Vf);},'SHZVC':function(_$Vr,_$Vf){return _$VM.kbewn(_$Vr,_$Vf);}},_$VR=_$VI,_$VC=_$VR.lib.WordArray;function _$VN(_$Vr,_$Vf,_$VX){for(var _$VV=[],_$VD=0x1*0x1706+0x1e20+-0x3526*0x1,_$Vw=0x1*0x1d95+0x20d0+-0x3e65;_$Vw<_$Vf;_$Vw++)if(_$Vw%(0x7c9+0xfe9*-0x1+0x824)){var _$VY=_$VX[_$Vr.charCodeAt(_$VH.lEhae(_$Vw,0x12f9*-0x1+-0x40*-0x47+0x13a))]<<_$Vw%(-0x109a+-0x1*-0x2552+-0x14b4)*(-0x487*0x4+0x9e4+0x12*0x75)|_$VX[_$Vr.charCodeAt(_$Vw)]>>>0x10dd*0x1+-0x253d+-0x2ea*-0x7-_$VH.FJbaj(_$VH.Aeoko(_$Vw,0x101d+0x1*0xa0c+-0x1*0x1a25),-0x88e+-0xd88+0x1618);_$VV[_$VD>>>-0x20b2+-0x1*0x7e1+-0x3*-0xd87]|=_$VY<<-0x15b*-0x9+0x151d+-0x2138-_$VD%(-0x1699+-0x4e1*0x5+0x2f02)*(0x20f7+-0xa00+-0x16ef),_$VD++;}return _$VC.create(_$VV,_$VD);}_$VR.enc.Base64={'stringify':function(_$Vr){return this.stringify1(_$Vr,-0x1ad2*-0x1+-0x9*-0x139+-0x25d2);},'stringify1':function(_$Vr,_$Vf){var _$VX=_$Vr.words,_$VV=_$Vr.sigBytes,_$VD=0x1c6f+-0x1364+0x1*-0x90a===_$Vf?this._map:this._map1;_$Vr.clamp();for(var _$Vw=[],_$VY=-0x24d4*-0x1+-0xa13+-0x8eb*0x3;_$VY<_$VV;_$VY+=0x336*-0x4+0x184*-0x11+0x269f)for(var _$VZ=_$VO.DJIWp(_$VX[_$VY>>>0x2*-0xb03+-0x1456+0xbb*0x3a]>>>-0x78c+0x2*0x371+0xc2-_$VY%(0x1812+0x19cd*-0x1+-0x1*-0x1bf)*(0x1*-0x263b+-0xb76+-0x31b9*-0x1)&-0x2547+0x1d52+-0x8f4*-0x1,-0x1*-0x248d+0x251*-0x6+-0x1697)|(_$VX[_$VY+(-0x15*0x14d+-0x1*0x1311+-0x5f*-0x7d)>>>0xf*0x1b4+-0x1f5e+-0x1*-0x5d4]>>>-0x11f2+0x10a8*-0x2+-0x2a*-0x139-(_$VY+(0x8*0x461+0x7*-0x41e+0x635*-0x1))%(0x29*0x45+-0x23c1+0x18b8)*(-0x18a8+0x244f+-0xb9f)&-0xbb6+0x1*0x698+0x61d)<<-0x125e+-0xcb+-0x1*-0x1331|_$VX[_$VY+(-0x18*-0x49+0xf55+-0x162b)>>>-0x2086+0xf27+0x1161]>>>0x1*0x2126+0xdd4+-0x2ee2-_$VO.ENnWk(_$VY+(0x159f+-0x1*0x1a03+0x466),-0x1aee+0x6ba+-0x1438*-0x1)*(-0xf89+-0x1*-0xc50+0x341)&-0x1c76*-0x1+0x9bf+-0x2536,_$VF=-0xb57+-0x2*0xd63+-0xb*-0x377;_$VO.ljQJh(_$VF,-0xe5*-0x29+0x361+-0x280a)&&_$VO.ljQJh(_$VY+(0x15*0x1b+-0x240+0x1*0x9+0.75)*_$VF,_$VV);_$VF++)_$Vw.push(_$VD.charAt(_$VZ>>>(0x17*-0x11d+0x20f2+-0x751)*(0x127d*0x1+-0x21d*0xa+0x2a8-_$VF)&-0xb8*0x4+-0x3*-0x728+-0x1259));var _$Vx=_$VD.charAt(0x1aa2+0x1d9f*-0x1+-0x1*-0x33d);if(_$Vx){for(;_$Vw.length%(0x940+0x509+0xd*-0x119);)_$Vw.push(_$Vx);}return _$Vw.join('');},'parse':function(_$Vr){var _$Vf=_$Vr.length,_$VX=this._map,_$VV=this._reverseMap;if(!_$VV){_$VV=this._reverseMap=[];for(var _$VD=-0x39a*-0x1+0x1b03+0x1*-0x1e9d;_$VD<_$VX.length;_$VD++)_$VV[_$VX.charCodeAt(_$VD)]=_$VD;}var _$Vw=_$VX.charAt(-0x38*0x9+-0x3*-0x195+-0x287);if(_$Vw){var _$VY=_$A7(_$Vr).call(_$Vr,_$Vw);-(-0x63*0x5c+-0x1330+0x36c5)!==_$VY&&(_$Vf=_$VY);}return _$VN(_$Vr,_$Vf,_$VV);},'encode':function(_$Vr){'use strict';var e=_3h9qp;var j=_2t8qp;var _$Vf,_$VX,_$VV,_$VD,_$Vw,_$VY,_$VZ,_$VF,_$Vx,_$Ve,_$Vi,_$VW;var c=[];var g=463;var n,k;l6:for(;;){switch(j[g++]){case 2:n=c.pop();c[c.length-1]+=n;break;case 3:if(c.pop())g+=j[g];else++g;break;case 7:c.push(_$VD);break;case 8:c.push(_$VO);break;case 9:n=c.pop();c[c.length-1]=c[c.length-1]>=n;break;case 11:_$VD=c[c.length-1];break;case 12:_$VW=c[c.length-1];break;case 14:c.push(_$Vr);break;case 16:c.push(_$Vi);break;case 22:c.push(_$VW);break;case 34:c.push(null);break;case 35:c.push(_$VY);break;case 39:c.push(_$Ve);break;case 40:_$Vw=c[c.length-1];break;case 42:_$VZ=c[c.length-1];break;case 44:c.push(_$Vw++);break;case 45:_$VY=c[c.length-1];break;case 46:c.push(_$Vw);break;case 47:c.push(j[g++]);break;case 48:c.push(_$VI);break;case 50:c.push(_$VF);break;case 51:c[c.length-5]=e.call(c[c.length-5],c[c.length-4],c[c.length-3],c[c.length-2],c[c.length-1]);c.length-=4;break;case 55:c.push(_1wnqp[32+j[g++]]);break;case 57:_$VF=c[c.length-1];break;case 58:_$VV=c[c.length-1];break;case 60:c.push(Array);break;case 62:g+=j[g];break;case 64:c.push(_$VZ);break;case 65:_$Vf=c[c.length-1];break;case 67:n=c.pop();c[c.length-1]=c[c.length-1]<n;break;case 68:c.push(new Array(j[g++]));break;case 69:_$Vx=c[c.length-1];break;case 71:c[c.length-4]=e.call(c[c.length-4],c[c.length-3],c[c.length-2],c[c.length-1]);c.length-=3;break;case 74:c[c.length-1]=c[c.length-1].length;break;case 75:return c.pop();break;case 77:_$Ve=c[c.length-1];break;case 79:c.push(c[c.length-1]);c[c.length-2]=c[c.length-2][_1wnqp[32+j[g++]]];break;case 82:c[c.length-1]=c[c.length-1][_1wnqp[32+j[g++]]];break;case 84:c.push(_$VX);break;case 85:_$VX=c[c.length-1];break;case 86:c.pop();break;case 89:c.push(_$Vx);break;case 90:if(c[c.length-2]!=null){c[c.length-3]=e.call(c[c.length-3],c[c.length-2],c[c.length-1]);c.length-=2;}else{n=c[c.length-3];c[c.length-3]=n(c[c.length-1]);c.length-=2;}break;case 91:c.push(_$Vf);break;case 92:return;break;case 93:c.push(this);break;case 94:c.push(_$fL);break;case 95:c.push(_$pj);break;case 96:c.push(_$VV);break;case 97:_$Vi=c[c.length-1];break;case 98:n=c.pop();c[c.length-1]-=n;break;}}},'_map1':wU(0x1d8),'_map':wU(0x289)};}(),_$VI.enc.Base64;}(_$X0.exports);}(_$Xx);var _$Xe=_$Xx.exports,_$Xi={'exports':{}};!function(_$Vk,_$Vt){_$Vk.exports=function(_$VM){return _$VM.enc.Utf8;}(_$X0.exports);}(_$Xi);var _$XW=_$Xi.exports,_$XK={'exports':{}};!function(_$Vk,_$Vt){var _$VM={'sLAdz':function(_$VI,_$VH){return _$VI<=_$VH;},'bmRIO':function(_$VI,_$VH){return _$h.yXYnH(_$VI,_$VH);},'CDMzu':function(_$VI,_$VH){return _$VI+_$VH;},'amqFp':function(_$VI,_$VH){return _$h.hVZyd(_$VI,_$VH);},'jvAFO':function(_$VI,_$VH){return _$h.ZgyAX(_$VI,_$VH);}};_$Vk.exports=function(_$VI){var _$VH={'EGfwE':function(_$VO,_$VR){return _$VM.bmRIO(_$VO,_$VR);},'sNgho':function(_$VO,_$VR){return _$VM.CDMzu(_$VO,_$VR);},'OkaVm':function(_$VO,_$VR){return _$VO|_$VR;},'RLEjH':function(_$VO,_$VR){return _$VO<<_$VR;},'UEPyR':function(_$VO,_$VR){return _$VM.amqFp(_$VO,_$VR);},'ZRaJH':function(_$VO,_$VR){return _$VO>>>_$VR;},'qzkjf':function(_$VO,_$VR){return _$VO+_$VR;},'xHSfu':function(_$VO,_$VR){return _$VO-_$VR;},'ZQIYd':function(_$VO,_$VR){return _$VO+_$VR;},'uwegN':function(_$VO,_$VR){return _$VM.jvAFO(_$VO,_$VR);},'zFZea':function(_$VO,_$VR){return _$VO>>>_$VR;},'PYgiy':function(_$VO,_$VR){return _$VM.amqFp(_$VO,_$VR);},'RWNwO':function(_$VO,_$VR){return _$VO*_$VR;},'zLZRA':function(_$VO,_$VR){return _$VO>>>_$VR;},'gvATn':function(_$VO,_$VR){return _$VO+_$VR;}};return function(_$VO){var _$VR={'zVEbe':function(_$VZ,_$VF){return _$VM.sLAdz(_$VZ,_$VF);}},_$VC=_$VI,_$VN=_$VC.lib,_$Vr=_$VN.WordArray,_$Vf=_$VN.Hasher,_$VX=_$VC.algo,_$VV=[],_$VD=[];!function(){var _$VZ={'Cmkmw':function(_$VW,_$VK){return _$VR.zVEbe(_$VW,_$VK);}};function _$VF(_$VW){for(var _$VK=_$VO.sqrt(_$VW),_$VT=-0x9bb*0x4+-0x1*0x2209+0x48f7;_$VZ.Cmkmw(_$VT,_$VK);_$VT++)if(!(_$VW%_$VT))return!(0xf*0x7f+-0x32e*0x6+0x5d2*0x2);return!(-0x89*-0x1+0x143f+-0x8*0x299);}function _$Vx(_$VW){return(-0x28aa0c74+-0xb7b98240+0x4*0x7818e3ad)*(_$VW-(0x551+-0x3*0xc23+0x1f18|_$VW))|-0x17c4+0x26de+-0x78d*0x2;}for(var _$Ve=-0x1118+0x15*-0xd6+0x22a8,_$Vi=-0x1e96+-0x25fa+0x10*0x449;_$Vi<0x1fea+-0x341+-0x1c69;)_$VF(_$Ve)&&(_$Vi<-0x1edd+-0x12e4+0x31c9&&(_$VV[_$Vi]=_$Vx(_$VO.pow(_$Ve,-0x8b0+-0x1def+0x269f+0.5))),_$VD[_$Vi]=_$Vx(_$VO.pow(_$Ve,(-0x931+-0x1c2e+0x2*0x12b0)/(-0xb4c*0x2+0x1*-0x2609+0x3ca4))),_$Vi++),_$Ve++;}();var _$Vw=[],_$VY=_$VX.SHA256=_$Vf.extend({'_doReset':function(){this._hash=new _$Vr.init(_$pj(_$VV).call(_$VV,0x855*-0x1+-0x205a+0x28af));},'_doProcessBlock':function(_$VZ,_$VF){for(var _$Vx=this._hash.words,_$Ve=_$Vx[-0x5f8+0x2544+0x7d3*-0x4],_$Vi=_$Vx[0x1*0x1c33+0x1bb*0x9+-0x2bc5],_$VW=_$Vx[-0x1*-0x2526+-0xff6+-0x152e],_$VK=_$Vx[0x276+0x1e0a+-0x207d*0x1],_$VT=_$Vx[-0x4*-0x7c9+-0x198e+0x592*-0x1],_$Vd=_$Vx[-0x13e5+-0x632+0x1*0x1a1c],_$VE=_$Vx[0x6d*-0x51+-0x1c3e+0x3ec1],_$VG=_$Vx[0x2be*-0xe+0x1*0x1342+0x1329],_$VU=0x19d7+0x4*0x543+-0x2ee3;_$VH.EGfwE(_$VU,0xcc*-0x2a+0x2593*-0x1+0x474b);_$VU++){if(_$VH.EGfwE(_$VU,0x1c96+0x20f4+0x2*-0x1ebd))_$Vw[_$VU]=0x5*-0x3d3+-0x1a9d+0x2dbc|_$VZ[_$VH.sNgho(_$VF,_$VU)];else{var _$Vg=_$Vw[_$VU-(-0x595*0x5+0x16d7+-0x65*-0xd)],_$VB=_$VH.OkaVm(_$VH.RLEjH(_$Vg,-0x640+0xd9d*-0x2+-0x2d*-0xbf),_$Vg>>>-0x20b8+0x8f7+0x17c8)^(_$Vg<<0x2007+-0x6c3+0x1936*-0x1|_$Vg>>>0x29*0xf1+0x1c24+-0x42ab)^_$Vg>>>-0xf75+-0x66*0x61+0x361e,_$Vy=_$Vw[_$VU-(-0x2*-0xc25+0x1*0x26b+0x5*-0x557)],_$Vl=(_$VH.UEPyR(_$Vy,0x6+-0xf03+-0x141*-0xc)|_$Vy>>>0x1d+0x227*0x1+-0x233)^(_$Vy<<0xf81+0x13b1+-0x2325|_$VH.ZRaJH(_$Vy,0x1*0xfa7+-0x19dc+-0x7*-0x178))^_$Vy>>>-0x6d3*0x3+0x22b7+-0xe34;_$Vw[_$VU]=_$VH.qzkjf(_$VB+_$Vw[_$VU-(-0x19*-0x57+0xb5*0x35+-0x2df1)]+_$Vl,_$Vw[_$VH.xHSfu(_$VU,0x1*0x2353+-0x2447+0x104)]);}var _$VP=_$Ve&_$Vi^_$Ve&_$VW^_$Vi&_$VW,_$VQ=(_$Ve<<0x78f+0x2051*0x1+-0x5ae*0x7|_$VH.ZRaJH(_$Ve,0x13cd+-0x5*0x277+-0x778))^(_$Ve<<0x15ee+-0x1afc+0x521|_$Ve>>>0x95*-0x15+-0xe19*-0x2+-0x4*0x3fb)^(_$Ve<<-0x5*0x326+0x77*0x13+0x6f3|_$Ve>>>0x2405*0x1+-0x160+-0x228f),_$Vu=_$VH.ZQIYd(_$VG+_$VH.uwegN((_$VT<<-0xdcc*-0x2+0x1a49+-0xd*0x423|_$VT>>>-0x1*-0x1cf+-0x1fc4+0x1dfb)^(_$VT<<0x118b+-0x17ea+0x674|_$VH.zFZea(_$VT,-0xc31+0x892*0x4+-0x160c)),_$VH.PYgiy(_$VT,0xd23*0x1+0xd4*-0x2f+0xec*0x1c)|_$VT>>>-0xf10+-0x9a5*0x2+0x2273),_$VT&_$Vd^~_$VT&_$VE)+_$VD[_$VU]+_$Vw[_$VU];_$VG=_$VE,_$VE=_$Vd,_$Vd=_$VT,_$VT=_$VK+_$Vu|-0x165+-0x3a4*0x5+0x1399*0x1,_$VK=_$VW,_$VW=_$Vi,_$Vi=_$Ve,_$Ve=_$Vu+_$VH.ZQIYd(_$VQ,_$VP)|0xc7c+-0x11f1+0x575;}_$Vx[0x75*-0x1b+-0x1465+-0x105e*-0x2]=_$Vx[0x191*-0x1+-0x5a2+0x13*0x61]+_$Ve|-0x5e*0x7+0x2083+-0x447*0x7,_$Vx[-0x21bd+-0x7ea+0x1*0x29a8]=_$Vx[0xa6*0x18+-0x1*-0x2c+-0xfbb]+_$Vi|-0x1*-0x2551+-0x1606*0x1+-0xf4b,_$Vx[-0x569+0x1ea7+-0x5*0x50c]=_$VH.OkaVm(_$Vx[0x2a1+0x1917+-0x2*0xddb]+_$VW,-0x167c+0x1b1a+-0x6*0xc5),_$Vx[0x18e*0xd+-0xb84+0x1*-0x8af]=_$Vx[-0x191b+-0x5ef+0x1f0d]+_$VK|0x1*0x205b+-0x15a3+-0x2ae*0x4,_$Vx[-0x10e7+-0x39*-0x63+-0x520]=_$Vx[0x1299+-0x175d+0x4c8]+_$VT|0x83f*0x4+0x2216*-0x1+-0x11a*-0x1,_$Vx[-0x13*-0x1e7+0x3*-0x450+-0x1730]=_$Vx[0x32d+-0x61*-0x5d+-0x2665]+_$Vd|-0x3*0x7c3+0x191d+0x9c*-0x3,_$Vx[0x1485+0x29*0x39+-0x30*0x9e]=_$Vx[0x252c+0x2240+-0x4a*0xf7]+_$VE|0x406*0x5+0x9d*-0x4+-0x11aa,_$Vx[0x160f*-0x1+0x473*0x5+0x1*-0x29]=_$Vx[0x1*-0x25ef+-0x1*0xc28+0xa*0x503]+_$VG|-0xe7f*-0x1+0x10cc+-0x1f4b;},'_doFinalize':function(){var _$VZ=this._data,_$VF=_$VZ.words,_$Vx=_$VH.RWNwO(0x1c04+0x1109+-0x2d05,this._nDataBytes),_$Ve=(0x15d*-0x16+-0xa4*0x11+0x2*0x1475)*_$VZ.sigBytes;return _$VF[_$VH.zLZRA(_$Ve,0xc30+-0x1d17+-0x13*-0xe4)]|=0xc35+0x2663+-0x4*0xc86<<0xd1e+0x227+0x1*-0xf2d-_$Ve%(-0x1331*-0x2+0x3*0x3d9+0x13*-0x29f),_$VF[-0x19c9+-0x1e49+0x3820+(_$Ve+(-0x20f*-0x5+0x26*-0x59+-0x1*-0x32b)>>>0x609*0x4+-0x33*-0x91+-0x143*0x2a<<0x1113+-0x1d4e*-0x1+0x1*-0x2e5d)]=_$VO.floor(_$Vx/(0x55dc8*-0x411+0xe407f658+-0x4faa398*-0xa)),_$VF[-0x199*-0x17+-0x59e*-0x1+-0xbe*0x39+(_$VH.ZRaJH(_$VH.gvATn(_$Ve,0x2a*-0xa7+0x9*0x251+0x6cd),-0x215+-0x17ab+-0x1*-0x19c9)<<0x31*-0x53+-0xf*0x233+0x30e4)]=_$Vx,_$VZ.sigBytes=(-0x5*-0x151+-0x2037*0x1+0x19a6)*_$VF.length,this._process(),this._hash;},'clone':function(){var _$VZ=_$Vf.clone.call(this);return _$VZ._hash=this._hash.clone(),_$VZ;}});_$VC.SHA256=_$Vf._createHelper(_$VY),_$VC.HmacSHA256=_$Vf._createHmacHelper(_$VY);}(Math),_$VI.SHA256;}(_$X0.exports);}(_$XK);var _$XT=_$XK.exports,_$Xd={'exports':{}},_$XE={'exports':{}};!function(_$Vk,_$Vt){var _$VM={'rfLQm':function(_$VI,_$VH){return _$h.wWnFW(_$VI,_$VH);}};_$Vk.exports=function(_$VI){var _$VH,_$VO,_$VR;_$VO=(_$VH=_$VI).lib.Base,_$VR=_$VH.enc.Utf8,_$VH.algo.HMAC=_$VO.extend({'init':function(_$VC,_$VN){'use strict';var l=_3h9qp;var t=_2t8qp;var wg,_$Vr,_$Vf,_$VX,_$VV,_$VD,_$Vw,_$VY;var k=[];var i=736;var c,j;l7:for(;;){switch(t[i++]){case 4:_$VV=k[k.length-1];break;case 7:k.push(_$VY++);break;case 8:c=k.pop();k[k.length-1]=k[k.length-1]>c;break;case 12:k.pop();break;case 13:_$Vw=k[k.length-1];break;case 15:k.push(_$VN);break;case 16:_$VC=k[k.length-1];break;case 17:k.push(a0dbbcbn);break;case 18:k[k.length-3][k[k.length-2]]=k[k.length-1];k[k.length-3]=k[k.length-1];k.length-=2;break;case 20:k.push(_$VX);break;case 22:k[k.length-1]=k[k.length-1][_1wnqp[47+t[i++]]];break;case 23:k.push(_$VD);break;case 27:k.push(null);break;case 29:_$Vr=k[k.length-1];break;case 30:k[k.length-2][_1wnqp[47+t[i++]]]=k[k.length-1];k[k.length-2]=k[k.length-1];k.length--;break;case 32:k[k.length-2]=new k[k.length-2]();k.length-=1;break;case 33:c=k.pop();k[k.length-1]=k[k.length-1]==c;break;case 38:k.push(wg);break;case 41:k[k.length-2]=k[k.length-2][k[k.length-1]];k.length--;break;case 44:k.push(this);break;case 46:return;break;case 47:k.push(k[k.length-1]);k[k.length-2]=k[k.length-2][_1wnqp[47+t[i++]]];break;case 53:k.push(_$Vf);break;case 54:c=k.pop();k[k.length-1]*=c;break;case 55:k.push(undefined);break;case 58:k[k.length-1]=typeof k[k.length-1];break;case 60:k.push(_$Vw);break;case 62:i+=t[i];break;case 64:k.push(_$VV);break;case 65:c=k.pop();k[k.length-1]^=c;break;case 70:k.push(_$VR);break;case 71:c=k.pop();k[k.length-1]=k[k.length-1]<c;break;case 72:if(k[k.length-1]){++i;--k.length;}else i+=t[i];break;case 73:_$VX=k[k.length-1];break;case 74:wg=k[k.length-1];break;case 75:_$Vf=k[k.length-1];break;case 77:if(k.pop())i+=t[i];else++i;break;case 79:_$VD=k[k.length-1];break;case 80:if(k[k.length-1]!=null){k[k.length-2]=l.call(k[k.length-2],k[k.length-1]);}else{c=k[k.length-2];k[k.length-2]=c();}k.length--;break;case 81:k.push(k[k.length-2]);k.push(k[k.length-2]);break;case 83:_$VN=k[k.length-1];break;case 84:k.push(_$Vr);break;case 85:k.push(_$VC);break;case 86:k.push(_$VY);break;case 92:k.push(t[i++]);break;case 97:_$VY=k[k.length-1];break;case 98:if(k[k.length-2]!=null){k[k.length-3]=l.call(k[k.length-3],k[k.length-2],k[k.length-1]);k.length-=2;}else{c=k[k.length-3];k[k.length-3]=c(k[k.length-1]);k.length-=2;}break;case 99:c=k.pop();k[k.length-1]+=c;break;}}},'reset':function(){var _$VC=this._hasher;_$VC.reset(),_$VC.update(this._iKey);},'update':function(_$VC){return this._hasher.update(_$VC),this;},'eKey':function(_$VC){'use strict';var m=_3h9qp;var p=_2t8qp;var _$VN,_$Vr,_$Vf,_$VX,_$VV,_$VD;var k=[];var b=897;var g,q;l8:for(;;){switch(p[b++]){case 5:g=k.pop();k[k.length-1]+=g;break;case 10:k.push(_$Vr);break;case 11:k.push(_$VD);break;case 16:b+=p[b];break;case 18:_$VV=k[k.length-1];break;case 21:_$Vr=k[k.length-1];break;case 30:k.push(k[k.length-1]);k[k.length-2]=k[k.length-2][_1wnqp[60+p[b++]]];break;case 31:k.push(_$Vf);break;case 34:k.push(_$VM);break;case 36:_$VD=k[k.length-1];break;case 38:_$VX=k[k.length-1];break;case 43:k[k.length-5]=m.call(k[k.length-5],k[k.length-4],k[k.length-3],k[k.length-2],k[k.length-1]);k.length-=4;break;case 44:k.push(null);break;case 51:if(k[k.length-1]!=null){k[k.length-2]=m.call(k[k.length-2],k[k.length-1]);}else{g=k[k.length-2];k[k.length-2]=g();}k.length--;break;case 55:k.push(String);break;case 56:return;break;case 61:k.push(_1wnqp[60+p[b++]]);break;case 63:k.push(_$VV);break;case 66:k.pop();break;case 68:_$VN=k[k.length-1];break;case 70:if(k[k.length-2]!=null){k[k.length-3]=m.call(k[k.length-3],k[k.length-2],k[k.length-1]);k.length-=2;}else{g=k[k.length-3];k[k.length-3]=g(k[k.length-1]);k.length-=2;}break;case 74:g=k.pop();k[k.length-1]=k[k.length-1]>g;break;case 75:k.push(_$VC);break;case 76:k.push(_$VN);break;case 80:k[k.length-4]=m.call(k[k.length-4],k[k.length-3],k[k.length-2],k[k.length-1]);k.length-=3;break;case 82:g=k.pop();k[k.length-1]-=g;break;case 86:k.push(p[b++]);break;case 88:k.push(new Array(p[b++]));break;case 89:k.push(_$pV);break;case 91:k.push(_$VX);break;case 92:k.push(_$pj);break;case 94:if(k.pop())b+=p[b];else++b;break;case 95:_$Vf=k[k.length-1];break;case 96:return k.pop();break;case 98:k[k.length-1]=k[k.length-1].length;break;}}},'finalize':function(_$VC){var _$VN,_$Vr=this._hasher,_$Vf=_$Vr.finalize(_$VC);return _$Vr.reset(),_$Vr.finalize(_$VM.rfLQm(_$pV,_$VN=this._oKey.clone()).call(_$VN,_$Vf));}});}(_$X0.exports);}(_$XE),function(_$Vk,_$Vt){_$Vk.exports=function(_$VM){return _$VM.HmacSHA256;}(_$X0.exports);}(_$Xd);var _$XG=_$Xd.exports,_$XU={'exports':{}};!function(_$Vk,_$Vt){_$Vk.exports=function(_$VM){return _$VM.HmacMD5;}(_$X0.exports);}(_$XU);var _$Xg=_$XU.exports,_$XB=function(){var _$Vk={};return{'setItem':function(_$Vt,_$VM){_$Vk[_$Vt]=_$VM;},'getItem':function(_$Vt){return _$Vk[_$Vt];}};}(),_$Xy=window.localStorage,_$Xl={'get':function(_$Vk){var _$Vt=arguments.length>0x2512+0x2140+-0x1*0x4651&&void(-0x1533+-0x17*-0x12f+-0x606)!==arguments[-0x10*-0x11+0x2f*0x1f+0x120*-0x6]?arguments[0x21*0x12d+-0x2*-0xff4+0x389*-0x14]:{'raw':!(0x3*-0x6ed+0xced+-0x7db*-0x1),'from':0x0},_$VM=_$XB.getItem(_$Vk);try{_$VM&&-0x6*-0x1d3+-0x20*0x18+-0x7f1!==_$Vt.from||(_$VM=_$Xy.getItem(_$Vk))&&_$XB.setItem(_$Vk,_$VM);}catch(_$VI){}if(!_$VM)return'';if(_$Vt.raw)return _$VM;try{return JSON.parse(_$VM);}catch(_$VH){return _$VM;}},'set':function(_$Vk,_$Vt){var wB=Vv,_$VM=_$Vt;_$h.vKJUi(wB(0x293),_$h.Rvrsx(_$rj,_$VM))&&(_$VM=_$RB(_$VM)),_$XB.setItem(_$Vk,_$VM);try{_$Xy.setItem(_$Vk,_$VM);}catch(_$VI){}}};function _$XP(_$Vk){return!(!_$Vk||!_$Vk.t||!_$Vk.e||0x45*-0x20+0x1208*0x1+-0x968===_$Vk.e||Date.now()-_$Vk.t>=(-0x2*-0xf44+0x2f6*0xb+-0x2*0x1d99)*_$Vk.e||Date.now()-_$Vk.t<-0x1*-0x2411+-0x2086+-0x38b);}var _$XQ={'get':function(_$Vk,_$Vt){var _$VM=_$Xl.get(_$Xf.STORAGE_KEY_TK),_$VI=_$h.LnqDK(_$XH,_$X7(_$VM)?_$VM:{},[_$Vk,_$Vt]);if(!_$X7(_$VI))return null;var _$VH=_$VI.v||'',_$VO=null;try{_$VO=JSON.parse(_$XW.stringify(_$Xe.parse(_$VH)));}catch(_$VR){return null;}return _$XP({'e':_$VI.e,'t':_$VI.t})?_$VO:null;},'save':function(_$Vk,_$Vt,_$VM){var _$VI=_$Xl.get(_$Xf.STORAGE_KEY_TK),_$VH=_$X7(_$VI)?_$VI:{},_$VO=function(_$VR){if(_$h.xdDoU(_$Xh,_$VR)){var _$VC=_$h.zbMrA(_$pj,_$VR).call(_$VR,0x186d+-0x4*0x3dd+-0x8ec,-0x2b*-0x2d+-0x3*0xa42+0x1746),_$VN=_$h.cgmkT(_$h.rJhYG(0xec9*-0x2+0x1e*-0x64+-0x2986*-0x1,_$h.daMvv(_$fW,_$VC,-0x18df*-0x1+0x2539+-0x3e08)),0x26bf+0x3*-0x6b0+0x1273*-0x1);if(!_$h.KxBXj(isNaN,_$VN))return _$VN;}return null;}(_$VM?_$VM.tk:'');_$VO&&(_$XI(_$VH,[_$Vk,_$Vt],{'v':_$Xe.stringify(_$XW.parse(_$RB(_$VM))),'e':_$VO,'t':Date.now()}),function(_$VR){var wy=a0dbbcbn,_$VC=wy(0x1a6).split('|'),_$VN=0x974+-0x1f8f+0x161b*0x1;while(!![]){switch(_$VC[_$VN++]){case'0':var _$Vr={};continue;case'1':_$XO(_$VR,function(_$VX,_$VV){_$XO(_$VX,function(_$VD,_$Vw){_$XP(_$VD)&&_$Vf.push({'fp':_$VV,'appId':_$Vw,'data':_$VD});});});continue;case'2':_$Vf.forEach(function(_$VX){var _$VV=_$VX.fp,_$VD=_$VX.appId,_$Vw=_$VX.data;_$XI(_$Vr,[_$VV,_$VD],_$Vw);}),_$Xl.set(_$Xf.STORAGE_KEY_TK,_$Vr);continue;case'3':if(!_$VR)return;continue;case'4':var _$Vf=[];continue;}break;}}(_$VH));}};function _$Xu(){'use strict';var x=_3h9qp;var a=_2t8qp;var wl,_$Vk,_$Vt,_$VM,_$VI,_$VH,_$VO,_$VR,_$VC;var d=[];var g=1028;var s,m;l9:for(;;){switch(a[g++]){case 1:d.push(_$VH);break;case 4:_$VR=d[d.length-1];break;case 6:d.push(_$Vk);break;case 7:d.push(undefined);break;case 9:d.push(_$pj);break;case 10:_$VH=d[d.length-1];break;case 15:d.push(_$XJ);break;case 19:d.push(null);break;case 21:d.push(d[d.length-1]);d[d.length-2]=d[d.length-2][_1wnqp[69+a[g++]]];break;case 22:d[d.length-1]=d[d.length-1].length;break;case 23:d.push(a[g++]);break;case 25:return d.pop();break;case 29:d.push(_$fW);break;case 31:_$Vk=d[d.length-1];break;case 34:if(d[d.length-1]!=null){d[d.length-2]=x.call(d[d.length-2],d[d.length-1]);}else{s=d[d.length-2];d[d.length-2]=s();}d.length--;break;case 35:return;break;case 36:_$VC=d[d.length-1];break;case 37:d.push(_1wnqp[69+a[g++]]);break;case 39:d.push(_$VI);break;case 41:d.push(_$h);break;case 44:d.push({});break;case 45:s=d.pop();d[d.length-1]|=s;break;case 46:_$VM=d[d.length-1];break;case 47:d.push(_$VR);break;case 51:_$Vt=d[d.length-1];break;case 55:if(d.pop())g+=a[g];else++g;break;case 56:d.push(_$VO);break;case 57:_$VI=d[d.length-1];break;case 58:d.push(function(_$VN,_$Vr){'use strict';var m=_3h9qp;var p=_2t8qp;var _$Vf;var t=[];var l=1246;var u,x;l10:for(;;){switch(p[l++]){case 1:u=t.pop();t[t.length-1]+=u;break;case 2:if(t.pop())l+=p[l];else++l;break;case 4:u=t.pop();t[t.length-1]=t[t.length-1]<u;break;case 6:if(t[t.length-2]!=null){t[t.length-3]=m.call(t[t.length-3],t[t.length-2],t[t.length-1]);t.length-=2;}else{u=t[t.length-3];t[t.length-3]=u(t[t.length-1]);t.length-=2;}break;case 7:t[t.length-1]=t[t.length-1].length;break;case 15:t.push(_$Vr);break;case 17:t.push(_1wnqp[81+p[l++]]);break;case 22:t.push(_$Vf);break;case 24:u=t.pop();t[t.length-1]=t[t.length-1]!==u;break;case 28:t.push(_$VN);break;case 31:t.push(_$Vf++);break;case 42:l+=p[l];break;case 55:t.push(_$A7);break;case 67:return t.pop();break;case 72:_$Vf=t[t.length-1];break;case 75:_$VN=t[t.length-1];break;case 76:t.push(t[t.length-1]);t[t.length-2]=t[t.length-2][_1wnqp[81+p[l++]]];break;case 77:t[t.length-2]=t[t.length-2][t[t.length-1]];t.length--;break;case 79:return;break;case 82:t.push(null);break;case 87:t.push(p[l++]);break;case 92:t.pop();break;case 94:if(t[t.length-1]){++l;--t.length;}else l+=p[l];break;case 96:t[t.length-1]=-t[t.length-1];break;case 99:t[t.length-4]=m.call(t[t.length-4],t[t.length-3],t[t.length-2],t[t.length-1]);t.length-=3;break;}}});break;case 59:s=d.pop();d[d.length-1]-=s;break;case 60:d.push(_$VM);break;case 63:d.push(_$VC);break;case 65:if(d[d.length-2]!=null){d[d.length-3]=x.call(d[d.length-3],d[d.length-2],d[d.length-1]);d.length-=2;}else{s=d[d.length-3];d[d.length-3]=s(d[d.length-1]);d.length-=2;}break;case 67:d.push(new Array(a[g++]));break;case 68:_$VO=d[d.length-1];break;case 71:d.pop();break;case 72:s=d.pop();d[d.length-1]*=s;break;case 76:d.push(wl);break;case 78:s=d.pop();d[d.length-1]=d[d.length-1]>s;break;case 80:d.push(Math);break;case 81:d.push(function(_$VN,_$Vr){'use strict';var i=_3h9qp;var o=_2t8qp;var _$Vf,_$VX,_$VV,_$VD,_$Vw,_$VY,_$VZ;var r=[];var p=1303;var s,a;l11:for(;;){switch(o[p++]){case 3:r[r.length-2]=r[r.length-2][r[r.length-1]];r.length--;break;case 5:r.push(--_$Vr);break;case 10:r.push(new Array(o[p++]));break;case 11:_$VY=r[r.length-1];break;case 12:r.push(_$h);break;case 13:r.push(_$Vw);break;case 14:r.push(_$VY++);break;case 20:s=r.pop();r[r.length-1]+=s;break;case 21:if(r[r.length-1]!=null){r[r.length-2]=i.call(r[r.length-2],r[r.length-1]);}else{s=r[r.length-2];r[r.length-2]=s();}r.length--;break;case 22:s=r.pop();r[r.length-1]=r[r.length-1]<s;break;case 26:_$Vf=r[r.length-1];break;case 27:r.push(_$VD);break;case 29:p+=o[p];break;case 30:r.push(_$Vr);break;case 31:r.push(_1wnqp[84+o[p++]]);break;case 32:s=r.pop();r[r.length-1]=r[r.length-1]==s;break;case 35:if(r[r.length-1]){++p;--r.length;}else p+=o[p];break;case 40:r[r.length-1]=r[r.length-1].length;break;case 41:r.push(_$VN);break;case 47:r.push(r[r.length-1]);r[r.length-2]=r[r.length-2][_1wnqp[84+o[p++]]];break;case 49:r.push(Math);break;case 51:_$Vw=r[r.length-1];break;case 53:r.push(_$VZ);break;case 56:r.push(o[p++]);break;case 60:r.push(_$VV);break;case 61:s=r.pop();r[r.length-1]-=s;break;case 63:s=r.pop();r[r.length-1]*=s;break;case 66:return r.pop();break;case 67:_$VZ=r[r.length-1];break;case 68:r.pop();break;case 69:_$VX=r[r.length-1];break;case 70:if(r.pop())p+=o[p];else++p;break;case 72:if(r.pop())++p;else p+=o[p];break;case 75:r[r.length-4]=i.call(r[r.length-4],r[r.length-3],r[r.length-2],r[r.length-1]);r.length-=3;break;case 76:if(r[r.length-2]!=null){r[r.length-3]=i.call(r[r.length-3],r[r.length-2],r[r.length-1]);r.length-=2;}else{s=r[r.length-3];r[r.length-3]=s(r[r.length-1]);r.length-=2;}break;case 78:r.push(_$VX--);break;case 79:_$VV=r[r.length-1];break;case 80:return;break;case 81:_$VD=r[r.length-1];break;case 84:r[r.length-3][r[r.length-2]]=r[r.length-1];r[r.length-3]=r[r.length-1];r.length-=2;break;case 85:r.push(_$Vf);break;case 87:r.push(_$VV++);break;case 90:r.push(_$VY);break;case 94:s=r.pop();r[r.length-1]|=s;break;case 95:r.push(_$VX);break;}}});break;case 82:d.push(Vv);break;case 83:wl=d[d.length-1];break;case 85:d[d.length-4]=x.call(d[d.length-4],d[d.length-3],d[d.length-2],d[d.length-1]);d.length-=3;break;case 89:d[d.length-5]=x.call(d[d.length-5],d[d.length-4],d[d.length-3],d[d.length-2],d[d.length-1]);d.length-=4;break;case 90:g+=a[g];break;case 91:s=d.pop();d[d.length-1]+=s;break;case 95:d[d.length-2][_1wnqp[69+a[g++]]]=d[d.length-1];d.length--;break;case 97:d.push(_$pV);break;case 99:d.push(_$Vt);break;}}}function _$XJ(_$Vk){for(var _$Vt=_$Vk.size,_$VM=_$Vk.num,_$VI='';_$Vt--;)_$VI+=_$VM[_$h.cgmkT(Math.random(),_$VM.length)|-0x2*-0x939+0xa2e*0x3+-0x30fc];return _$VI;}function _$Xj(_$Vk){return _$Vk&&_$Vk.v&&0x15*-0x1d7+0x13b2*-0x1+-0x1c5*-0x21===_$Vk.v.length&&_$Vk.e&&_$Vk.t&&_$h.TGQAf(_$Vk.t+(-0x20*0x92+0xc2f+0x1*0x9f9)*_$Vk.e,Date.now());}var _$XS={'get':function(_$Vk,_$Vt){var _$VM={'gZiAS':function(_$VN,_$Vr,_$Vf){return _$VN(_$Vr,_$Vf);}},_$VI=arguments.length>0x58a+0x32a*0xb+-0x2856&&_$h.hhZxk(void(0x428+-0xfc3*-0x2+0x1*-0x23ae),arguments[0x59e+-0x696*0x2+-0x8*-0xf2])?arguments[-0x14f6+-0x211c+0x3614]:-0xf*-0x19f+-0x1084+0x7cd*-0x1,_$VH=_$Xl.get(_$Xf.STORAGE_KEY_VK,{'raw':!(-0x2*-0x1de+-0x305*0x5+0xb5e),'from':_$VI}),_$VO=_$h.HsBLR(_$X7,_$VH)?_$VH:{},_$VR=_$XH(_$VO,[_$Vk,_$Vt]);if(_$Xj(_$VR))return _$VR.v;var _$VC=_$Xu();return _$XI(_$VO,[_$Vk,_$Vt],{'e':0x1e13380,'v':_$VC,'t':Date.now()}),function(_$VN){if(!_$VN)return;var _$Vr=[];_$h.wtKeL(_$XO,_$VN,function(_$VX,_$VV){_$VM.gZiAS(_$XO,_$VX,function(_$VD,_$Vw){_$Xj(_$VD)&&_$Vr.push({'v':_$VV,'appid':_$Vw,'data':_$VD});});});var _$Vf={};_$Vr.forEach(function(_$VX){var _$VV=_$VX.v,_$VD=_$VX.appid,_$Vw=_$VX.data;_$XI(_$Vf,[_$VV,_$VD],_$Vw);}),_$Xl.set(_$Xf.STORAGE_KEY_VK,_$Vf);}(_$VO),_$VC;}},_$Xc={'exports':{}};!function(_$Vk,_$Vt){_$Vk.exports=function(_$VM){return _$VM.enc.Utils;}(_$X0.exports);}(_$Xc);var _$Xo=_$Xc.exports;function _$Xm(_$Vk){'use strict';var d=_3h9qp;var p=_2t8qp;var _$Vt,_$VM;var m=[];var j=1447;var r,c;l12:for(;;){switch(p[j++]){case 7:r=m.pop();m[m.length-1]+=r;break;case 13:m[m.length-4]=d.call(m[m.length-4],m[m.length-3],m[m.length-2],m[m.length-1]);m.length-=3;break;case 18:_$Vt=m[m.length-1];break;case 19:m.push(null);break;case 24:m.push({});break;case 26:return;break;case 44:m.push(_1wnqp[89+p[j++]]);break;case 45:m.pop();break;case 48:m.push(m[m.length-1]);m[m.length-2]=m[m.length-2][_1wnqp[89+p[j++]]];break;case 49:m.push(_$h);break;case 56:m.push(function(_$VI){'use strict';var u=_3h9qp;var e=_2t8qp;var wP,_$VH,_$VO,_$VR,_$VC,_$VN,_$Vr,_$Vf,_$VX,_$VV;var r=[];var d=1598;var x,a;l13:for(;;){switch(e[d++]){case 2:_$Vr=r[r.length-1];break;case 3:if(r[r.length-2]!=null){r[r.length-3]=u.call(r[r.length-3],r[r.length-2],r[r.length-1]);r.length-=2;}else{x=r[r.length-3];r[r.length-3]=x(r[r.length-1]);r.length-=2;}break;case 5:_$VR=r[r.length-1];break;case 7:r.push(_$VR);break;case 9:r[r.length-2]=r[r.length-2][r[r.length-1]];r.length--;break;case 11:r.push(_$VI);break;case 12:r.push(Date);break;case 14:r.push(wP);break;case 16:r.push(r[r.length-1]);r[r.length-2]=r[r.length-2][_1wnqp[107+e[d++]]];break;case 18:r.push(_$Xs);break;case 19:r[r.length-6]=u.call(r[r.length-6],r[r.length-5],r[r.length-4],r[r.length-3],r[r.length-2],r[r.length-1]);r.length-=5;break;case 21:r.push(_$VC);break;case 23:r.push(_$Vf);break;case 25:r.push(_$Vr);break;case 27:r.push(function(_$VD,_$Vw,_$VY,_$VZ){'use strict';var i=_3h9qp;var g=_2t8qp;var _$VF,_$Vx,_$Ve,_$Vi,_$VW,_$VK;var b=[];var p=1772;var n,q;l14:for(;;){switch(g[p++]){case 1:b[b.length-1]=b[b.length-1][_1wnqp[121+g[p++]]];break;case 4:return;break;case 5:b.push(_$VW);break;case 7:b[b.length-4]=i.call(b[b.length-4],b[b.length-3],b[b.length-2],b[b.length-1]);b.length-=3;break;case 11:b.push(g[p++]);break;case 14:if(b[b.length-2]!=null){b[b.length-3]=i.call(b[b.length-3],b[b.length-2],b[b.length-1]);b.length-=2;}else{n=b[b.length-3];b[b.length-3]=n(b[b.length-1]);b.length-=2;}break;case 16:_$Vi=b[b.length-1];break;case 19:b.push(_$Xb);break;case 20:b.push(Uint8Array);break;case 23:_$VW=b[b.length-1];break;case 24:_$Ve=b[b.length-1];break;case 26:b.push(b[b.length-1]);b[b.length-2]=b[b.length-2][_1wnqp[121+g[p++]]];break;case 31:b[b.length-3]=new b[b.length-3](b[b.length-1]);b.length-=2;break;case 33:b.pop();break;case 34:return b.pop();break;case 44:b.push(Array);break;case 45:b.push(_$VK);break;case 46:b.push(function(_$VT,_$Vd,_$VE){'use strict';var s=_3h9qp;var k=_2t8qp;var b=[];var q=1940;var h,a;l15:for(;;){switch(k[q++]){case 17:if(b[b.length-2]!=null){b[b.length-3]=s.call(b[b.length-3],b[b.length-2],b[b.length-1]);b.length-=2;}else{h=b[b.length-3];b[b.length-3]=h(b[b.length-1]);b.length-=2;}break;case 18:b.push(_$VD);break;case 25:b.push(b[b.length-1]);b[b.length-2]=b[b.length-2][_1wnqp[128+k[q++]]];break;case 36:b.push(_$VE);break;case 58:return;break;case 60:b.push(_$Vd);break;case 88:b.pop();break;case 97:b[b.length-3][b[b.length-2]]=b[b.length-1];b[b.length-3]=b[b.length-1];b.length-=2;break;}}});break;case 48:b.push(_$Vi);break;case 49:b.push(_$Ve);break;case 52:_$Vx=b[b.length-1];break;case 54:_$VF=b[b.length-1];break;case 60:b.push(_$X2);break;case 62:b.push(function(_$VT,_$Vd,_$VE){'use strict';var n=_3h9qp;var g=_2t8qp;var m=[];var e=1950;var t,s;l16:for(;;){switch(g[e++]){case 23:m.pop();break;case 35:return;break;case 44:if(m[m.length-2]!=null){m[m.length-3]=n.call(m[m.length-3],m[m.length-2],m[m.length-1]);m.length-=2;}else{t=m[m.length-3];m[m.length-3]=t(m[m.length-1]);m.length-=2;}break;case 57:m[m.length-3][m[m.length-2]]=m[m.length-1];m[m.length-3]=m[m.length-1];m.length-=2;break;case 60:m.push(_$Vd);break;case 72:m.push(_$VZ);break;case 93:m.push(_$VE);break;case 95:m.push(m[m.length-1]);m[m.length-2]=m[m.length-2][_1wnqp[129+g[e++]]];break;}}});break;case 69:b.push(function(_$VT,_$Vd,_$VE){'use strict';var e=_3h9qp;var i=_2t8qp;var t=[];var q=1960;var n,y;l17:for(;;){switch(i[q++]){case 27:t.push(t[t.length-1]);t[t.length-2]=t[t.length-2][_1wnqp[130+i[q++]]];break;case 32:t[t.length-3][t[t.length-2]]=t[t.length-1];t[t.length-3]=t[t.length-1];t.length-=2;break;case 33:t.push(_$VE);break;case 35:t.push(_$Vd);break;case 41:if(t[t.length-2]!=null){t[t.length-3]=e.call(t[t.length-3],t[t.length-2],t[t.length-1]);t.length-=2;}else{n=t[t.length-3];t[t.length-3]=n(t[t.length-1]);t.length-=2;}break;case 54:t.push(_$VY);break;case 67:return;break;case 97:t.pop();break;}}});break;case 71:n=b.pop();b[b.length-1]+=n;break;case 78:if(b[b.length-1]!=null){b[b.length-2]=i.call(b[b.length-2],b[b.length-1]);}else{n=b[b.length-2];b[b.length-2]=n();}b.length--;break;case 79:b.push(_$VF);break;case 82:b.push(_$Vx);break;case 87:b.push(null);break;case 89:b.push(_$Xo);break;case 90:_$VK=b[b.length-1];break;case 96:b.push(_$Vw);break;case 98:b.push(undefined);break;}}});break;case 31:r.push(_$Xb);break;case 32:return;break;case 33:r[r.length-1]=!r[r.length-1];break;case 36:x=r.pop();for(a=0;a<e[d+1];++a)if(x===_1wnqp[107+e[d+a*2+2]]){d+=e[d+a*2+3];continue l13;}d+=e[d];break;case 40:r.push(_$VO++);break;case 42:r.push(_$Xe);break;case 43:_$VC=r[r.length-1];break;case 44:r.push(_$VV);break;case 45:r.push(new Array(e[d++]));break;case 47:_$VO=r[r.length-1];break;case 48:wP=r[r.length-1];break;case 55:r.push(_$Xa);break;case 56:r.push(_1wnqp[107+e[d++]]);break;case 61:r.push(undefined);break;case 62:r.push(_$X8);break;case 64:_$VN=r[r.length-1];break;case 65:r.push(null);break;case 67:if(r.pop())d+=e[d];else++d;break;case 68:r.push(a0dbbcbn);break;case 71:_$VH=r[r.length-1];break;case 73:x=r.pop();r[r.length-1]+=x;break;case 74:_$Vf=r[r.length-1];break;case 75:r.push(_$VH);break;case 76:_$VX=r[r.length-1];break;case 77:d+=e[d];break;case 78:r.push(_$VN);break;case 80:r.pop();break;case 81:r.push(_$X4);break;case 83:r[r.length-4]=u.call(r[r.length-4],r[r.length-3],r[r.length-2],r[r.length-1]);r.length-=3;break;case 86:if(r[r.length-1]!=null){r[r.length-2]=u.call(r[r.length-2],r[r.length-1]);}else{x=r[r.length-2];r[r.length-2]=x();}r.length--;break;case 89:_$VV=r[r.length-1];break;case 91:return r.pop();break;case 92:r.push(e[d++]);break;case 93:r.push(_$VX);break;}}});break;case 63:m.push(p[j++]);break;case 67:m[m.length-1]=m[m.length-1][_1wnqp[89+p[j++]]];break;case 69:return m.pop();break;case 73:m.push(_$Vk);break;case 74:m.push(_$X2);break;case 75:if(m[m.length-2]!=null){m[m.length-3]=d.call(m[m.length-3],m[m.length-2],m[m.length-1]);m.length-=2;}else{r=m[m.length-3];m[m.length-3]=r(m[m.length-1]);m.length-=2;}break;case 77:_$VM=m[m.length-1];break;case 79:m[m.length-2][_1wnqp[89+p[j++]]]=m[m.length-1];m[m.length-2]=m[m.length-1];m.length--;break;case 82:m.push(_$Vt);break;case 87:if(m[m.length-1]!=null){m[m.length-2]=d.call(m[m.length-2],m[m.length-1]);}else{r=m[m.length-2];m[m.length-2]=r();}m.length--;break;case 88:m.push(undefined);break;case 94:m.push(_$VM);break;case 98:m.push(function(){'use strict';var e=_3h9qp;var a=_2t8qp;var _$VI,_$VH,_$VO,_$VR,_$VC,_$VN,_$Vr,_$Vf;var u=[];var y=1970;var t,r;l18:for(;;){switch(a[y++]){case 1:u.push(_$VR);break;case 3:u.push(_$VO);break;case 4:u.push(_$X8);break;case 12:u.push(_$Vf);break;case 13:u.push(0);break;case 15:u.pop();break;case 18:return;break;case 21:_$VO=u[u.length-1];break;case 23:u.push(_$XW);break;case 24:t=a[y++];u.push(new RegExp(_1wnqp[131+t],_1wnqp[131+t+1]));break;case 25:u.push(_$Xe);break;case 26:u.push(_$h);break;case 28:u.push(_$Vr);break;case 30:if(u[u.length-1]!=null){u[u.length-2]=e.call(u[u.length-2],u[u.length-1]);}else{t=u[u.length-2];u[u.length-2]=t();}u.length--;break;case 31:u[u.length-4]=e.call(u[u.length-4],u[u.length-3],u[u.length-2],u[u.length-1]);u.length-=3;break;case 32:u.push(1);break;case 39:_$VH=u[u.length-1];break;case 44:t=u.pop();u[u.length-1]-=t;break;case 45:u.push(u[u.length-1]);u[u.length-2]=u[u.length-2][_1wnqp[131+a[y++]]];break;case 46:u.push(null);break;case 48:u[u.length-1]=u[u.length-1].length;break;case 53:_$VR=u[u.length-1];break;case 55:u.push(_$VN);break;case 57:u.push(new Array(a[y++]));break;case 58:u.push(_$VI);break;case 59:if(u.pop())y+=a[y];else++y;break;case 61:u.push(a[y++]);break;case 62:t=u.pop();u[u.length-1]+=t;break;case 63:_$Vf=u[u.length-1];break;case 64:u.push(_$VH);break;case 67:t=u.pop();u[u.length-1]=u[u.length-1]<t;break;case 70:_$VI=u[u.length-1];break;case 76:u[u.length-2]=u[u.length-2][u[u.length-1]];u.length--;break;case 77:u.push(_$VN++);break;case 81:u.push(Math);break;case 82:if(u[u.length-1]){++y;--u.length;}else y+=a[y];break;case 85:u.push(_1wnqp[131+a[y++]]);break;case 87:return u.pop();break;case 88:u[u.length-3][u[u.length-2]]=u[u.length-1];u.length-=2;break;case 89:_$VN=u[u.length-1];break;case 90:if(u[u.length-2]!=null){u[u.length-3]=e.call(u[u.length-3],u[u.length-2],u[u.length-1]);u.length-=2;}else{t=u[u.length-3];u[u.length-3]=t(u[u.length-1]);u.length-=2;}break;case 91:y+=a[y];break;case 94:_$Vr=u[u.length-1];break;case 97:_$VC=u[u.length-1];break;case 98:t=u.pop();u[u.length-1]*=t;break;case 99:u.push(_$VC);break;}}});break;}}}function _$Xs(_$Vk){return _$AO(Array.prototype).call(_$Vk,function(_$Vt){var _$VM;return _$h.OwiDU(_$pj,_$VM='00'+_$h.MaEfr(0x2156+0x3*0x869+-0x3992,_$Vt).toString(-0x1460+-0xf1b*0x1+0x238b)).call(_$VM,-(0xcab+-0x151*0xe+0x5c5));}).join('');}function _$Xa(_$Vk){var _$Vt=new Uint8Array(_$Vk.length);return Array.prototype.forEach.call(_$Vt,function(_$VM,_$VI,_$VH){_$VH[_$VI]=_$Vk.charCodeAt(_$VI);}),_$Xs(_$Vt);}function _$Xb(_$Vk){'use strict';var e=_3h9qp;var g=_2t8qp;var _$Vt,_$VM,_$VI,_$VH,_$VO;var a=[];var h=2199;var c,w;l19:for(;;){switch(g[h++]){case 1:if(a.pop())++h;else h+=g[h];break;case 3:a[a.length-5]=e.call(a[a.length-5],a[a.length-4],a[a.length-3],a[a.length-2],a[a.length-1]);a.length-=4;break;case 5:a.push(_$VM);break;case 6:a.push(_$Vt);break;case 9:_$VI=a[a.length-1];break;case 12:if(a[a.length-1]!=null){a[a.length-2]=e.call(a[a.length-2],a[a.length-1]);}else{c=a[a.length-2];a[a.length-2]=c();}a.length--;break;case 17:_$Vt=a[a.length-1];break;case 20:a.push(function(){'use strict';var e=_3h9qp;var u=_2t8qp;var _$VR;var p=[];var y=2339;var q,a;l20:for(;;){switch(u[y++]){case 3:p.push(ArrayBuffer);break;case 6:p.push(_$VR);break;case 22:p.pop();break;case 28:_$VR=p[p.length-1];break;case 33:p.push(p[p.length-1]);p[p.length-2]=p[p.length-2][_1wnqp[155+u[y++]]];break;case 35:p[p.length-5]=e.call(p[p.length-5],p[p.length-4],p[p.length-3],p[p.length-2],p[p.length-1]);p.length-=4;break;case 39:return;break;case 53:p[p.length-2]=p[p.length-2][p[p.length-1]];p.length--;break;case 55:q=p.pop();p[p.length-1]=p[p.length-1]===q;break;case 57:p[p.length-1]=!p[p.length-1];break;case 60:p.push(u[y++]);break;case 73:p.push(undefined);break;case 76:p.push(DataView);break;case 85:q=p.pop();p[p.length-1]+=q;break;case 87:return p.pop();break;case 98:p.push(Int16Array);break;case 99:p[p.length-3]=new p[p.length-3](p[p.length-1]);p.length-=2;break;}}});break;case 22:a.push(undefined);break;case 24:_$VM=a[a.length-1];break;case 29:a.pop();break;case 35:a.push(_$VH);break;case 38:return a.pop();break;case 40:c=a.pop();a[a.length-1]+=c;break;case 42:a.push(_$VI);break;case 44:return;break;case 48:a[a.length-4]=e.call(a[a.length-4],a[a.length-3],a[a.length-2],a[a.length-1]);a.length-=3;break;case 53:h+=g[h];break;case 56:a.push(g[h++]);break;case 57:_$VO=a[a.length-1];break;case 58:c=a.pop();a[a.length-1]/=c;break;case 65:a.push(ArrayBuffer);break;case 67:a.push(_$VO);break;case 68:a.push(Uint8Array);break;case 74:_$VH=a[a.length-1];break;case 77:c=a.pop();a[a.length-1]%=c;break;case 78:a.push(a[a.length-1]);a[a.length-2]=a[a.length-2][_1wnqp[152+g[h++]]];break;case 81:a.push(_$Vk);break;case 83:a.push(DataView);break;case 84:if(a[a.length-2]!=null){a[a.length-3]=e.call(a[a.length-3],a[a.length-2],a[a.length-1]);a.length-=2;}else{c=a[a.length-3];a[a.length-3]=c(a[a.length-1]);a.length-=2;}break;case 85:a.push(Math);break;case 87:a[a.length-3]=new a[a.length-3](a[a.length-1]);a.length-=2;break;}}}var _$Xz=_$R;_$qp({'global':!(0x7c*-0x40+0xead+0x7*0x255),'forced':_$Xz.globalThis!==_$Xz},{'globalThis':_$Xz});var _$Xv=_$R,_$V0={'exports':{}},_$V1=_$qp,_$V2=_$p,_$V3=_$z,_$V4=_$W.f,_$V5=_$K;_$h.LpseP(_$V1,{'target':Vv(0x142),'stat':!(-0x2*0xb31+-0xacb*-0x1+0xb97),'forced':!_$V5||_$V2(function(){_$V4(0x22bf+0x93c+-0x2bfa);}),'sham':!_$V5},{'getOwnPropertyDescriptor':function(_$Vk,_$Vt){return _$V4(_$V3(_$Vk),_$Vt);}});var _$V6=_$h1.Object,_$V7=_$V0.exports=function(_$Vk,_$Vt){return _$V6.getOwnPropertyDescriptor(_$Vk,_$Vt);};_$V6.getOwnPropertyDescriptor.sham&&(_$V7.sham=!(0x15b8+-0x1*0x1efd+0x945));var _$V8=_$V0.exports;function _$V9(){var wQ=Vv,_$Vk={'gGMXO':wQ(0x268),'tmVQR':function(_$VM,_$VI){return _$VM in _$VI;},'deeLC':wQ(0x16a),'mfGwm':function(_$VM,_$VI){return _$VM!==_$VI;},'eJXYv':function(_$VM,_$VI){return _$VM===_$VI;},'AZckf':function(_$VM,_$VI){return _$VM!=_$VI;},'ACtoI':function(_$VM,_$VI){return _$VM!==_$VI;},'zzzbN':function(_$VM,_$VI){return _$VM===_$VI;},'bGWmD':_$h.hYDHf,'WPNkD':function(_$VM,_$VI){return _$VM(_$VI);},'GfkCM':_$h.MoIKq,'befgJ':function(_$VM,_$VI){return _$h.phENT(_$VM,_$VI);},'wetMi':function(_$VM,_$VI){return _$VM/_$VI;}};try{var _$Vt=function(){'use strict';var c=_3h9qp;var p=_2t8qp;var wu,_$VM,_$VI,_$VH,_$VO,_$VR,_$VC,_$VN,_$Vr,_$Vf,_$VX,_$VV,_$VD,_$Vw,_$VY,_$VZ,_$VF,_$Vx,_$Ve,_$Vi;var a=[];var g=2409;var b,i;l21:for(;;){switch(p[g++]){case 1:a.push(_$Vw);break;case 2:a.push(_$X8);break;case 3:wu=a[a.length-1];break;case 4:_$VC=a[a.length-1];break;case 5:a.push(Window);break;case 6:a.push(Deno);break;case 7:g+=p[g];break;case 8:a.push(_$Ve);break;case 9:a.push(_$Xk);break;case 10:_$VO=a[a.length-1];break;case 11:_$VI=a[a.length-1];break;case 12:a.push(_$Vf);break;case 13:_$VR=a[a.length-1];break;case 14:a[a.length-2]=a[a.length-2][a[a.length-1]];a.length--;break;case 15:a.push(_$VV);break;case 17:a.push(_$Vr);break;case 18:a.push(_$Vk);break;case 20:a.push({});break;case 21:_$VM=a[a.length-1];break;case 22:a.push(process);break;case 23:a[a.length-4]=c.call(a[a.length-4],a[a.length-3],a[a.length-2],a[a.length-1]);a.length-=3;break;case 24:_$Ve=a[a.length-1];break;case 26:b=a.pop();a[a.length-1]=a[a.length-1]in b;break;case 27:if(a[a.length-1])g+=p[g];else{++g;--a.length;}break;case 28:a.push(null);break;case 29:_$Vi=a[a.length-1];break;case 30:_$VY=a[a.length-1];break;case 31:b=a.pop();a[a.length-1]=a[a.length-1]!==b;break;case 32:_$VZ=a[a.length-1];break;case 33:a.push(_1wnqp[156+p[g++]]);break;case 34:a.push(typeof Deno);break;case 35:return a.pop();break;case 36:a.push(_$VC);break;case 37:a.push(_$VO);break;case 38:_$Vf=a[a.length-1];break;case 39:a[a.length-1]=a[a.length-1][_1wnqp[156+p[g++]]];break;case 40:a[a.length-2][_1wnqp[156+p[g++]]]=a[a.length-1];a[a.length-2]=a[a.length-1];a.length--;break;case 41:b=a.pop();a[a.length-1]=a[a.length-1]===b;break;case 43:a.push(_$VD);break;case 44:a.push(_$VI);break;case 45:a.push(a[a.length-1]);a[a.length-2]=a[a.length-2][_1wnqp[156+p[g++]]];break;case 46:if(a[a.length-2]!=null){a[a.length-3]=c.call(a[a.length-3],a[a.length-2],a[a.length-1]);a.length-=2;}else{b=a[a.length-3];a[a.length-3]=b(a[a.length-1]);a.length-=2;}break;case 47:a.push(_$VY);break;case 48:a.push(_$XF);break;case 49:a.push(_$A7);break;case 50:b=a.pop();a[a.length-1]|=b;break;case 51:b=a.pop();a[a.length-1]=a[a.length-1]==b;break;case 52:return;break;case 53:a.push(Date);break;case 54:_$VD=a[a.length-1];break;case 55:a.push(wQ);break;case 56:a.push(Error);break;case 57:a.push(_$V8);break;case 58:a.push(wu);break;case 59:_$Vx=a[a.length-1];break;case 60:a.push(_$VF);break;case 61:a.push(_$VR);break;case 62:a.push(_$VH);break;case 63:a[a.length-1]=undefined;break;case 64:a[a.length-1]=a[a.length-1].length;break;case 65:a.push(_$Xv);break;case 66:a[a.length-2]=new a[a.length-2]();a.length-=1;break;case 67:if(a[a.length-1]!=null){a[a.length-2]=c.call(a[a.length-2],a[a.length-1]);}else{b=a[a.length-2];a[a.length-2]=b();}a.length--;break;case 68:a.push(_$VN);break;case 69:a.push(document);break;case 70:_$Vw=a[a.length-1];break;case 71:a.pop();break;case 72:if(a[a.length-1]){++g;--a.length;}else g+=p[g];break;case 73:a.push(undefined);break;case 74:_$VV=a[a.length-1];break;case 75:a.push(typeof process);break;case 76:a[a.length-1]=!a[a.length-1];break;case 77:_$VX=a[a.length-1];break;case 78:a.push(HTMLAllCollection);break;case 79:a.push(p[g++]);break;case 80:a[a.length-3]=new a[a.length-3](a[a.length-1]);a.length-=2;break;case 81:b=a.pop();a[a.length-1]+=b;break;case 82:_$VF=a[a.length-1];break;case 83:if(a.pop())++g;else g+=p[g];break;case 84:a.push(_$Vx);break;case 85:b=a.pop();a[a.length-1]=a[a.length-1]!=b;break;case 86:a.push(1);break;case 87:a.push(typeof Bun);break;case 88:a.push(_$VZ);break;case 89:_$VH=a[a.length-1];break;case 90:a.push(window);break;case 91:a.push(0);break;case 92:a[a.length-1]=-a[a.length-1];break;case 93:_$VN=a[a.length-1];break;case 94:a.push(_$VM);break;case 95:a.push(navigator);break;case 96:b=p[g++];a.push(new RegExp(_1wnqp[156+b],_1wnqp[156+b+1]));break;case 97:_$Vr=a[a.length-1];break;case 98:a.push(_$Vi);break;case 99:a.push(_$VX);break;}}}();return _$Vt.bu1='0.1.5',_$Vt.bu10=-0x932+0x11*-0x247+0x2ff2,_$Vt.bu11=-0x76b+-0x107f+0x2*0xbf6,_$Vt;}catch(_$VM){return{'bu6':-(0x19e1+0x15a6+0x365*-0xe),'bu8':0x0,'bu1':'0.1.5','bu10':0x9,'bu11':0x2};}}var _$Vh=['pp',Vv(0x19d),_$h.bgjZR,'v',Vv(0x22c),'pf',Vv(0x284),_$h.UamFJ,Vv(0x210),Vv(0x209)];function _$Vn(_$Vk,_$Vt,_$VM,_$VI){if(-0x26b+0x219f+-0x1f33===_$Vk&&_$CB(_$Vh).call(_$Vh,_$Vt)||-0x557*0x5+0x59b+0x1518===_$Vk)try{_$VI[_$Vt]=_$VM();}catch(_$VH){}}function _$Vq(_$Vk){var wJ=Vv,_$Vt={'cQqSK':wJ(0x1d6),'ScAkx':wJ(0x27f),'ubNEU':function(_$VI,_$VH){return _$VI(_$VH);},'MXGIK':function(_$VI,_$VH){return _$VI!==_$VH;},'QilRn':function(_$VI,_$VH){return _$VI(_$VH);},'aptYE':wJ(0x18c),'DIwxP':function(_$VI,_$VH){return _$VI&&_$VH;},'AJhPL':function(_$VI,_$VH){return _$VI+_$VH;},'RJktW':wJ(0x14c),'FUboG':wJ(0x162)},_$VM={};return _$h.zplll(_$Vn,_$Vk,'wc',function(_$VI){var wj=wJ,_$VH;return-(-0x61f*-0x3+-0x123a+0x22*-0x1)===_$h.DaVMZ(_$A7,_$VH=window.navigator.userAgent).call(_$VH,wj(0x245))||window.chrome?0x16*-0x176+-0x1*-0x120e+0x6*0x259:0xa31+0x1c4*0xe+-0x22e8;},_$VM),_$Vn(_$Vk,'wd',function(_$VI){return window.navigator.webdriver?0x1e3b+-0x74*-0x56+-0x11*0x412:0x14bd+0x1556+-0x2a13*0x1;},_$VM),_$h.clmQB(_$Vn,_$Vk,'l',function(_$VI){return window.navigator.language;},_$VM),_$h.MVnSx(_$Vn,_$Vk,'ls',function(_$VI){return window.navigator.languages.join(',');},_$VM),_$Vn(_$Vk,'ml',function(_$VI){return window.navigator.mimeTypes.length;},_$VM),_$Vn(_$Vk,'pl',function(_$VI){return window.navigator.plugins.length;},_$VM),_$Vn(_$Vk,'av',function(_$VI){return window.navigator.appVersion;},_$VM),_$Vn(_$Vk,'ua',function(_$VI){return window.navigator.userAgent;},_$VM),_$h.clmQB(_$Vn,_$Vk,wJ(0x19d),function(_$VI){var wS=wJ,_$VH=new RegExp(wS(0x1c9)),_$VO=window.navigator.userAgent.match(_$VH);return _$VO&&_$VO[-0x1493*-0x1+-0x1*0x2037+-0xba5*-0x1]?_$VO[0x1*0xf10+-0x67a*-0x5+-0x2f71]:'';},_$VM),_$Vn(_$Vk,'pp',function(_$VI){var wc=wJ,_$VH={},_$VO=_$X5(wc(0x1c0)),_$VR=_$X5(_$Vt.cQqSK),_$VC=_$X5(_$Vt.ScAkx);return _$VO&&(_$VH.p1=_$VO),_$VR&&(_$VH.p2=_$VR),_$VC&&(_$VH.p3=_$VC),_$VH;},_$VM),_$Vn(_$Vk,wJ(0x22c),function(_$VI){return _$V9();},_$VM),_$h.czXoW(_$Vn,_$Vk,wJ(0x230),function(_$VI){var wo=wJ,_$VH=_$Vt.ubNEU(_$X5,wo(0x1c0)),_$VO=_$X5(wo(0x1d6)),_$VR=_$X5(wo(0x27f));if(!_$VH&&!_$VO&&!_$VR){var _$VC=document.cookie;if(_$VC)return _$VC;}return'';},_$VM),_$h.MVnSx(_$Vn,_$Vk,wJ(0x17e),function(_$VI){var wm=wJ,_$VH=_$h.LnqDK(_$Xk,wm(0x1f8),{}).querySelector;return _$VH||'';},_$VM),_$h.zplll(_$Vn,_$Vk,'w',function(_$VI){return window.screen.width;},_$VM),_$Vn(_$Vk,'h',function(_$VI){return window.screen.height;},_$VM),_$Vn(_$Vk,'ow',function(_$VI){return window.outerWidth;},_$VM),_$Vn(_$Vk,'oh',function(_$VI){return window.outerHeight;},_$VM),_$Vn(_$Vk,wJ(0x148),function(_$VI){return location.href;},_$VM),_$h.MVnSx(_$Vn,_$Vk,'og',function(_$VI){return location.origin;},_$VM),_$Vn(_$Vk,'pf',function(_$VI){return window.navigator.platform;},_$VM),_$h.zplll(_$Vn,_$Vk,'pr',function(_$VI){return window.devicePixelRatio;},_$VM),_$Vn(_$Vk,'re',function(_$VI){return document.referrer;},_$VM),_$Vn(_$Vk,wJ(0x23e),function(_$VI){return _$Vt.ubNEU(_$X8,0x7*0x1b7+0x38a+0x1f*-0x80);},_$VM),_$Vn(_$Vk,wJ(0x169),function(_$VI){var ws=wJ,_$VH=new RegExp(ws(0x22a)),_$VO=document.referrer.match(_$VH);return _$VO&&_$VO[-0x169f+0x3df*-0x9+0x3976]?_$VO[0x1c40+-0x1*0x1169+-0x6f*0x19]:'';},_$VM),_$Vn(_$Vk,'v',function(_$VI){return _$XZ;},_$VM),_$Vn(_$Vk,wJ(0x1c5),function(_$VI){var _$VH=new Error(_$h.TVnCd).stack.toString(),_$VO=_$VH.split('\x0a'),_$VR=_$VO.length;return _$VR>0x167d+-0x2501*-0x1+0x61*-0x9d?_$VO[_$VR-(0x1*-0x26b+-0x981+-0x2b*-0x47)]:_$VH;},_$VM),_$h.czXoW(_$Vn,_$Vk,wJ(0x124),function(_$VI){return Window.toString()+'$'+Window.toString.toString.toString();},_$VM),_$Vn(_$Vk,wJ(0x209),function(_$VI){var wa=wJ,_$VH,_$VO,_$VR,_$VC,_$VN,_$Vr,_$Vf=-0x251e+0x73*-0x39+0x3eb9,_$VX=!!window.location&&!!window.location.host,_$VV=_$VX&&_$Vt.MXGIK(-(0x2083+-0xb*-0x1ec+-0x35a6),_$Vt.QilRn(_$A7,_$VH=window.location.host).call(_$VH,wa(0x161)))||_$VX&&_$Vt.MXGIK(-(0x380+0x1*0x70+-0x3ef),_$A7(_$VO=window.location.host).call(_$VO,_$Vt.aptYE)),_$VD=!!document.body&&!!document.body.innerHTML;_$Vt.DIwxP(_$VV,_$VD)&&-(-0x1*0x1665+0x1a4e+0x32*-0x14)!==_$A7(_$VR=document.body.innerHTML).call(_$VR,wa(0x199))&&(_$Vf|=-0x1a*0x10d+0x7*0x2a7+-0x26*-0x3b),_$VV&&_$VD&&-(0x2*0xc99+-0x1*-0x1599+-0x71*0x6a)!==_$A7(_$VC=document.body.innerHTML).call(_$VC,wa(0x160))&&(_$Vf|=0xa2*0x5+-0xf2b*-0x2+-0x217e),_$VD&&-(0x332*0x4+0x1ad6+-0x279d)!==_$A7(_$VN=document.body.innerHTML).call(_$VN,wa(0x15b))&&-(-0x1d31+0xe49+0xee9)!==_$A7(_$Vr=document.body.innerHTML).call(_$Vr,wa(0x205))&&(_$Vf|=0x1321+-0x25f8+0x12db);var _$Vw=document.documentElement;return _$Vw&&_$Vw.getAttribute(['di',wa(0x18a),wa(0x14b)].join(''))&&(_$Vf|=-0x2134+-0x257d+0x46d1),_$Vf;},_$VM),_$Vn(_$Vk,wJ(0x210),function(_$VI){var _$VH=_$Xl.get(_$Xf.CANVAS_FP),_$VO=_$X7(_$VH)?_$VH.v:'';return _$VO||(navigator.userAgent&&!/Mobi|Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)&&(_$VO=_$Xt()),_$VO&&_$Xl.set(_$Xf.CANVAS_FP,{'v':_$VO,'t':Date.now(),'e':0x1e13380})),_$VO;},_$VM),_$h.tTZTJ(_$Vn,_$Vk,_$h.aYdvl,function(_$VI){var _$VH=_$Xt();return _$VH&&_$Xl.set(_$Xf.CANVAS_FP,{'v':_$VH,'t':Date.now(),'e':0x1e13380}),_$VH;},_$VM),_$Vn(_$Vk,_$h.UamFJ,function(_$VI){var _$VH=_$Xl.get(_$Xf.WEBGL_FP);return _$h.nHYps(_$X7,_$VH)&&_$VH.v?_$VH.v:'';},_$VM),_$h.MVnSx(_$Vn,_$Vk,wJ(0x143),function(_$VI){var wb=wJ,_$VH={'ESknn':wb(0x1ca),'HITwp':function(_$VR,_$VC){return _$VR(_$VC);},'OnBCq':wb(0x1ea),'kRstB':function(_$VR,_$VC){return _$VR+_$VC;},'TaWZr':function(_$VR,_$VC){return _$VR+_$VC;},'pqpBd':function(_$VR,_$VC){return _$VR+_$VC;},'SFNkx':function(_$VR,_$VC){return _$Vt.AJhPL(_$VR,_$VC);},'YIiMi':_$Vt.RJktW,'FbhUK':function(_$VR,_$VC){return _$VR+_$VC;},'BwEgI':function(_$VR,_$VC){return _$VR+_$VC;},'qpWMe':wb(0x181),'ipIjo':function(_$VR,_$VC){return _$VR+_$VC;},'HqjlM':_$Vt.FUboG,'nURYG':wb(0x22d)},_$VO=function(){var wv=wb,_$VR={'ITtez':function(_$VZ,_$VF){return _$VZ+_$VF;}},_$VC,_$VN=function(_$VZ){return _$VC.clearColor(0xb55+-0x20f2+0x159d,0x3*-0xca9+-0xd*-0x53+-0x1*-0x21c4,-0x1566+-0xb74+-0x1*-0x20da,0x11*-0x1a5+-0x2244+0x1*0x3e3a),_$VC.enable(_$VC.DEPTH_TEST),_$VC.depthFunc(_$VC.LEQUAL),_$VC.clear(_$VC.COLOR_BUFFER_BIT|_$VC.DEPTH_BUFFER_BIT),_$VR.ITtez('['+_$VZ[0xa8e+0x11f4+-0xb2*0x29]+',\x20'+_$VZ[0x4*-0x731+-0x4dc+0x21a1],']');};if(!(_$VC=function(){var wz=a0dbbcbn,_$VZ=document.createElement(wz(0x210)),_$VF=null;try{_$VF=_$VZ.getContext(wz(0x263))||_$VZ.getContext(wz(0x1e6));}catch(_$Vx){}return _$VF||(_$VF=null),_$VF;}()))return null;var _$Vr=[],_$Vf=_$VC.createBuffer();_$VC.bindBuffer(_$VC.ARRAY_BUFFER,_$Vf);var _$VX=new Float32Array([-(-0x20ab+0x14cd*0x1+0xbde+0.2),-(0x1*-0x135f+-0x501+0x1860+0.9),0x1333*-0x2+0x327*0x5+0x5*0x487,0x1c5f+0x21*0x1+0x10*-0x1c8+0.4,-(0x985*-0x2+-0x1a3f*-0x1+-0x735+0.26),0x2bd*0x7+-0x1136*0x1+0x3*-0xa7,0x2045+-0xb0d+-0x8*0x2a7,-0x18a*0x1+-0x106*0x1f+-0x851*-0x4+0.732134444,0x67*0xa+0x108a*-0x1+-0x6*-0x216]);_$VC.bufferData(_$VC.ARRAY_BUFFER,_$VX,_$VC.STATIC_DRAW),_$Vf.itemSize=0xaa*0x2c+-0xfee+-0xd47,_$Vf.numItems=0x7*-0x9d+-0x4*-0x65+-0x2*-0x15d;var _$VV=_$VC.createProgram(),_$VD=_$VC.createShader(_$VC.VERTEX_SHADER);_$VC.shaderSource(_$VD,wv(0x195)),_$VC.compileShader(_$VD);var _$Vw=_$VC.createShader(_$VC.FRAGMENT_SHADER);_$VC.shaderSource(_$Vw,wv(0x27a)),_$VC.compileShader(_$Vw),_$VC.attachShader(_$VV,_$VD),_$VC.attachShader(_$VV,_$Vw),_$VC.linkProgram(_$VV),_$VC.useProgram(_$VV),_$VV.vertexPosAttrib=_$VC.getAttribLocation(_$VV,_$VH.ESknn),_$VV.offsetUniform=_$VC.getUniformLocation(_$VV,wv(0x137)),_$VC.enableVertexAttribArray(_$VV.vertexPosArray),_$VC.vertexAttribPointer(_$VV.vertexPosAttrib,_$Vf.itemSize,_$VC.FLOAT,!(-0x1b*-0x1f+-0xf5e+0xc1a),-0x1cba+-0x7e1*0x3+0x345d,0x9*-0x1f2+0xc01+-0x581*-0x1),_$VC.uniform2f(_$VV.offsetUniform,-0x9eb*0x1+0x2490+-0x1aa4,-0x18f1+0x20a4+-0x7b2),_$VC.drawArrays(_$VC.TRIANGLE_STRIP,-0x17c6*0x1+-0xd7f+-0x1d*-0x149,_$Vf.numItems),null!=_$VC.canvas&&_$Vr.push(_$VC.canvas.toDataURL()),_$Vr.push(wv(0x119)+_$VC.getSupportedExtensions().join(';')),_$Vr.push(wv(0x119)+_$VC.getSupportedExtensions().join(';')),_$Vr.push('w1'+_$VN(_$VC.getParameter(_$VC.ALIASED_LINE_WIDTH_RANGE))),_$Vr.push('w2'+_$VH.HITwp(_$VN,_$VC.getParameter(_$VC.ALIASED_POINT_SIZE_RANGE))),_$Vr.push('w3'+_$VC.getParameter(_$VC.ALPHA_BITS)),_$Vr.push('w4'+(_$VC.getContextAttributes().antialias?_$VH.OnBCq:'no')),_$Vr.push('w5'+_$VC.getParameter(_$VC.BLUE_BITS)),_$Vr.push(_$VH.kRstB('w6',_$VC.getParameter(_$VC.DEPTH_BITS))),_$Vr.push('w7'+_$VC.getParameter(_$VC.GREEN_BITS)),_$Vr.push('w8'+function(_$VZ){var Y0=wv,_$VF,_$Vx=_$VZ.getExtension(Y0(0x121))||_$VZ.getExtension(Y0(0x28c))||_$VZ.getExtension(Y0(0x28a));return _$Vx?(0x1ce+0x2243+0x2411*-0x1===(_$VF=_$VZ.getParameter(_$Vx.MAX_TEXTURE_MAX_ANISOTROPY_EXT))&&(_$VF=0x2399*-0x1+0x4ef*0x1+0x12e*0x1a),_$VF):null;}(_$VC)),_$Vr.push(_$VH.TaWZr('w9',_$VC.getParameter(_$VC.MAX_COMBINED_TEXTURE_IMAGE_UNITS))),_$Vr.push(wv(0x1f9)+_$VC.getParameter(_$VC.MAX_CUBE_MAP_TEXTURE_SIZE)),_$Vr.push(_$VH.pqpBd(wv(0x12e),_$VC.getParameter(_$VC.MAX_FRAGMENT_UNIFORM_VECTORS))),_$Vr.push(_$VH.SFNkx(wv(0x24a),_$VC.getParameter(_$VC.MAX_RENDERBUFFER_SIZE))),_$Vr.push(wv(0x17d)+_$VC.getParameter(_$VC.MAX_TEXTURE_IMAGE_UNITS)),_$Vr.push(_$VH.YIiMi+_$VC.getParameter(_$VC.MAX_TEXTURE_SIZE)),_$Vr.push(wv(0x1d3)+_$VC.getParameter(_$VC.MAX_VARYING_VECTORS)),_$Vr.push(wv(0x10c)+_$VC.getParameter(_$VC.MAX_VERTEX_ATTRIBS)),_$Vr.push(_$VH.FbhUK(wv(0x1b5),_$VC.getParameter(_$VC.MAX_VERTEX_TEXTURE_IMAGE_UNITS))),_$Vr.push(wv(0x28b)+_$VC.getParameter(_$VC.MAX_VERTEX_UNIFORM_VECTORS)),_$Vr.push(_$VH.FbhUK(wv(0x28d),_$VN(_$VC.getParameter(_$VC.MAX_VIEWPORT_DIMS)))),_$Vr.push(_$VH.BwEgI(_$VH.qpWMe,_$VC.getParameter(_$VC.RED_BITS))),_$Vr.push(wv(0x13a)+_$VC.getParameter(_$VC.RENDERER)),_$Vr.push(wv(0x22b)+_$VC.getParameter(_$VC.SHADING_LANGUAGE_VERSION)),_$Vr.push(_$VH.ipIjo(wv(0x18b),_$VC.getParameter(_$VC.STENCIL_BITS))),_$Vr.push(wv(0x150)+_$VC.getParameter(_$VC.VENDOR)),_$Vr.push(wv(0x256)+_$VC.getParameter(_$VC.VERSION));try{var _$VY=_$VC.getExtension(_$VH.HqjlM);_$VY&&(_$Vr.push(wv(0x168)+_$VC.getParameter(_$VY.UNMASKED_VENDOR_WEBGL)),_$Vr.push(_$VH.pqpBd(_$VH.nURYG,_$VC.getParameter(_$VY.UNMASKED_RENDERER_WEBGL))));}catch(_$VZ){}return _$X4.format(_$X2(wv(0x243).concat(_$Vr.join('\xa7'))));}();return _$VO&&_$Xl.set(_$Xf.WEBGL_FP,{'v':_$VO,'t':Date.now(),'e':0x1e13380}),_$VO;},_$VM),_$Vn(_$Vk,wJ(0x284),function(_$VI){return navigator.hardwareConcurrency;},_$VM),_$VM;}function _$Vp(){var Y1=Vv,_$Vk=arguments.length>0x1*0x66e+-0x5*-0x175+-0xdb7&&void(-0x1*0x1bef+-0x20d5+0x3cc4)!==arguments[-0x1114+-0x50d*0x1+0x1621]?arguments[-0x1dde+0x21fb+-0x41d]:{};this._token='',this._defaultToken='',this._isNormal=!(-0x1374+0x1*0x13+0x2*0x9b1),this._appId='',this._defaultAlgorithm={'local_key_1':_$X2,'local_key_2':_$XT,'local_key_3':_$XG},this._algos={'MD5':_$X2,'SHA256':_$XT,'HmacSHA256':_$XG,'HmacMD5':_$Xg},this._version=Y1(0x1e9),this._fingerprint='',_$Vk=_$XA({},_$Vp.settings,_$Vk),this._$icg(_$Vk);}return _$Vp.prototype._$icg=function(_$Vk){var Y2=Vv,_$Vt=_$Vk.appId,_$VM=_$Vk.debug,_$VI=_$Vk.onSign,_$VH=_$Vk.onRequestToken,_$VO=_$Vk.onRequestTokenRemotely;_$Xh(_$Vk.appId)&&_$Vk.appId||console.error(_$h.atYPs),this._appId=_$Vt||'',this._debug=Boolean(_$VM),this._onSign=_$Xn(_$VI)?_$VI:_$X9,this._onRequestToken=_$Xn(_$VH)?_$VH:_$X9,this._onRequestTokenRemotely=_$h.ADsTu(_$Xn,_$VO)?_$VO:_$X9,_$Xp(this._debug,Y2(0x236).concat(this._appId)),this._onRequestToken({'code':0x0,'message':Y2(0x1cd)}),this._onRequestTokenRemotely({'code':0xc8,'message':''});},_$Vp.prototype._$gdk=function(_$Vk,_$Vt,_$VM,_$VI){'use strict';var y=_3h9qp;var h=_2t8qp;var Y3,_$VH,_$VO,_$VR,_$VC,_$VN,_$Vr,_$Vf,_$VX,_$VV,_$VD,_$Vw,_$VY,_$VZ;var t=[];var m=3661;var e,p;l22:for(;;){switch(h[m++]){case 1:t.push(_$VC);break;case 2:t.push(_$VO);break;case 7:e=t.pop();t[t.length-1]%=e;break;case 9:t.push(_$VR);break;case 11:m+=h[m];break;case 16:_$VX=t[t.length-1];break;case 17:e=h[m++];t.push(new RegExp(_1wnqp[217+e],_1wnqp[217+e+1]));break;case 18:e=t.pop();t[t.length-1]+=e;break;case 19:t.push(_$VH);break;case 21:_$VH=t[t.length-1];break;case 22:if(t[t.length-2]!=null){t[t.length-3]=y.call(t[t.length-3],t[t.length-2],t[t.length-1]);t.length-=2;}else{e=t[t.length-3];t[t.length-3]=e(t[t.length-1]);t.length-=2;}break;case 25:t.push(_$h);break;case 26:t.push(new RegExp(_1wnqp[217+h[m++]]));break;case 27:t.push(Vv);break;case 30:t.push(_$Vf);break;case 31:Y3=t[t.length-1];break;case 33:t[t.length-2]=t[t.length-2][t[t.length-1]];t.length--;break;case 35:t.push(_$pj);break;case 36:t.push(_$VD);break;case 37:if(t.pop())++m;else m+=h[m];break;case 38:_$Vw=t[t.length-1];break;case 40:t.push(this[_1wnqp[217+h[m++]]]);break;case 42:t.push(_$VX);break;case 44:t.push(_$VV);break;case 45:t[t.length-5]=y.call(t[t.length-5],t[t.length-4],t[t.length-3],t[t.length-2],t[t.length-1]);t.length-=4;break;case 46:t[t.length-4]=y.call(t[t.length-4],t[t.length-3],t[t.length-2],t[t.length-1]);t.length-=3;break;case 49:_$VC=t[t.length-1];break;case 51:t.push(Y3);break;case 52:t.push(h[m++]);break;case 53:t.push(null);break;case 54:_$VR=t[t.length-1];break;case 55:t.push(_1wnqp[217+h[m++]]);break;case 56:_$Vr=t[t.length-1];break;case 57:t.pop();break;case 58:t.push(_$VI);break;case 59:_$VY=t[t.length-1];break;case 60:t.push(_$Vt);break;case 61:t.push(function(_$VF){'use strict';var n=_3h9qp;var j=_2t8qp;var _$Vx,_$Ve,_$Vi,_$VW;var u=[];var d=3902;var i,o;l23:for(;;){switch(j[d++]){case 3:_$Ve=u[u.length-1];break;case 6:i=u.pop();u[u.length-1]=u[u.length-1]>=i;break;case 8:if(u.pop())++d;else d+=j[d];break;case 9:u.push(u[u.length-1]);u[u.length-2]=u[u.length-2][_1wnqp[241+j[d++]]];break;case 10:u.push(_$Ve);break;case 12:u.push(_$VN);break;case 15:u.push(_$Vi);break;case 17:u.push(_$Vf);break;case 19:if(u[u.length-2]!=null){u[u.length-3]=n.call(u[u.length-3],u[u.length-2],u[u.length-1]);u.length-=2;}else{i=u[u.length-3];u[u.length-3]=i(u[u.length-1]);u.length-=2;}break;case 24:u.push(_$VW);break;case 25:_$VW=u[u.length-1];break;case 28:u.push(_$VX);break;case 31:u.push(_1wnqp[241+j[d++]]);break;case 32:u[u.length-4]=n.call(u[u.length-4],u[u.length-3],u[u.length-2],u[u.length-1]);u.length-=3;break;case 35:u.push(isNaN);break;case 36:u.push(_$VY);break;case 37:_$VZ=u[u.length-1];break;case 38:u[u.length-5]=n.call(u[u.length-5],u[u.length-4],u[u.length-3],u[u.length-2],u[u.length-1]);u.length-=4;break;case 39:u.push(0);break;case 41:u.pop();break;case 43:u.push(_$pV);break;case 46:i=u.pop();u[u.length-1]+=i;break;case 49:u.push(_$Vk);break;case 56:u[u.length-3][u[u.length-2]]=u[u.length-1];u.length-=2;break;case 59:u.push(new Array(j[d++]));break;case 62:i=u.pop();for(o=0;o<j[d+1];++o)if(i===_1wnqp[241+j[d+o*2+2]]){d+=j[d+o*2+3];continue l23;}d+=j[d];break;case 63:_$Vi=u[u.length-1];break;case 68:u.push(_$VF);break;case 70:u.push(_$Vx);break;case 71:u.push(_$h);break;case 73:u[u.length-2]=u[u.length-2][u[u.length-1]];u.length--;break;case 74:u.push(1);break;case 79:u.push(j[d++]);break;case 80:_$Vx=u[u.length-1];break;case 81:u.push(_$VZ);break;case 86:return;break;case 87:_$Vf=u[u.length-1];break;case 88:u.push(_$A7);break;case 93:u[u.length-1]=u[u.length-1][_1wnqp[241+j[d++]]];break;case 94:if(u[u.length-1]){++d;--u.length;}else d+=j[d];break;case 98:d+=j[d];break;case 99:u.push(null);break;}}});break;case 62:t.push(_$Xe);break;case 63:_$VD=t[t.length-1];break;case 65:_$VO=t[t.length-1];break;case 68:_$VN=t[t.length-1];break;case 69:t.push(_$Vk);break;case 71:return;break;case 73:t.push(t[t.length-1]);t[t.length-2]=t[t.length-2][_1wnqp[217+h[m++]]];break;case 74:t[t.length-1]=t[t.length-1][_1wnqp[217+h[m++]]];break;case 75:t.push(_$Xp);break;case 76:t.push(_$XW);break;case 79:t.push(_$Vw);break;case 80:t.push(_$Vr);break;case 81:return t.pop();break;case 82:_$VV=t[t.length-1];break;case 85:_$VZ=t[t.length-1];break;case 87:t[t.length-1]=t[t.length-1].length;break;case 90:t.push(_$VM);break;case 91:t.push(this);break;case 94:_$Vf=t[t.length-1];break;case 95:t.push(_$pV);break;}}},_$Vp.prototype._$atm=function(_$Vk,_$Vt,_$VM){var _$VI=this._defaultAlgorithm[_$Vk];return _$h.cAqGN===_$Vk?_$VI(_$Vt,_$VM).toString(_$X4):_$VI(_$Vt).toString(_$X4);},_$Vp.prototype._$pam=function(_$Vk,_$Vt){'use strict';var o=_3h9qp;var i=_2t8qp;var Y4,_$VM;var s=[];var t=4027;var a,y;l24:for(;;){switch(i[t++]){case 10:_$VM=s[s.length-1];break;case 11:Y4=s[s.length-1];break;case 12:if(s[s.length-1])t+=i[t];else{++t;--s.length;}break;case 20:s.push(i[t++]);break;case 27:return;break;case 33:s[s.length-1]=!s[s.length-1];break;case 39:s.push(null);break;case 42:s.push(_$VM);break;case 46:s.push(this[_1wnqp[248+i[t++]]]);break;case 52:if(s[s.length-1]!=null){s[s.length-2]=o.call(s[s.length-2],s[s.length-1]);}else{a=s[s.length-2];s[s.length-2]=a();}s.length--;break;case 61:s.push(_$Vk);break;case 63:s.push(s[s.length-1]);s[s.length-2]=s[s.length-2][_1wnqp[248+i[t++]]];break;case 71:s.push(Vv);break;case 73:s.push(undefined);break;case 78:s.push(Function);break;case 80:return s.pop();break;case 81:s[s.length-3]=new s[s.length-3](s[s.length-1]);s.length-=2;break;case 85:s.push(this);break;case 87:s.push(_$Vt);break;case 88:s.push(Y4);break;case 92:if(s[s.length-2]!=null){s[s.length-3]=o.call(s[s.length-3],s[s.length-2],s[s.length-1]);s.length-=2;}else{a=s[s.length-3];s[s.length-3]=a(s[s.length-1]);s.length-=2;}break;case 95:s[s.length-2][_1wnqp[248+i[t++]]]=s[s.length-1];s[s.length-2]=s[s.length-1];s.length--;break;case 96:s.pop();break;case 97:s.push(_1wnqp[248+i[t++]]);break;case 99:if(s[s.length-1]){++t;--s.length;}else t+=i[t];break;}}},_$Vp.prototype._$gsp=function(_$Vk,_$Vt,_$VM,_$VI,_$VH){'use strict';var q=_3h9qp;var n=_2t8qp;var x=[];var m=4082;var l,u;l25:for(;;){switch(n[m++]){case 5:x.push(_$Vk);break;case 12:x.push(0);break;case 15:m+=n[m];break;case 25:x.push(this[_1wnqp[253+n[m++]]]);break;case 28:x.push(x[x.length-1]);x[x.length-2]=x[x.length-2][_1wnqp[253+n[m++]]];break;case 32:x.push(_$Vt);break;case 37:return x.pop();break;case 45:x.push(n[m++]);break;case 46:if(x[x.length-2]!=null){x[x.length-3]=q.call(x[x.length-3],x[x.length-2],x[x.length-1]);x.length-=2;}else{l=x[x.length-3];x[x.length-3]=l(x[x.length-1]);x.length-=2;}break;case 51:x.push(_1wnqp[253+n[m++]]);break;case 56:x.push(_$VM);break;case 58:if(x.pop())++m;else m+=n[m];break;case 62:return;break;case 64:x.push(new Array(n[m++]));break;case 72:x[x.length-3][x[x.length-2]]=x[x.length-1];x.length-=2;break;case 75:x.push(1);break;case 84:x.push(_$VI);break;case 96:x.push(_$VH);break;}}},_$Vp.prototype._$gs=function(_$Vk,_$Vt){'use strict';var y=_3h9qp;var m=_2t8qp;var Y5,_$VM,_$VI,_$VH;var d=[];var h=4182;var a,s;l26:for(;;){switch(m[h++]){case 1:d[d.length-4]=y.call(d[d.length-4],d[d.length-3],d[d.length-2],d[d.length-1]);d.length-=3;break;case 5:a=d.pop();d[d.length-1]+=a;break;case 7:d.push(_$VI);break;case 10:_$VH=d[d.length-1];break;case 13:d.push(_$VM);break;case 15:d.push(m[h++]);break;case 16:d.push(_$Xp);break;case 20:d.push(_$pV);break;case 21:d.push(_$X2);break;case 24:d.push(_$Vk);break;case 29:d.push(_$X4);break;case 31:_$VM=d[d.length-1];break;case 39:d.push(Vv);break;case 48:d.push(_$VH);break;case 55:return;break;case 62:d.push(d[d.length-1]);d[d.length-2]=d[d.length-2][_1wnqp[263+m[h++]]];break;case 66:d.push(_$Vt);break;case 67:return d.pop();break;case 71:d.push(function(_$VO){'use strict';var q=_3h9qp;var k=_2t8qp;var d=[];var c=4249;var o,x;l27:for(;;){switch(k[c++]){case 4:d.push(_$VO);break;case 7:return d.pop();break;case 29:d.push(_1wnqp[269+k[c++]]);break;case 36:d[d.length-1]=d[d.length-1][_1wnqp[269+k[c++]]];break;case 59:return;break;case 61:o=d.pop();d[d.length-1]+=o;break;}}});break;case 75:if(d[d.length-2]!=null){d[d.length-3]=y.call(d[d.length-3],d[d.length-2],d[d.length-1]);d.length-=2;}else{a=d[d.length-3];d[d.length-3]=a(d[d.length-1]);d.length-=2;}break;case 77:d.push(this[_1wnqp[263+m[h++]]]);break;case 79:d.push(Y5);break;case 80:d.pop();break;case 84:d.push(_1wnqp[263+m[h++]]);break;case 88:_$VI=d[d.length-1];break;case 92:d.push(null);break;case 94:d.push(_$AO);break;case 99:Y5=d[d.length-1];break;}}},_$Vp.prototype._$gsd=function(_$Vk,_$Vt){'use strict';var d=_3h9qp;var g=_2t8qp;var Y6,_$VM,_$VI,_$VH,_$VO,_$VR,_$VC;var j=[];var y=4261;var e,b;l28:for(;;){switch(g[y++]){case 1:j.push(_$Vk);break;case 2:_$VO=j[j.length-1];break;case 3:j.push(_$VI++);break;case 4:j.push(_$AO);break;case 8:_$VH=j[j.length-1];break;case 13:j.push(1);break;case 16:j.push(function(_$VN){'use strict';var o=_3h9qp;var y=_2t8qp;var Y7;var e=[];var u=4461;var b,m;l29:for(;;){switch(y[u++]){case 1:e.pop();break;case 9:return;break;case 11:e.push(Y6);break;case 13:e.push(y[u++]);break;case 25:return e.pop();break;case 28:e.push(null);break;case 32:if(e[e.length-1])u+=y[u];else{++u;--e.length;}break;case 51:e.push(Y7);break;case 59:b=e.pop();e[e.length-1]=e[e.length-1]===b;break;case 65:e.push(_$VN);break;case 73:Y7=e[e.length-1];break;case 75:if(e[e.length-2]!=null){e[e.length-3]=o.call(e[e.length-3],e[e.length-2],e[e.length-1]);e.length-=2;}else{b=e[e.length-3];e[e.length-3]=b(e[e.length-1]);e.length-=2;}break;case 91:e[e.length-1]=e[e.length-1][_1wnqp[292+y[u++]]];break;}}});break;case 19:j.push(_$VH);break;case 20:j.push(_$X4);break;case 22:j[j.length-4]=d.call(j[j.length-4],j[j.length-3],j[j.length-2],j[j.length-1]);j.length-=3;break;case 23:j.push(_$X2);break;case 24:return j.pop();break;case 25:j.push(j[j.length-1]);j[j.length-2]=j[j.length-2][_1wnqp[272+g[y++]]];break;case 27:j[j.length-1]=!j[j.length-1];break;case 30:_$VC=j[j.length-1];break;case 31:j.push(new Array(g[y++]));break;case 33:_$VM=j[j.length-1];break;case 35:j.push(_$pV);break;case 38:j.push(0);break;case 39:Y6=j[j.length-1];break;case 40:j.push(function(_$VN){'use strict';var n=_3h9qp;var o=_2t8qp;var h=[];var t=4486;var d,m;l30:for(;;){switch(o[t++]){case 10:h.push(_1wnqp[293+o[t++]]);break;case 38:h[h.length-1]=h[h.length-1][_1wnqp[293+o[t++]]];break;case 40:return h.pop();break;case 47:h.push(_$VN);break;case 90:return;break;case 93:d=h.pop();h[h.length-1]+=d;break;}}});break;case 44:j.push(Y6);break;case 45:j.push(_$h);break;case 46:j.push(null);break;case 48:j[j.length-5]=d.call(j[j.length-5],j[j.length-4],j[j.length-3],j[j.length-2],j[j.length-1]);j.length-=4;break;case 49:j.push(_$VM);break;case 52:j.push(_$Xp);break;case 53:if(j[j.length-2]!=null){j[j.length-3]=d.call(j[j.length-3],j[j.length-2],j[j.length-1]);j.length-=2;}else{e=j[j.length-3];j[j.length-3]=e(j[j.length-1]);j.length-=2;}break;case 54:_$VR=j[j.length-1];break;case 55:j[j.length-2]=j[j.length-2][j[j.length-1]];j.length--;break;case 59:j.push(this[_1wnqp[272+g[y++]]]);break;case 68:e=j.pop();j[j.length-1]+=e;break;case 70:e=j.pop();for(b=0;b<g[y+1];++b)if(e===_1wnqp[272+g[y+b*2+2]]){y+=g[y+b*2+3];continue l28;}y+=g[y];break;case 71:j.pop();break;case 72:j.push(Vv);break;case 74:y+=g[y];break;case 75:return;break;case 76:if(j[j.length-1])y+=g[y];else{++y;--j.length;}break;case 77:j.push(_$AX);break;case 80:j.push(_1wnqp[272+g[y++]]);break;case 83:_$VI=j[j.length-1];break;case 84:j[j.length-3][j[j.length-2]]=j[j.length-1];j.length-=2;break;case 87:if(j.pop())y+=g[y];else++y;break;case 89:j.push(_$VR);break;case 90:j.push(_$VC);break;case 93:j.push(g[y++]);break;case 94:j.push(_$Vt);break;case 95:j.push(_$VO);break;case 96:j[j.length-1]=j[j.length-1][_1wnqp[272+g[y++]]];break;}}},_$Vp.prototype._$rds=function(){var Y8=Vv,_$Vk,_$Vt,_$VM=this;_$Xp(this._debug,Y8(0x223)),this._fingerprint=_$XS.get(this._version,this._appId),_$Xp(this._debug,Y8(0x136).concat(this._fingerprint));var _$VI=_$XQ.get(this._fingerprint,this._appId),_$VH=(_$h.qHGqM(null,_$VI)?void(-0x25fa+-0xe8d+0x1*0x3487):_$VI.tk)||'',_$VO=(null===_$VI?void(-0x125*-0x2+-0x27*0x75+-0x61*-0x29):_$VI.algo)||'',_$VR=this._$pam(_$VH,_$VO);_$Xp(this._debug,_$pV(_$Vk=_$pV(_$Vt=_$h.wWCTA.concat(_$VR,Y8(0x1b9))).call(_$Vt,_$VH,_$h.HhbVG)).call(_$Vk,_$VO)),_$VR?_$Xp(this._debug,Y8(0x1a5)):(_$h.kdcaK(setTimeout,function(){var _$VC={'JYINN':function(_$VN,_$Vr,_$Vf){return _$VN(_$Vr,_$Vf);}};_$VM._$rgo().catch(function(_$VN){var Y9=a0dbbcbn;_$VC.JYINN(_$Xp,_$VM._debug,Y9(0x10e).concat(_$VN));});},0x134d+0x36*0x83+-0x59*0x87),_$Xp(this._debug,Y8(0x224)));},_$Vp.prototype._$rgo=function(){var Yh=Vv,_$Vk={'mtFTA':function(_$VR){return _$VR();},'aCIan':function(_$VR,_$VC,_$VN){return _$h.iXjCt(_$VR,_$VC,_$VN);}},_$Vt,_$VM,_$VI=this,_$VH=_$Xk(Yh(0x275),{}),_$VO=_$pV(_$Vt=Yh(0x26e).concat(this._fingerprint,'_')).call(_$Vt,this._appId);return _$Xp(this._debug,_$h.QHfez(_$pV,_$VM=_$h.IUoNq.concat(_$VO,Yh(0x13d))).call(_$VM,!!_$VH[_$VO])),_$VH[_$VO]||(_$VH[_$VO]=new _$OT(function(_$VR,_$VC){return _$VI._$ram().then(function(_$VN){_$Vk.mtFTA(_$VR);}).catch(function(_$VN){var Yn=a0dbbcbn,_$Vr;_$Vk.aCIan(_$Xp,_$VI._debug,_$pV(_$Vr=Yn(0x14d).concat(_$VO,Yn(0x23b))).call(_$Vr,_$VN,Yn(0x197))),delete _$VH[_$VO],_$VC();});})),_$VH[_$VO];},_$Vp.prototype._$ram=function(){var Yq=Vv,_$Vk={'Aeeuy':function(_$VO,_$VR){return _$VO===_$VR;},'rkglK':function(_$VO,_$VR){return _$h.ShifC(_$VO,_$VR);},'NpqcW':function(_$VO,_$VR){return _$VO(_$VR);}},_$Vt=this;_$Xp(this._debug,_$h.YLRWT);var _$VM=_$Vq(0x621+-0x1b67+0x1546*0x1);_$VM.ai=this._appId,_$VM.fp=this._fingerprint,_$VM.wk=0x144b*0x1+0x3fe*0x2+-0x3*0x96d===_$VM.extend.wk?-(0x1d79+-0x12ce+-0x111*0xa):_$VM.extend.wk;var _$VI=_$RB(_$VM,null,-0x8b*-0x1e+-0xe5b+-0x1d*0x11);_$Xp(this._debug,Yq(0x253).concat(_$VI));var _$VH=_$Xe.encode(_$XW.parse(_$VI));return function(_$VO,_$VR){var _$VC={'EBKXP':function(_$Vw,_$VY){return _$Vw(_$VY);},'LOUxJ':function(_$Vw,_$VY){return _$Vw&&_$VY;}},_$VN=_$VO.fingerprint,_$Vr=_$VO.appId,_$Vf=_$VO.version,_$VX=_$VO.env,_$VV=_$VO.debug,_$VD=_$VO.tk;return new _$OT(function(_$Vw,_$VY){var Yp=a0dbbcbn;_$Xr.post({'url':Yp(0x220),'dataType':Yp(0x239),'data':_$RB({'version':_$Vf,'fp':_$VN,'appId':_$Vr,'timestamp':Date.now(),'platform':Yp(0x214),'expandParams':_$VX,'fv':_$XZ,'localTk':_$VD}),'contentType':Yp(0x206),'noCredentials':!(-0x1*-0xead+-0x3be+-0xaef),'timeout':0x2,'debug':_$VV}).then(function(_$VZ){var YA=Yp,_$VF=_$VZ.body;if(_$VR&&_$VC.EBKXP(_$VR,{'code':_$VF.status,'message':''}),-0x1*-0x469+-0x29*-0x23+0x18a*-0x6===_$VF.status&&_$VF.data&&_$VF.data.result){var _$Vx=_$VF.data.result,_$Ve=_$Vx.algo,_$Vi=_$Vx.tk,_$VW=_$Vx.fp,_$VK=_$VF.data.ts;_$VC.LOUxJ(_$Ve,_$Vi)&&_$VW?_$Vw({'algo':_$Ve,'token':_$Vi,'fp':_$VW,'ts':_$VK}):_$VC.EBKXP(_$VY,YA(0x23c));}else _$VC.EBKXP(_$VY,YA(0x15d));}).catch(function(_$VZ){var YL=Yp,_$VF,_$Vx=_$VZ.code,_$Ve=_$VZ.message;_$VR&&_$VR({'code':_$Vx,'message':_$Ve}),_$VY(_$pV(_$VF=YL(0x21e).concat(_$Vx,',\x20')).call(_$VF,_$Ve));});});}({'fingerprint':this._fingerprint,'appId':this._appId,'version':this._version,'env':_$VH,'debug':this._debug,'tk':_$Xm(this._fingerprint)}).then(function(_$VO){var Yk=Yq,_$VR,_$VC,_$VN,_$Vr,_$Vf=_$VO.algo,_$VX=_$VO.token,_$VV=_$VO.fp,_$VD=_$VO.ts,_$Vw=_$Vk.Aeeuy(_$VV,_$Vt._fingerprint),_$VY=_$Vw?_$XS.get(_$Vt._version,_$Vt._appId,0x33*0x45+-0xed3+0x115):'',_$VZ=_$VY&&_$VV===_$VY;_$Vk.rkglK(_$VZ,_$VD)&&Math.abs(Date.now()-_$VD)<=0x1bf61*-0x2+-0x230b4*-0x1+0x5e1ee&&_$XQ.save(_$Vt._fingerprint,_$Vt._appId,{'tk':_$VX,'algo':_$Vf}),_$Xp(_$Vt._debug,_$pV(_$VR=_$Vk.NpqcW(_$pV,_$VC=_$pV(_$VN=_$pV(_$Vr=Yk(0x1ec).concat(_$Vw,Yk(0x1eb))).call(_$Vr,_$VZ,Yk(0x110))).call(_$VN,_$VX,Yk(0x1cc))).call(_$VC,_$VY,Yk(0x1e7))).call(_$VR,_$VV));});},_$Vp.prototype._$cps=function(_$Vk){var Yt=Vv,_$Vt,_$VM,_$VI,_$VH,_$VO,_$VR=null;return this._appId||(_$VR={'code':_$XV,'message':'appId is required'}),_$X7(_$Vk)||(_$VR={'code':_$XX,'message':_$h.xUTuy}),_$X7(_$VO=_$Vk)&&!_$h.vovjJ(_$CN,_$VO).length&&(_$VR={'code':_$XX,'message':_$h.ABQeo}),function(_$VC){for(var _$VN=_$CN(_$VC),_$Vr=0x2672*0x1+0x24*0x16+-0x298a;_$Vr<_$VN.length;_$Vr++){var _$Vf=_$VN[_$Vr];if(_$A7(_$Xq).call(_$Xq,_$Vf)>=0x1*0x1e6d+-0x4*0x682+-0xf*0x4b)return!(0x79*-0x1e+0x1*-0xc21+0x1a4f);}return!(0x3*0x17+0x31*0x25+-0x13*0x63);}(_$Vk)&&(_$VR={'code':_$XX,'message':Yt(0x138)}),_$VR?(this._onSign(_$VR),null):-0x123*0x1+-0x18fe+0x1a21*0x1===(_$VH=_$AX(_$Vt=_$AO(_$VM=_$CO(_$VI=_$CN(_$Vk)).call(_$VI)).call(_$VM,function(_$VC){return{'key':_$VC,'value':_$Vk[_$VC]};})).call(_$Vt,function(_$VC){var YM=Yt;return _$VN=_$VC.value,YM(0x1de)==(_$Vr=_$h.Smrql(_$rj,_$VN))&&!isNaN(_$VN)||YM(0x286)==_$Vr||YM(0x12d)==_$Vr;var _$VN,_$Vr;})).length?(this._onSign({'code':_$XX,'message':Yt(0x273)}),null):_$VH;},_$Vp.prototype._$ms=function(_$Vk,_$Vt){'use strict';var t=_3h9qp;var l=_2t8qp;var YI,_$VM,_$VI,_$VH,_$VO,_$VR,_$VC,_$VN,_$Vr,_$Vf;var c=[];var e=4498;var w,q;l31:for(;;){switch(l[e++]){case 2:return;break;case 3:c.pop();break;case 5:c[c.length-5]=t.call(c[c.length-5],c[c.length-4],c[c.length-3],c[c.length-2],c[c.length-1]);c.length-=4;break;case 6:c.push(_$VN);break;case 7:_$VN=c[c.length-1];break;case 8:_$VH=c[c.length-1];break;case 9:_$VC=c[c.length-1];break;case 11:c.push(_$VH);break;case 12:c.push(_$X6);break;case 16:c.push(_$VO);break;case 17:if(c[c.length-2]!=null){c[c.length-3]=t.call(c[c.length-3],c[c.length-2],c[c.length-1]);c.length-=2;}else{w=c[c.length-3];c[c.length-3]=w(c[c.length-1]);c.length-=2;}break;case 19:c.push(Date);break;case 21:if(c[c.length-1]!=null){c[c.length-2]=t.call(c[c.length-2],c[c.length-1]);}else{w=c[c.length-2];c[c.length-2]=w();}c.length--;break;case 22:if(c.pop())++e;else e+=l[e];break;case 23:c[c.length-1]=c[c.length-1][_1wnqp[296+l[e++]]];break;case 24:c.push(_$Xw);break;case 26:c[c.length-7]=t.call(c[c.length-7],c[c.length-6],c[c.length-5],c[c.length-4],c[c.length-3],c[c.length-2],c[c.length-1]);c.length-=6;break;case 27:c[c.length-2][_1wnqp[296+l[e++]]]=c[c.length-1];c.length--;break;case 28:_$VR=c[c.length-1];break;case 35:c.push(c[c.length-1]);c[c.length-2]=c[c.length-2][_1wnqp[296+l[e++]]];break;case 36:c.push(_$XD);break;case 38:c.push(1);break;case 39:w=c.pop();c[c.length-1]+=w;break;case 40:c.push(_$RB);break;case 41:c[c.length-2][_1wnqp[296+l[e++]]]=c[c.length-1];c[c.length-2]=c[c.length-1];c.length--;break;case 42:c.push(this);break;case 47:_$VO=c[c.length-1];break;case 49:c.push(_$Vf);break;case 50:YI=c[c.length-1];break;case 52:c.push(_1wnqp[296+l[e++]]);break;case 53:c.push(_$VC);break;case 54:_$Vr=c[c.length-1];break;case 56:return c.pop();break;case 59:e+=l[e];break;case 60:c.push(0);break;case 61:c.push(_$AO);break;case 62:if(c[c.length-1])e+=l[e];else{++e;--c.length;}break;case 63:c.push(Vv);break;case 64:c.push(_$Vr);break;case 65:_$VM=c[c.length-1];break;case 67:c[c.length-4]=t.call(c[c.length-4],c[c.length-3],c[c.length-2],c[c.length-1]);c.length-=3;break;case 68:c.push(_$h);break;case 69:c.push(_$Vt);break;case 70:c.push(_$Xp);break;case 74:c.push(_$Vk);break;case 77:c.push({});break;case 78:c.push(_$VR);break;case 80:c.push(_$VM);break;case 81:c.push(this[_1wnqp[296+l[e++]]]);break;case 84:_$Vf=c[c.length-1];break;case 85:c.push(l[e++]);break;case 86:c.push(null);break;case 87:c.push(YI);break;case 88:c.push(_$Xm);break;case 91:c[c.length-6]=t.call(c[c.length-6],c[c.length-5],c[c.length-4],c[c.length-3],c[c.length-2],c[c.length-1]);c.length-=5;break;case 95:_$VI=c[c.length-1];break;case 96:c.push(function(_$VX){'use strict';var y=_3h9qp;var a=_2t8qp;var u=[];var h=4741;var t,m;l32:for(;;){switch(a[h++]){case 38:u[u.length-1]=u[u.length-1][_1wnqp[327+a[h++]]];break;case 60:u.push(_$VX);break;case 69:return u.pop();break;case 92:return;break;}}});break;case 97:c.push(_$VI);break;}}},_$Vp.prototype._$clt=function(){'use strict';var g=_3h9qp;var c=_2t8qp;var YH,_$Vk,_$Vt,_$VM,_$VI;var a=[];var j=4746;var s,b;l33:for(;;){switch(c[j++]){case 3:a.push(YH);break;case 5:a.push(_$RB);break;case 6:a.push(_$Vk);break;case 7:if(a.pop())++j;else j+=c[j];break;case 8:s=a.pop();a[a.length-1]+=s;break;case 10:a.push(_$VI);break;case 14:a.pop();break;case 20:a.push(_$Vt++);break;case 21:_$Vt=a[a.length-1];break;case 22:if(a.pop())j+=c[j];else++j;break;case 23:_$VI=a[a.length-1];break;case 25:a.push(_$Xe);break;case 26:if(a[a.length-2]!=null){a[a.length-3]=g.call(a[a.length-3],a[a.length-2],a[a.length-1]);a.length-=2;}else{s=a[a.length-3];a[a.length-3]=s(a[a.length-1]);a.length-=2;}break;case 29:a.push(a[a.length-1]);a[a.length-2]=a[a.length-2][_1wnqp[328+c[j++]]];break;case 36:a[a.length-4]=g.call(a[a.length-4],a[a.length-3],a[a.length-2],a[a.length-1]);a.length-=3;break;case 38:_$VM=a[a.length-1];break;case 52:a.push(_$VM);break;case 53:a.push(_$Xp);break;case 54:a.push(_1wnqp[328+c[j++]]);break;case 55:_$Vk=a[a.length-1];break;case 56:a.push(_$h);break;case 59:a.push(new Array(c[j++]));break;case 65:YH=a[a.length-1];break;case 66:a.push(_$Vq);break;case 67:a[a.length-6]=g.call(a[a.length-6],a[a.length-5],a[a.length-4],a[a.length-3],a[a.length-2],a[a.length-1]);a.length-=5;break;case 68:a[a.length-2]=a[a.length-2][a[a.length-1]];a.length--;break;case 70:a[a.length-1]=a[a.length-1][_1wnqp[328+c[j++]]];break;case 73:a[a.length-1]=!a[a.length-1];break;case 79:j+=c[j];break;case 81:a[a.length-2][_1wnqp[328+c[j++]]]=a[a.length-1];a[a.length-2]=a[a.length-1];a.length--;break;case 82:a.push(c[j++]);break;case 86:a.push(_$XW);break;case 88:a.push(Vv);break;case 89:a.push(this[_1wnqp[328+c[j++]]]);break;case 90:return a.pop();break;case 92:return;break;case 93:a.push(null);break;case 98:s=a.pop();for(b=0;b<c[j+1];++b)if(s===_1wnqp[328+c[j+b*2+2]]){j+=c[j+b*2+3];continue l33;}j+=c[j];break;}}},_$Vp.prototype._$sdnmd=function(_$Vk){'use strict';var a=_3h9qp;var h=_2t8qp;var YO,_$Vt,_$VM,_$VI,_$VH;var c=[];var d=4901;var x,b;l34:for(;;){switch(h[d++]){case 3:c.push(_$VH);break;case 5:_$VH=c[c.length-1];break;case 6:_$VI=c[c.length-1];break;case 13:c.push(Date);break;case 15:_$VM=c[c.length-1];break;case 18:_$Vt=c[c.length-1];break;case 19:c.push(h[d++]);break;case 23:YO=c[c.length-1];break;case 30:return c.pop();break;case 33:c[c.length-6]=a.call(c[c.length-6],c[c.length-5],c[c.length-4],c[c.length-3],c[c.length-2],c[c.length-1]);c.length-=5;break;case 36:c.push(this);break;case 37:c[c.length-4]=a.call(c[c.length-4],c[c.length-3],c[c.length-2],c[c.length-1]);c.length-=3;break;case 38:c.push(this[_1wnqp[344+h[d++]]]);break;case 40:x=c.pop();c[c.length-1]-=x;break;case 43:c.push(_$Xp);break;case 45:c.push(_$h);break;case 52:c.push(c[c.length-1]);c[c.length-2]=c[c.length-2][_1wnqp[344+h[d++]]];break;case 58:return;break;case 59:c.push(null);break;case 60:c.push(YO);break;case 65:c[c.length-5]=a.call(c[c.length-5],c[c.length-4],c[c.length-3],c[c.length-2],c[c.length-1]);c.length-=4;break;case 66:c.push(_1wnqp[344+h[d++]]);break;case 69:if(c.pop())++d;else d+=h[d];break;case 70:if(c[c.length-2]!=null){c[c.length-3]=a.call(c[c.length-3],c[c.length-2],c[c.length-1]);c.length-=2;}else{x=c[c.length-3];c[c.length-3]=x(c[c.length-1]);c.length-=2;}break;case 71:if(c[c.length-1]!=null){c[c.length-2]=a.call(c[c.length-2],c[c.length-1]);}else{x=c[c.length-2];c[c.length-2]=x();}c.length--;break;case 74:c.push({});break;case 75:c.push(_$VM);break;case 82:c.pop();break;case 86:c.push(_$XA);break;case 88:c.push(_$Vt);break;case 92:c.push(_$VI);break;case 93:c.push(Vv);break;case 96:c.push(_$Vk);break;case 99:x=c.pop();c[c.length-1]=c[c.length-1]==x;break;}}},_$Vp.prototype.sign=function(_$Vk){var YR=Vv;try{var _$Vt=this._$sdnmd(_$Vk);return _$Vt;}catch(_$VM){return _$VM;}},_$Vp.settings={'debug':!(-0x1*0x2449+-0x25b6+0x4a00)},window.ParamsSign=_$Vp,_$Vp,window._mts=_$Vp;}();
+
+//////    
+console.log(window.ParamsSign);
+function get_h5st(input_param) {
+    x = new window.ParamsSign({
+        appId: "586ae"
+    })
+    res = x.sign(input_param)
+    console.log(res['h5st'].length);
+    console.log(res['h5st']);
+    
+}
+input_param={
+    "functionId": "unionSearchRecommend",
+    "appid": "unionpc",
+    "body": "0cdcd53a20c6827470558548480b253a0cd7f8b82e0b86c490e1bb7447e2863c"
+}
+get_h5st(input_param)

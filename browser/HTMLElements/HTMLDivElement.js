@@ -13,8 +13,6 @@ Object.defineProperties(HTMLDivElement.prototype, {
 var curMemoryArea = mframe.memory.HTMLDivElement = {};
 
 //============== Constant START ==================
-Object.defineProperty(HTMLDivElement, "arguments", { configurable: false, enumerable: false, value: null, writable: false, });
-Object.defineProperty(HTMLDivElement, "caller", { configurable: false, enumerable: false, value: null, writable: false, });
 //==============↑↑Constant END↑↑==================
 
 //%%%%%%% Attribute START %%%%%

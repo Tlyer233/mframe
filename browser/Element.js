@@ -17,6 +17,32 @@ var curMemoryArea = mframe.memory.Element = {};
 //==============↑↑Constant END↑↑==================
 
 //%%%%%%% Attribute START %%%%%%%%%%%%%%%%%%%%%%%%
+// tagName
+curMemoryArea.tagName_getter = function tagName() { debugger; }; mframe.safefunction(curMemoryArea.tagName_getter);
+Object.defineProperty(curMemoryArea.tagName_getter, "name", {value: "get tagName",configurable: true,});
+Object.defineProperty(Element.prototype, "tagName", {get: curMemoryArea.tagName_getter,enumerable: true,configurable: true,});
+curMemoryArea.tagName_smart_getter = function tagName() {
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res = this.jsdomMemory.tagName; // 返回实例属性或jsdom值
+    mframe.log({ flag: 'property', className: 'Element', propertyName: 'tagName', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.tagName_smart_getter);
+Element.prototype.__defineGetter__("tagName", curMemoryArea.tagName_smart_getter);
+
+// childElementCount
+curMemoryArea.childElementCount_getter = function childElementCount() { debugger; }; mframe.safefunction(curMemoryArea.childElementCount_getter);
+Object.defineProperty(curMemoryArea.childElementCount_getter, "name", {value: "get childElementCount",configurable: true,});
+Object.defineProperty(Element.prototype, "childElementCount", {get: curMemoryArea.childElementCount_getter,enumerable: true,configurable: true,});
+curMemoryArea.childElementCount_smart_getter = function childElementCount() {    
+    console.log(this.tagName);
+    debugger;
+    if (this.constructor && this === this.constructor.prototype) throw new Error('Illegal invocation');
+    res =  this.jsdomMemory.childElementCount; // 返回实例属性或jsdom值
+    res = 100;
+    mframe.log({ flag: 'property', className: 'Element', propertyName: 'childElementCount', method: 'get', val: res }); 
+    return res; 
+}; mframe.safefunction(curMemoryArea.childElementCount_smart_getter);
+Element.prototype.__defineGetter__("childElementCount", curMemoryArea.childElementCount_smart_getter);
 
 //%%%%%%%↑↑Attribute END↑↑%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -17,7 +17,7 @@ HTMLHeadElement.prototype.__proto__ = HTMLElement.prototype;
 
 
 mframe.memory.htmlelements['head'] = function () {
-    var head = new (function () { });
+    var head = {};
     head.__proto__ = HTMLHeadElement.prototype;
 
     //////////{HTMLHeadElement 特有的 属性/方法}//////////////
